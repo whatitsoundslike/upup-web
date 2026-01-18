@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import "../styles/globals.css";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { Navbar, MobileBottomNav } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 
 export const metadata: Metadata = {
-  title: "Travel World - 꿈꾸던 여행을 떠나세요",
-  description: "전 세계의 특별한 여행 상품을 만나보세요",
+  title: "Tesla EV Service",
+  description: "테슬라 오너와 팬들을 위한 프리미엄 웹 서비스",
 };
 
 export default function RootLayout({
@@ -12,8 +15,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ko">
-      <body>{children}</body>
+    <html lang="ko" suppressHydrationWarning>
+      <body className="antialiased min-h-screen flex flex-col">
+        <ThemeProvider>
+          <Navbar />
+          <main className="flex-grow">
+            {children}
+          </main>
+          <Footer />
+          <MobileBottomNav />
+        </ThemeProvider>
+      </body>
     </html>
   );
 }
