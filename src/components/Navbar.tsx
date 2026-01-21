@@ -13,18 +13,18 @@ import {
     Menu,
     X,
     Moon,
-    Sun
+    Sun,
+    Handshake
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const navItems = [
-    { name: '최신 소식', href: '/news', icon: Newspaper },
     { name: '보조금 현황', href: '/subsidy', icon: Coins },
     { name: '악세사리', href: '/shop', icon: ShoppingBag },
+    { name: '중고거래', href: '/used-trade', icon: Handshake },
     { name: '커뮤니티', href: '/community', icon: Users },
-    { name: '팁', href: '/tips', icon: Lightbulb },
 ];
 
 export function Navbar() {
