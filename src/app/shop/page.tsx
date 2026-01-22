@@ -3,15 +3,7 @@
 import { motion } from 'framer-motion';
 import { ShoppingBag, Star, TrendingUp, Tag, Heart } from 'lucide-react';
 import Link from 'next/link';
-
-const products = [
-    { id: 1, name: '사이버트럭 스타일 무선 충전기', price: '129,000', category: 'Interior', rating: 4.9 },
-    { id: 2, name: '모델 3/Y 일체형 매트 세트', price: '185,000', category: 'Protection', rating: 4.8 },
-    { id: 3, name: '슈퍼차저 스타일 데스크 가젯', price: '45,000', category: 'Lifestyle', rating: 5.0 },
-    { id: 4, name: '카본 파이버 스포일러', price: '320,000', category: 'Performance', rating: 4.7 },
-    { id: 5, name: '알칸타라 키 카드 케이스', price: '29,000', category: 'Lifestyle', rating: 4.9 },
-    { id: 6, name: 'HEPA 에어필터 (V2)', price: '68,000', category: 'Maintenance', rating: 4.6 },
-];
+import products from './products.json';
 
 export default function ShopPage() {
     return (
@@ -37,12 +29,12 @@ export default function ShopPage() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.05 }}
-                            className="group cursor-pointer p-2 rounded-[1rem] border border-foreground/5 hover:bg-foreground/5 transition-all flex flex-col h-full"
+                            className="group cursor-pointer rounded-[1rem] border border-foreground/5 hover:bg-foreground/5 transition-all flex flex-col h-full"
                         >
-                            <div className="aspect-square bg-foreground/5 rounded-2xl overflow-hidden mb-6 relative">
+                            <div className="aspect-square bg-foreground/5 rounded-t-[1rem] overflow-hidden mb-6 relative">
                                 <div className="absolute top-4 right-4 z-10" onClick={(e) => e.preventDefault()}>
                                     <button className="bg-white/10 glass rounded-full">
-                                        <Heart className="h-5 w-5" />
+                                        <Heart fill="white" className="h-5 w-5" />
                                     </button>
                                 </div>
                                 {idx === 0 && (
@@ -50,12 +42,21 @@ export default function ShopPage() {
                                         Best
                                     </div>
                                 )}
-                                <div className="w-full h-full flex items-center justify-center italic text-foreground/20 font-bold text-xl uppercase tracking-tighter">
-                                    Product Image
-                                </div>
+                                {product.thumb ? (
+                                    <img
+                                        src={product.thumb}
+                                        alt={product.name}
+                                        className="w-full h-full object-cover"
+                                        loading="lazy"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center italic text-foreground/20 font-bold text-xl uppercase tracking-tighter">
+                                        Product Image
+                                    </div>
+                                )}
                             </div>
 
-                            <div className="space-y-2">
+                            <div className="space-y-2 px-2 pb-2">
                                 <div className="flex justify-between items-center">
                                     <span className="text-xs font-bold text-foreground/40 uppercase tracking-widest">{product.category}</span>
                                     <div className="flex items-center gap-1 text-xs font-bold text-amber-500">

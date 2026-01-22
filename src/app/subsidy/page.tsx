@@ -3,177 +3,15 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Coins, MapPin, Info, AlertTriangle, Search } from 'lucide-react';
+import cities from './cities.json';
 
-const cities = [
-    { name1: '서울', name2: '서울특별시', totalCount: 10500, applyCount: 0, etc: 'ㅇ 상반기 보급대수 : 승용 10,500대(일반 8,900대, 우선순위 1,600대)\n    ※ 연간 총 보급대수 : 승용차 15,094대, 화물차 1,779대, 승합 76대 (총 16,949대)\n    ※ 보급대수는 보급여건 및 예산범위 내에서 변동될 수 있으며 전기택시？전기이륜은 별도 공고,   3/4분기부터 우선순위？택배？중소기업 물량을 일반 물량과 통합 집행' },
-    { name1: '부산', name2: '부산광역시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '대구', name2: '대구광역시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '인천', name2: '인천광역시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '광주', name2: '광주광역시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '대전', name2: '대전광역시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '울산', name2: '울산광역시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '세종', name2: '세종특별자치시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '수원시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '성남시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '의정부시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '안양시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '부천시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '광명시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '평택시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '동두천시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '안산시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '고양시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '과천시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '구리시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '남양주시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '오산시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '시흥시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '군포시', totalCount: 750, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '의왕시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '하남시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '용인시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '파주시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '이천시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '안성시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '김포시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '화성시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '광주시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '양주시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '포천시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '여주시', totalCount: 509, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '연천군', totalCount: 55, applyCount: 0, etc: '「2026년 전기자동차 구매지원 사업 상반기 공고」.\n1. 사업기간: 2026. 01. 22.(목) 09:00 ~ 2026. 6. 30.(화) 18:00 \n2. 사업내용: 전기자동차를 구매하는 자에게 예산의 범위 내에서 보조금 지원\n3. 보급대수(상반기): 승용 55대, 화물 20대, 승합1대\n  - 보급대수는 차종별 보조금 차등 지원 및 국비 추가 지급 등에 따라 변동될 수 있으며 변경 시 추가 공고를 통해 알려드립니다.\n4. 지원대상: 공고문 참고' },
-    { name1: '경기', name2: '가평군', totalCount: 100, applyCount: 0, etc: '' },
-    { name1: '경기', name2: '양평군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '강원', name2: '춘천시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '강원', name2: '원주시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '강원', name2: '강릉시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '강원', name2: '동해시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '강원', name2: '태백시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '강원', name2: '속초시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '강원', name2: '삼척시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '강원', name2: '홍천군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '강원', name2: '횡성군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '강원', name2: '영월군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '강원', name2: '평창군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '강원', name2: '정선군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '강원', name2: '철원군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '강원', name2: '화천군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '강원', name2: '양구군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '강원', name2: '인제군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '강원', name2: '고성군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '강원', name2: '양양군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '충북', name2: '청주시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '충북', name2: '충주시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '충북', name2: '제천시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '충북', name2: '보은군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '충북', name2: '옥천군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '충북', name2: '영동군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '충북', name2: '증평군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '충북', name2: '진천군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '충북', name2: '괴산군', totalCount: 100, applyCount: 0, etc: '<2026년 상반기 괴산군 전기자동차 보급사업>\n★ 접수기간: 2026. 1. 26.(월) ~ 6. 30.(화)\n★ 보급대수: 승용 100대, 화물 40대\n★ 지원차종 및 지원금액 : 무공해차 통합누리집(www.ev.or.kr)참고\n★ 문의사항: 환경과(043-830-3627)\n\n※공고문 금요일에 올라갑니다' },
-    { name1: '충북', name2: '음성군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '충북', name2: '단양군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '충남', name2: '천안시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '충남', name2: '공주시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '충남', name2: '보령시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '충남', name2: '아산시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '충남', name2: '서산시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '충남', name2: '논산시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '충남', name2: '계룡시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '충남', name2: '당진시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '충남', name2: '금산군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '충남', name2: '부여군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '충남', name2: '서천군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '충남', name2: '청양군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '충남', name2: '홍성군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '충남', name2: '예산군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '충남', name2: '태안군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전북', name2: '전주시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전북', name2: '군산시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전북', name2: '익산시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전북', name2: '정읍시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전북', name2: '남원시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전북', name2: '김제시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전북', name2: '완주군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전북', name2: '진안군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전북', name2: '무주군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전북', name2: '장수군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전북', name2: '임실군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전북', name2: '순창군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전북', name2: '고창군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전북', name2: '부안군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전남', name2: '목포시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전남', name2: '여수시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전남', name2: '순천시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전남', name2: '나주시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전남', name2: '광양시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전남', name2: '담양군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전남', name2: '곡성군', totalCount: 70, applyCount: 0, etc: '' },
-    { name1: '전남', name2: '구례군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전남', name2: '고흥군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전남', name2: '보성군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전남', name2: '화순군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전남', name2: '장흥군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전남', name2: '강진군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전남', name2: '해남군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전남', name2: '영암군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전남', name2: '무안군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전남', name2: '함평군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전남', name2: '영광군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전남', name2: '장성군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전남', name2: '완도군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전남', name2: '진도군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '전남', name2: '신안군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경북', name2: '포항시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경북', name2: '경주시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경북', name2: '김천시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경북', name2: '안동시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경북', name2: '구미시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경북', name2: '영주시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경북', name2: '영천시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경북', name2: '상주시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경북', name2: '문경시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경북', name2: '경산시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경북', name2: '의성군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경북', name2: '청송군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경북', name2: '영양군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경북', name2: '영덕군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경북', name2: '청도군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경북', name2: '고령군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경북', name2: '성주군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경북', name2: '칠곡군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경북', name2: '예천군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경북', name2: '봉화군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경북', name2: '울진군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경북', name2: '울릉군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경남', name2: '창원시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경남', name2: '진주시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경남', name2: '통영시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경남', name2: '사천시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경남', name2: '김해시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경남', name2: '밀양시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경남', name2: '거제시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경남', name2: '양산시', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경남', name2: '의령군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경남', name2: '함안군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경남', name2: '창녕군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경남', name2: '고성군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경남', name2: '남해군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경남', name2: '하동군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경남', name2: '산청군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경남', name2: '함양군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경남', name2: '거창군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '경남', name2: '합천군', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '제주', name2: '제주특별자치도', totalCount: 0, applyCount: 0, etc: '' },
-    { name1: '공단', name2: '한국환경공단', totalCount: 0, applyCount: 0, etc: '' },
-];
 
 export default function SubsidyPage() {
     const [searchTerm, setSearchTerm] = useState('');
 
     const filteredCities = cities.filter((city) =>
-        city.name1.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        city.name2.toLowerCase().includes(searchTerm.toLowerCase())
+        city.locationName1.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        city.locationName2.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return (
@@ -212,15 +50,15 @@ export default function SubsidyPage() {
                             <tbody className="divide-y divide-white/5">
                                 {filteredCities.map((city) => {
                                     const remainCount = city.totalCount - city.applyCount;
-                                    const rate = Math.round((remainCount / city.totalCount) * 100);
+                                    const rate = Math.round((remainCount / city.totalCount) * 1000) / 10;
                                     return (
-                                        <tr key={`${city.name1}-${city.name2}`} className="hover:bg-white/5 transition-colors group">
+                                        <tr key={`${city.locationName1}-${city.locationName2}`} className="hover:bg-white/5 transition-colors group">
                                             <td className="px-6 py-5">
                                                 <div className="flex items-center gap-3">
                                                     <span className="px-2 py-1 bg-foreground/5 rounded-md text-[10px] font-black uppercase tracking-widest text-foreground/40 group-hover:bg-tesla-red/20 group-hover:text-tesla-red transition-colors">
-                                                        {city.name1}
+                                                        {city.locationName1}
                                                     </span>
-                                                    <span className="font-bold text-sm">{city.name2}</span>
+                                                    <span className="font-bold text-sm">{city.locationName2}</span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5 font-mono text-sm text-foreground/60 text-right">
