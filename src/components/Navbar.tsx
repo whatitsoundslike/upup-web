@@ -21,6 +21,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const navItems = [
+    { name: '테슬라뉴스', href: '/news', icon: Newspaper },
     { name: '보조금 현황', href: '/subsidy', icon: Coins },
     { name: '악세사리', href: '/shop', icon: ShoppingBag },
     { name: '중고거래', href: '/used-trade', icon: Handshake },
