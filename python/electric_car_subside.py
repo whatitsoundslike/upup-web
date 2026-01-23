@@ -67,7 +67,7 @@ if __name__ == "__main__":
     # 상품 정보 파싱
     subsidyList = parse_subsidy(sample_html)
 
-    output_path = os.path.join("src", "app", "subsidy", "cities.json")
+    output_path = os.path.join("src", "app", "tesla", "subsidy", "cities.json")
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(subsidyList)
         f.write("\n")

@@ -24,7 +24,7 @@ export default function ShopPage() {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-8">
                 {products.map((product, idx) => (
-                    <Link key={product.id} href={`/shop/${product.id}`}>
+                    <Link key={product.id} href={`/tesla/shop/${product.id}`}>
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}

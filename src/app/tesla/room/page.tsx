@@ -32,7 +32,7 @@ export default function UsedTradePage() {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-8">
                 {listings.map((item, idx) => (
-                    <Link key={item.id} href={`/used-trade/${item.id}`}>
+                    <Link key={item.id} href={`/tesla/room/${item.id}`}>
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}

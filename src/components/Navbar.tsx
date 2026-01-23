@@ -21,11 +21,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const navItems = [
-    { name: '뉴스', href: '/news', icon: Newspaper },
-    { name: '보조금 현황', href: '/subsidy', icon: Coins },
-    { name: '악세사리', href: '/shop', icon: ShoppingBag },
-    { name: '룸', href: '/room', icon: Handshake },
-    { name: '커뮤니티', href: '/community', icon: Users },
+    { name: '뉴스', href: '/tesla/news', icon: Newspaper },
+    { name: '보조금 현황', href: '/tesla/subsidy', icon: Coins },
+    { name: '악세사리', href: '/tesla/shop', icon: ShoppingBag },
+    { name: '룸', href: '/tesla/room', icon: Handshake },
+    { name: '커뮤니티', href: '/tesla/community', icon: Users },
 ];
 
 export function Navbar() {
@@ -41,7 +41,7 @@ export function Navbar() {
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div className="flex h-16 items-center justify-between">
                     <div className="flex items-center">
-                        <Link href="/" className="flex items-center gap-2 group">
+                        <Link href="/tesla" className="flex items-center gap-2 group">
                             <div className="relative h-12 w-32">
                                 <Image
                                     src="/logo.png"

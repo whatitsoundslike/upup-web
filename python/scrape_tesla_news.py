@@ -195,7 +195,7 @@ def main():
     all_news.sort(key=lambda x: x.get('published_at') or "", reverse=True)
 
     # Save to JSON
-    output_path = os.path.join("src", "app", "news", "news.json")
+    output_path = os.path.join("src", "app", "tesla", "news", "news.json")
     with open(output_path, 'w', encoding='utf-8') as f:
         json.dump(all_news, f, ensure_ascii=False, indent=4)
     

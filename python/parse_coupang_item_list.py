@@ -161,7 +161,7 @@ if __name__ == "__main__":
     # 상품 정보 파싱
     products = parse_products(cleaned_html)
 
-    output_path = os.path.join("src", "app", "shop", "products.json")
+    output_path = os.path.join("src", "app", "tesla", "shop", "products.json")
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(products)
         f.write("\n")
