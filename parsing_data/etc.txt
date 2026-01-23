@@ -9,3 +9,7 @@ copy(document.getElementById('product-list').outerHTML)
 
 copy(document.getElementsByClassName('table01 ')[0].outerHTML)
 
+
+
+python ./python/electric_car_subside.py
+python ./python/scrape_tesla_news.py
