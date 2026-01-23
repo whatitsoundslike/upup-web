@@ -1,10 +1,17 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Zap, ShieldCheck, Cpu, Globe, ArrowRight } from 'lucide-react';
+import { Zap, ShieldCheck, Cpu, Globe, ArrowRight, DockIcon } from 'lucide-react';
 import Link from 'next/link';
 
 const features = [
+  {
+    title: '뉴스',
+    desc: '테슬라 뉴스를 확인하세요.',
+    icon: DockIcon,
+    href: '/news',
+    color: 'text-blue-500'
+  },
   {
     title: '보조금 현황',
     desc: '2026년 지자체별 전기차 보조금 잔여 현황을 확인하세요.',
@@ -20,15 +27,15 @@ const features = [
     color: 'text-tesla-red'
   },
   {
-    title: '정비 및 꿀팁',
-    desc: '오너들이 직접 공유하는 실데이터 기반 관리 노하우.',
+    title: '룸',
+    desc: '테슬라 오너들의 차에는 무엇이 있을까요? 사용자들의 꿀팁 확인하기.',
     icon: Cpu,
-    href: '/tips',
+    href: '/room',
     color: 'text-emerald-500'
   },
   {
     title: '커뮤니티',
-    desc: '국내 최대 테슬라 오너들의 지식 공유 공간.',
+    desc: '테슬라 오너들의 지식 공유 공간.',
     icon: Globe,
     href: '/community',
     color: 'text-purple-500'
