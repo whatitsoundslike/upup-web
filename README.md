@@ -35,40 +35,27 @@ Add the following to your Vercel project's **Environment Variables**:
 - `DATABASE_URL`
 
 Example:
-
-```
 mysql://USER:PASSWORD@HOST:3306/DBNAME?sslaccept=accept_invalid_certs
-```
 
 If you want strict SSL, use:
-
-```
 mysql://USER:PASSWORD@HOST:3306/DBNAME?sslaccept=strict&sslcert=PATH
-```
 
 ### 2) Build command
 
 `vercel.json` sets:
-
-```
 npm run vercel-build
-```
 
 Which runs:
-
-```
 npm run prisma:migrate:deploy && npm run prisma:generate && npm run build
-```
 
 ### 3) Deploy
 
 - Connect the repo in Vercel and deploy.
 - Ensure Vercel can reach the database (RDS security group/VPC rules).
 
+npx vercel --prod --yes
+
+
 ### 4) Health check
 
-After deploy, verify:
-
-```
 GET /api/health
-```

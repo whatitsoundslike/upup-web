@@ -1,4 +1,4 @@
-import SharedShopPage from '@/components/SharedShopPage';
+import Shop from '@/components/Shop';
 
 // Toy products - 실제로는 데이터베이스나 API에서 가져와야 합니다
 const toyProducts = [
@@ -24,5 +24,5 @@ const toyProducts = [
 ];
 
 export default function ToyShopPage() {
-    return <SharedShopPage category="toy" products={toyProducts} />;
+    return <Shop category="toy" products={toyProducts} />;
 }

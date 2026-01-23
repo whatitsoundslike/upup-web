@@ -20,7 +20,7 @@ interface ShopPageProps {
     products: Product[];
 }
 
-export default function SharedShopPage({ category, products }: ShopPageProps) {
+export default function Shop({ category, products }: ShopPageProps) {
     const categoryTitles = {
         tesla: {
             title: 'Tesla Accessory Store',
