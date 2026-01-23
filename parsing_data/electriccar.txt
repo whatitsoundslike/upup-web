@@ -1054,9 +1054,11 @@
 					
 						<td style="border-right: 1px solid #ddd;">파주시</td>
 					
-					<td></td>
+					<td>전기승용</td>
 					
 						<td>
+							
+								<button type="button" onclick="goDownloadFile('2026','4148', 'A');return false;" class="btnDown">본공고 1</button><br>
 							
 							
 							
@@ -1071,13 +1073,19 @@
 							
 						</td>
 					
-					<td></td>
-					<td></td>
-					<td></td>
-					<td></td>
-					<td style="text-align:center;"></td>
+					<td>*일반: 출고등록순<br>*우선: 출고등록순</td>
+					<td>1229<br> (120)<br> (0)<br> (60)<br> (1049)</td>
+					<td>0<br> (0)<br> (0)<br> (0)<br> (0)</td>
+					<td>0<br> (0)<br> (0)<br> (0)<br> (0)</td>
+					<td style="text-align:center;">0<br> (0)<br> (0)<br> (0)<br> (0)</td>
 					
-						<td></td>
+						<td>★ 접수기간: 2026. 1. 27.(화) 10:00 ~ 예산 소진 시까지
+<br>★ 상반기 보급대수: 승용 1,229대, 전기화물 150대, 전기승합 13대(일반 9대, 어린이통학용 4대)
+<br>★ 보급대수는 보급여건 및 예산범위 내에서 변동될 수 있으며 전기이륜은 별도 공고
+<br>★ 지원대상: 공고문 참고
+<br>
+<br>* 차종별 보조금 확인방법
+<br>무공해차 통합누리집 &gt; 구매 및 지원 &gt; 구매보조금 지급현황 &gt; 지자체 차종별보조금</td>
 					
 				</tr>
 				
@@ -1350,7 +1358,7 @@
 					
 						<td style="border-right: 1px solid #ddd;">여주시</td>
 					
-					<td>전기승용</td>
+					<td></td>
 					
 						<td>
 							
@@ -1367,11 +1375,11 @@
 							
 						</td>
 					
-					<td>*일반: 접수순(초과시 추첨)<br>*우선: 접수순(초과시 추첨)</td>
-					<td>1<br> (0)<br> (0)<br> (0)<br> (1)</td>
-					<td>0<br> (0)<br> (0)<br> (0)<br> (0)</td>
-					<td>0<br> (0)<br> (0)<br> (0)<br> (0)</td>
-					<td style="text-align:center;">0<br> (0)<br> (0)<br> (0)<br> (0)</td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td style="text-align:center;"></td>
 					
 						<td></td>
 					
@@ -1408,7 +1416,7 @@
 					
 					<td>*일반: 출고등록순<br>*우선: 출고등록순</td>
 					<td>55<br> (0)<br> (0)<br> (0)<br> (55)</td>
-					<td>30<br> (6)<br> (2)<br> (2)<br> (20)</td>
+					<td>31<br> (7)<br> (2)<br> (2)<br> (20)</td>
 					<td>0<br> (0)<br> (0)<br> (0)<br> (0)</td>
 					<td style="text-align:center;">55<br> (0)<br> (0)<br> (0)<br> (55)</td>
 					
@@ -2231,7 +2239,7 @@
 					
 					<td>*일반: 출고등록순<br>*우선: 출고등록순</td>
 					<td>1019<br> (120)<br> (0)<br> (60)<br> (839)</td>
-					<td>240<br> (76)<br> (3)<br> (8)<br> (153)</td>
+					<td>257<br> (79)<br> (3)<br> (9)<br> (166)</td>
 					<td>0<br> (0)<br> (0)<br> (0)<br> (0)</td>
 					<td style="text-align:center;">1019<br> (120)<br> (0)<br> (60)<br> (839)</td>
 					
@@ -2279,7 +2287,7 @@
 					
 					<td>*일반: 출고등록순<br>*우선: 출고등록순</td>
 					<td>800<br> (80)<br> (0)<br> (40)<br> (680)</td>
-					<td>168<br> (37)<br> (2)<br> (11)<br> (118)</td>
+					<td>175<br> (39)<br> (2)<br> (11)<br> (123)</td>
 					<td>0<br> (0)<br> (0)<br> (0)<br> (0)</td>
 					<td style="text-align:center;">800<br> (80)<br> (0)<br> (40)<br> (680)</td>
 					
@@ -2302,7 +2310,9 @@
 <br>  ※ 공동명의자로 등록시 둘다 지원 필수자격은 충족하여야 함
 <br>- 생애최소 구입 신청 시 지방세 세목별 과세증명서(자동차 취등록세, 자동차세 부과이력) 지역 전국, 과세년도는 현재까지로 기준 설정하여 제출 요청 
 <br>- 공고문 미숙지, 신청 오타 및 서류미비 사항으로 인한 책임은 신청자에게 있음(보완사항은 보완 완료 시간으로 접수된것으로 간주함)
-<br>- 구매보조금 지급신청 후 제천시청 자연환경과로 원본제출(사본은 원본대조필 날인) , 주소: 충청북도 제천시 내토로 295 제천시청 자연환경과</td>
+<br>- 구매보조금 지급신청 후 제천시청 자연환경과로 원본제출(사본은 원본대조필 날인) , 주소: 충청북도 제천시 내토로 295 제천시청 자연환경과
+<br>
+<br>★ 전환지원금 관련 판매 및 폐차 시기는 보조금 지급신청 전까지</td>
 					
 				</tr>
 				
@@ -3972,7 +3982,7 @@
 					
 					<td>*일반: 출고등록순<br>*우선: 출고등록순</td>
 					<td>70<br> (0)<br> (0)<br> (0)<br> (70)</td>
-					<td>33<br> (12)<br> (1)<br> (0)<br> (20)</td>
+					<td>34<br> (12)<br> (1)<br> (0)<br> (21)</td>
 					<td>0<br> (0)<br> (0)<br> (0)<br> (0)</td>
 					<td style="text-align:center;">70<br> (0)<br> (0)<br> (0)<br> (70)</td>
 					
@@ -4669,7 +4679,7 @@
 					
 						<td style="border-right: 1px solid #ddd;">안동시</td>
 					
-					<td></td>
+					<td>전기승용</td>
 					
 						<td>
 							
@@ -4686,11 +4696,11 @@
 							
 						</td>
 					
-					<td></td>
-					<td></td>
-					<td></td>
-					<td></td>
-					<td style="text-align:center;"></td>
+					<td>*일반: 출고등록순<br>*우선: 출고등록순</td>
+					<td>640<br> (64)<br> (0)<br> (5)<br> (571)</td>
+					<td>0<br> (0)<br> (0)<br> (0)<br> (0)</td>
+					<td>0<br> (0)<br> (0)<br> (0)<br> (0)</td>
+					<td style="text-align:center;">0<br> (0)<br> (0)<br> (0)<br> (0)</td>
 					
 						<td></td>
 					
@@ -5231,7 +5241,7 @@
 					
 						<td style="border-right: 1px solid #ddd;">예천군</td>
 					
-					<td></td>
+					<td>전기승용</td>
 					
 						<td>
 							
@@ -5248,11 +5258,11 @@
 							
 						</td>
 					
-					<td></td>
-					<td></td>
-					<td></td>
-					<td></td>
-					<td style="text-align:center;"></td>
+					<td>*일반: 출고등록순<br>*우선: 출고등록순</td>
+					<td>100<br> (10)<br> (0)<br> (5)<br> (85)</td>
+					<td>0<br> (0)<br> (0)<br> (0)<br> (0)</td>
+					<td>0<br> (0)<br> (0)<br> (0)<br> (0)</td>
+					<td style="text-align:center;">0<br> (0)<br> (0)<br> (0)<br> (0)</td>
 					
 						<td></td>
 					
@@ -5527,7 +5537,7 @@
 					
 						<td style="border-right: 1px solid #ddd;">김해시</td>
 					
-					<td></td>
+					<td>전기승용</td>
 					
 						<td>
 							
@@ -5544,13 +5554,24 @@
 							
 						</td>
 					
-					<td></td>
-					<td></td>
-					<td></td>
-					<td></td>
-					<td style="text-align:center;"></td>
+					<td>*일반: 출고등록순<br>*우선: 출고등록순</td>
+					<td>850<br> (100)<br> (0)<br> (50)<br> (700)</td>
+					<td>0<br> (0)<br> (0)<br> (0)<br> (0)</td>
+					<td>0<br> (0)<br> (0)<br> (0)<br> (0)</td>
+					<td style="text-align:center;">0<br> (0)<br> (0)<br> (0)<br> (0)</td>
 					
-						<td></td>
+						<td>1차 공고: 1/26 ~   접수: 1/28 ~
+<br>★2026년 김해시 전기자동차(승용)보급사업 공고
+<br>- 지원대수 : 1000대
+<br>
+<br>※ 자세한 내용은 김해시 공고문 참조
+<br>※ 반드시 공고문 숙지 후 신청바랍니다. 통화량이 많아 통화가 어려울 수 있습니다.
+<br>
+<br>★ 주의사항
+<br>1. 출고기한이 만료된 기신청자는 지원신청서 재접수하여야 함
+<br>2. 전기차 보조금 지원대상자로 선정되었으나, 보조금 지급 청구기간 미도래로 보조금 미청구시 출고물량으로 확인 안됨
+<br>3. 잔여물량은 단순 참고용이며 실 잔여물량이 아님
+<br>4. 보급대수는 보급여건 및 예산범위 내에서 변동될 수 있음</td>
 					
 				</tr>
 				
@@ -6022,9 +6043,11 @@
 					
 						<td style="border-right: 1px solid #ddd;">합천군</td>
 					
-					<td></td>
+					<td>전기승용</td>
 					
 						<td>
+							
+								<button type="button" onclick="goDownloadFile('2026','4889', 'A');return false;" class="btnDown">본공고 1</button><br>
 							
 							
 							
@@ -6039,13 +6062,17 @@
 							
 						</td>
 					
-					<td></td>
-					<td></td>
-					<td></td>
-					<td></td>
-					<td style="text-align:center;"></td>
+					<td>*일반: 출고등록순<br>*우선: 출고등록순</td>
+					<td>180<br> (18)<br> (0)<br> (18)<br> (144)</td>
+					<td>0<br> (0)<br> (0)<br> (0)<br> (0)</td>
+					<td>0<br> (0)<br> (0)<br> (0)<br> (0)</td>
+					<td style="text-align:center;">0<br> (0)<br> (0)<br> (0)<br> (0)</td>
 					
-						<td></td>
+						<td>전기자동차 보급사업 개요
+<br> ○ 총 물량 : 전기자동차 승용 180대(상반기 126대, 하반기 54대)
+<br> ※ 보급대수는 보조금 차등지원 및 추가지원 등으로 변경될 수 있음
+<br> ※ 지원가능 확인 요청 시 합천군 고시공고 붙임3. 지원가능확인요청서 서식에 맞춰 제출
+<br> ※ 자세한 사항은 합천군 공고문을 참고하여 주시기 바라며 빠른 처리를 위한 단순 접수알림, 처리독촉 문의는 자제해주시기 바랍니다.</td>
 					
 				</tr>
 				
@@ -6119,7 +6146,7 @@
 					
 					<td>*일반: 출고등록순<br>*우선: -</td>
 					<td>30000<br> (0)<br> (0)<br> (0)<br> (30000)</td>
-					<td>36<br> (0)<br> (30)<br> (2)<br> (4)</td>
+					<td>296<br> (0)<br> (290)<br> (2)<br> (4)</td>
 					<td>0<br> (0)<br> (0)<br> (0)<br> (0)</td>
 					<td style="text-align:center;">30000<br> (0)<br> (0)<br> (0)<br> (30000)</td>
 					
