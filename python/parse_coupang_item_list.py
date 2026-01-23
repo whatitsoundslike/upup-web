@@ -78,15 +78,16 @@ def parse_products(html_content):
                 break
 
         products.append({
-            "id": stable_hash_id(name, link, price_value),
+            "id": stable_hash_id(name),
             "thumb": thumb,
             "name": name,
             "price": price_value,
-            "category": "Unknown",
+            "link": link,
+            "category": "",
             "rating": rating,
         })
     
-    return json.dumps(products, ensure_ascii=False, indent=2)
+    return products
 
 def clean_html(html_content):
     """
@@ -143,28 +144,39 @@ def clean_html(html_content):
     return cleaned_str
 
 if __name__ == "__main__":
-    file_path = "parsing_data/coupang_tesla_1.txt"
-    
-    if not os.path.exists(file_path):
-        print(f"오류: {file_path} 파일을 찾을 수 없습니다.")
-        sample_html = "<ul></ul>" 
-    else:
-        with open(file_path, "r", encoding="utf-8") as f:
-            sample_html = f.read()
-
-    cleaned_html = clean_html(sample_html)
-
-    print("\n" + "="*50)
-    print("--- 클래스 및 태그 정제 완료 ---")
-    print("="*50)
-
-    # 상품 정보 파싱
-    products = parse_products(cleaned_html)
-
+    base_path = "parsing_data"
     output_path = os.path.join("src", "app", "tesla", "shop", "products.json")
-    with open(output_path, "w", encoding="utf-8") as f:
-        f.write(products)
-        f.write("\n")
-
     
-    print(products)
+    all_products = []
+    seen_ids = set()
+    
+    # coupang_tesla_1.txt ~ 5.txt 순회
+    for i in range(1, 6):
+        file_name = f"coupang_tesla_{i}.txt"
+        file_path = os.path.join(base_path, file_name)
+        
+        if not os.path.exists(file_path):
+            print(f"[{file_name}] 파일을 찾을 수 없습니다. 건너뜁니다.")
+            continue
+            
+        print(f"[{file_name}] 파싱 중...")
+        with open(file_path, "r", encoding="utf-8") as f:
+            html_content = f.read()
+            
+        cleaned_html = clean_html(html_content)
+        products = parse_products(cleaned_html)
+        
+        # 중복 제거 및 리스트 추가
+        for product in products:
+            if product["id"] not in seen_ids:
+                seen_ids.add(product["id"])
+                all_products.append(product)
+                
+    print(f"\n총 {len(all_products)}개의 상품(중복 제거됨)을 저장합니다.")
+
+    # 결과 저장
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(all_products, f, ensure_ascii=False, indent=2)
+        
+    print(f"저장 완료: {output_path}")

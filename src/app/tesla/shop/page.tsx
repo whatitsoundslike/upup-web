@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { ShoppingBag, Star, TrendingUp, Tag, Heart } from 'lucide-react';
 import Link from 'next/link';
-import products from './products.json';
+import products from './cp_products.json';
 
 export default function ShopPage() {
     return (
@@ -13,18 +13,18 @@ export default function ShopPage() {
                     <h1 className="text-4xl font-black tracking-tighter mb-4 uppercase">Accessory Store</h1>
                     <p className="text-foreground/60 text-lg">당신의 테슬라를 더욱 특별하게 만드는 최고의 선택.</p>
                 </div>
-                <div className="flex gap-2">
+                {/* <div className="flex gap-2">
                     {['All', 'Interior', 'Exterior', 'Tech'].map((tab) => (
                         <button key={tab} className="px-4 py-2 rounded-full border dark:border-white/10 text-sm font-bold hover:bg-foreground/5 transition-all">
                             {tab}
                         </button>
                     ))}
-                </div>
+                </div> */}
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-8">
                 {products.map((product, idx) => (
-                    <Link key={product.id} href={`/tesla/shop/${product.id}`}>
+                    <Link href={product.link} target='_blank' key={product.id}>
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -57,12 +57,6 @@ export default function ShopPage() {
                             </div>
 
                             <div className="space-y-2 px-2 pb-2">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-xs font-bold text-foreground/40 uppercase tracking-widest">{product.category}</span>
-                                    <div className="flex items-center gap-1 text-xs font-bold text-amber-500">
-                                        <Star className="h-3 w-3 fill-amber-500" /> {product.rating}
-                                    </div>
-                                </div>
                                 <h3 className="text-lg font-bold group-hover:text-tesla-red transition-colors">{product.name}</h3>
                                 <div className="flex items-center gap-2">
                                     <span className="text-xl font-black">{product.price}원</span>
