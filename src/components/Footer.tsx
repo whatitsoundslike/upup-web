@@ -1,8 +1,17 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Github, Twitter, Mail } from 'lucide-react';
+import { navRoomDescription, navRoomLogo } from '@/config/navConfig';
 
 export function Footer() {
+    const pathname = usePathname();
+    const firstSegment = pathname.split('/')[1] || '';
+
+    const logoSrc: string = navRoomLogo[firstSegment] || '/room-icon/logo.png';
+
     return (
         <footer className="border-t dark:border-white/10 bg-background pt-12 pb-24 md:pb-12 mt-20">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -11,17 +20,16 @@ export function Footer() {
                         <Link href="/tesla" className="flex items-center gap-2 mb-4 group">
                             <div className="relative h-12 w-32">
                                 <Image
-                                    src="/logo.png"
-                                    alt="Tesla Logo"
+                                    src={logoSrc}
+                                    alt="Logo"
                                     fill
                                     className="object-contain group-hover:scale-105 transition-transform"
                                 />
                             </div>
-                            <span className="sr-only">TESLA EV</span>
+                            <span className="sr-only">Zroom</span>
                         </Link>
                         <p className="text-sm text-foreground/60 leading-relaxed">
-                            테슬라 오너와 팬들을 위한 가장 앞선 웹 서비스.
-                            최신 기술 소식부터 커뮤니티 정보까지 한눈에 확인하세요.
+                            {navRoomDescription[firstSegment] || 'Zroom'}
                         </p>
                     </div>
 
@@ -60,7 +68,7 @@ export function Footer() {
 
                 <div className="mt-12 pt-8 border-t dark:border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
                     <p className="text-xs text-foreground/40">
-                        © 2026 Tesla EV Service. All rights reserved.
+                        © 2026 Zroom. All rights reserved.
                     </p>
                     <div className="flex gap-6">
                         <Link href="/terms" className="text-xs text-foreground/40 hover:text-foreground">이용약관</Link>

@@ -5,28 +5,15 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import {
-    Newspaper,
-    Coins,
-    ShoppingBag,
-    Users,
-    Lightbulb,
     Menu,
     X,
     Moon,
     Sun,
-    Handshake
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-
-const navItems = [
-    { name: '뉴스', href: '/tesla/news', icon: Newspaper },
-    { name: '보조금 현황', href: '/tesla/subsidy', icon: Coins },
-    { name: '악세사리', href: '/tesla/shop', icon: ShoppingBag },
-    { name: '룸', href: '/tesla/room', icon: Handshake },
-    { name: '커뮤니티', href: '/tesla/community', icon: Users },
-];
+import { navConfigs, defaultNavItems, type NavItem, navRoomLogo } from '@/config/navConfig';
 
 export function Navbar() {
     const pathname = usePathname();
@@ -36,22 +23,30 @@ export function Navbar() {
 
     React.useEffect(() => setMounted(true), []);
 
+    // 현재 경로에서 1-depth 추출 (예: /tesla/news -> 'tesla')
+    const firstSegment = pathname.split('/')[1] || '';
+
+    // 해당 섹션의 네비게이션 아이템 가져오기
+    const navItems: NavItem[] = navConfigs[firstSegment] || defaultNavItems;
+
+    const logoSrc: string = navRoomLogo[firstSegment] || '/room-icon/logo.png';
+
     return (
         <nav className="sticky top-0 z-50 w-full border-b dark:border-white/10" style={{ backgroundColor: 'var(--background-hex)' }}>
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div className="flex h-16 items-center justify-between">
                     <div className="flex items-center">
-                        <Link href="/tesla" className="flex items-center gap-2 group">
+                        <Link href={firstSegment ? `/${firstSegment}` : '/'} className="flex items-center gap-2 group">
                             <div className="relative h-12 w-32">
                                 <Image
-                                    src="/logo.png"
-                                    alt="Tesla Logo"
+                                    src={logoSrc}
+                                    alt="Logo"
                                     fill
                                     className="object-contain transition-transform group-hover:scale-105"
                                     priority
                                 />
                             </div>
-                            <span className="sr-only">TESLA EV</span>
+                            <span className="sr-only">{firstSegment ? firstSegment.toUpperCase() : 'HOME'}</span>
                         </Link>
                     </div>
 
@@ -133,8 +128,13 @@ export function Navbar() {
     );
 }
 
+
 export function MobileBottomNav() {
     const pathname = usePathname();
+
+    // 현재 경로에서 1-depth 추출
+    const firstSegment = pathname.split('/')[1] || '';
+    const navItems: NavItem[] = navConfigs[firstSegment] || defaultNavItems;
 
     return (
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t dark:border-white/10 px-4 py-2" style={{ backgroundColor: 'var(--background-hex)' }}>
