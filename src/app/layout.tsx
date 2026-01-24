@@ -3,6 +3,8 @@ import "../styles/globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Navbar, MobileBottomNav } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import Script from "next/script";
+
 
 export const metadata: Metadata = {
   title: "Tesla EV Service",
@@ -17,6 +19,20 @@ export default function RootLayout({
   return (
     <html lang="ko" suppressHydrationWarning>
       <body className="antialiased min-h-screen flex flex-col">
+        {/* Google tag (gtag.js) */}
+        <Script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-V8Q70CN6GV"
+        />
+        <Script id="google-analytics">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-V8Q70CN6GV');
+          `}
+        </Script>
         <ThemeProvider>
           <Navbar />
           <main className="flex-grow">

@@ -7,9 +7,51 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
+model Member {
+  id        BigInt      @id @default(autoincrement())
   name      String?
+  email     String   @unique
+  password  String
   createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  rooms     Room[]
 }
+
+model Room {
+  id        BigInt      @id @default(autoincrement())
+  member    Member   @relation(fields: [memberId], references: [id])
+  memberId  BigInt
+  name      String?
+  description String?
+  images    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  items     Item[]
+  records   Record[]
+}
+
+model Item {
+  id        BigInt      @id @default(autoincrement())
+  room      Room     @relation(fields: [roomId], references: [id])
+  roomId    BigInt
+  memberId  BigInt
+  name      String?
+  images    Json
+  sale      Boolean
+  price     BigInt
+  buyUrl    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model Record {
+  id        BigInt      @id @default(autoincrement())
+  room      Room     @relation(fields: [roomId], references: [id])
+  roomId    BigInt
+  memberId  BigInt
+  text      String?
+  images    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+  

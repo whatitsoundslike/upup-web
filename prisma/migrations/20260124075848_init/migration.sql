@@ -1,0 +1,63 @@
+-- CreateTable
+CREATE TABLE `Member` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(191) NULL,
+    `email` VARCHAR(191) NOT NULL,
+    `password` VARCHAR(191) NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    UNIQUE INDEX `Member_email_key`(`email`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Room` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `memberId` BIGINT NOT NULL,
+    `name` VARCHAR(191) NULL,
+    `description` VARCHAR(191) NULL,
+    `images` JSON NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Item` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `roomId` BIGINT NOT NULL,
+    `memberId` BIGINT NOT NULL,
+    `name` VARCHAR(191) NULL,
+    `images` JSON NOT NULL,
+    `sale` BOOLEAN NOT NULL,
+    `price` BIGINT NOT NULL,
+    `buyUrl` VARCHAR(191) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `Record` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `roomId` BIGINT NOT NULL,
+    `memberId` BIGINT NOT NULL,
+    `text` VARCHAR(191) NULL,
+    `images` JSON NOT NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- AddForeignKey
+ALTER TABLE `Room` ADD CONSTRAINT `Room_memberId_fkey` FOREIGN KEY (`memberId`) REFERENCES `Member`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Item` ADD CONSTRAINT `Item_roomId_fkey` FOREIGN KEY (`roomId`) REFERENCES `Room`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Record` ADD CONSTRAINT `Record_roomId_fkey` FOREIGN KEY (`roomId`) REFERENCES `Room`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

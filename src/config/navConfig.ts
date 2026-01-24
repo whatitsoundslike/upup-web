@@ -26,12 +26,12 @@ export const navConfigs: NavConfig = {
         { name: '뉴스', href: '/tesla/news', icon: Newspaper },
         { name: '보조금 현황', href: '/tesla/subsidy', icon: Coins },
         { name: 'Shop', href: '/tesla/shop', icon: ShoppingBag },
-        { name: 'Room', href: '/tesla/room', icon: Handshake },
+        // { name: 'Room', href: '/tesla/room', icon: Handshake },
     ],
     toy: [
         { name: '홈', href: '/toy', icon: Home },
         { name: 'Shop', href: '/toy/shop', icon: ShoppingBag },
-        { name: 'Room', href: '/toy/room', icon: BookOpen },
+        // { name: 'Room', href: '/toy/room', icon: BookOpen },
     ],
 };
 

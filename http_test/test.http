@@ -2,3 +2,7 @@
 GET {{baseUrl}}/api/health
 Accept: application/json
 
+### Rooms
+GET {{baseUrl}}/api/rooms
+Accept: application/json
+
