@@ -3,20 +3,58 @@
 import { motion } from 'framer-motion';
 import { Newspaper, Calendar, ArrowRight, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
-import newsData from './news.json';
+import { useEffect, useState } from 'react';
 
 interface NewsItem {
     source: string;
     title: string;
     link: string;
     thumbnail: string | null;
-    description: string;
+    description?: string;
     published_at: string | null;
 }
 
+// 4시간 단위 버전 값 생성
+export function get4HourVersion(date = new Date()) {
+    const FOUR_HOURS = 4 * 60 * 60 * 1000;
+    return Math.floor(date.getTime() / FOUR_HOURS);
+}
+
+
 export default function NewsPage() {
+    const [newsData, setNewsData] = useState<NewsItem[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchNews = async () => {
+            
+            try {
+                const response = await fetch('https://cdn.jsdelivr.net/gh/grapheople/jroom@main/json/tesla_news.json?v=' + get4HourVersion());
+                const data = await response.json();
+                setNewsData(data);
+            } catch (error) {
+                console.error('Failed to fetch news:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchNews();
+    }, []);
+
     // Filter out template items if any exist (checking for {{title}})
-    const validNews = (newsData as NewsItem[]).filter(item => !item.title.includes('{{title}}'));
+    const validNews = newsData.filter(item => !item.title.includes('{{title}}'));
+
+    if (isLoading) {
+        return (
+            <div className="max-w-7xl mx-auto px-4 py-16 flex items-center justify-center min-h-[60vh]">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 border-4 border-tesla-red/20 border-t-tesla-red rounded-full animate-spin" />
+                    <p className="text-foreground/60 font-medium">뉴스를 불러오는 중입니다...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-16">
@@ -48,7 +86,7 @@ export default function NewsPage() {
                                         <img
                                             src="/default_thumbnail.png"
                                             alt="Default Thumbnail"
-                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 opacity-50"
+                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                         />
                                     )}
                                 </div>
@@ -71,9 +109,11 @@ export default function NewsPage() {
                                         {item.title}
                                     </h3>
 
-                                    <p className="text-sm text-foreground/60 line-clamp-2 mb-3">
-                                        {item.description}
-                                    </p>
+                                    {item.description && (
+                                        <p className="text-sm text-foreground/60 line-clamp-2 mb-3">
+                                            {item.description}
+                                        </p>
+                                    )}
 
                                     <div className="flex items-center text-xs font-semibold text-foreground/40 group-hover:text-tesla-red transition-colors mt-auto">
                                         기사 원문 보기 <ExternalLink className="w-3 h-3 ml-1" />
@@ -84,8 +124,8 @@ export default function NewsPage() {
                     ))}
 
                     {validNews.length === 0 && (
-                        <div className="text-center py-20 text-foreground/40">
-                            뉴스 데이터를 불러올 수 없습니다.
+                        <div className="text-center py-20 text-foreground/40 font-medium">
+                            등록된 뉴스 기사가 없습니다.
                         </div>
                     )}
                 </div>

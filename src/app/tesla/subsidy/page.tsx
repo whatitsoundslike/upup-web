@@ -1,18 +1,59 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Coins, MapPin, Info, AlertTriangle, Search } from 'lucide-react';
-import cities from './cities.json';
 
+// 4시간 단위 버전 값 생성
+export function get4HourVersion(date = new Date()) {
+    const FOUR_HOURS = 4 * 60 * 60 * 1000;
+    return Math.floor(date.getTime() / FOUR_HOURS);
+}
+
+interface City {
+    locationName1: string;
+    locationName2: string;
+    totalCount: number;
+    applyCount: number;
+    etc: string;
+}
 
 export default function SubsidyPage() {
+    const [cities, setCities] = useState<City[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchCities = async () => {
+            try {
+                const response = await fetch('https://cdn.jsdelivr.net/gh/grapheople/jroom@main/json/electriccar_subside.json?v=' + get4HourVersion());
+                const data = await response.json();
+                setCities(data);
+            } catch (error) {
+                console.error('Error fetching news:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchCities();
+    }, []);
+
     const [searchTerm, setSearchTerm] = useState('');
 
     const filteredCities = cities.filter((city) =>
         city.locationName1.toLowerCase().includes(searchTerm.toLowerCase()) ||
         city.locationName2.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    if (isLoading) {
+        return (
+            <div className="max-w-7xl mx-auto px-4 py-16 flex items-center justify-center min-h-[60vh]">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 border-4 border-tesla-red/20 border-t-tesla-red rounded-full animate-spin" />
+                    <p className="text-foreground/60 font-medium">뉴스를 불러오는 중입니다...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-16">
