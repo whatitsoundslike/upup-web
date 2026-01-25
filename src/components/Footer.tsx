@@ -70,10 +70,10 @@ export function Footer() {
                     <p className="text-xs text-foreground/40">
                         © 2026 Zroom. All rights reserved.
                     </p>
-                    <div className="flex gap-6">
+                    {/* <div className="flex gap-6">
                         <Link href="/terms" className="text-xs text-foreground/40 hover:text-foreground">이용약관</Link>
                         <Link href="/privacy" className="text-xs text-foreground/40 hover:text-foreground">개인정보처리방침</Link>
-                    </div>
+                    </div> */}
                 </div>
             </div>
         </footer>
