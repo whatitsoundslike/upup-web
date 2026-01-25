@@ -69,7 +69,8 @@ export default function HomePage() {
       try {
         const response = await fetch('https://cdn.jsdelivr.net/gh/grapheople/jroom@main/json/tesla_news.json?v=' + get4HourVersion());
         const data = await response.json();
-        setNewsData(data.slice(0, 3));
+        const shuffled = [...data].sort(() => Math.random() - 0.5);
+        setNewsData(shuffled.slice(0, 3));
       } catch (error) {
         console.error('Failed to fetch news:', error);
       } finally {
