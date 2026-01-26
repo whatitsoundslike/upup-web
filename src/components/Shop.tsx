@@ -58,11 +58,6 @@ export default function Shop({ category, products }: ShopPageProps) {
                                         <Heart className="h-5 w-5" />
                                     </button>
                                 </div>
-                                {idx === 0 && (
-                                    <div className="absolute top-4 left-4 z-10 px-3 py-1 bg-tesla-red text-white text-[10px] font-bold rounded-full uppercase tracking-widest">
-                                        Best
-                                    </div>
-                                )}
                                 {product.thumb ? (
                                     <img
                                         src={product.thumb}
@@ -90,6 +85,16 @@ export default function Shop({ category, products }: ShopPageProps) {
                     </Link>
                 ))}
             </div>
+            <a className="flex mt-12 justify-center"
+                href="https://link.coupang.com/a/dAkm6t"
+                target="_blank"
+                referrerPolicy="unsafe-url"
+            >
+                <img
+                    src="https://ads-partners.coupang.com/banners/960739?subId=zroomzroom&traceId=V0-301-5079b8362432a905-I960739&w=728&h=90"
+                    alt=""
+                />
+            </a>
         </div>
     );
 }
