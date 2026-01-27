@@ -27,13 +27,13 @@ const features = [
     href: '/tesla/shop',
     color: 'text-tesla-red'
   },
-  // {
-  //   title: '룸',
-  //   desc: '테슬라 오너들의 차에는 무엇이 있을까요? 사용자들의 꿀팁 확인하기.',
-  //   icon: Cpu,
-  //   href: '/tesla/room',
-  //   color: 'text-emerald-500'
-  // },
+  {
+    title: '룸',
+    desc: '테슬라 오너들의 차에는 무엇이 있을까요? 사용자들의 꿀팁 확인하기.',
+    icon: Cpu,
+    href: '/tesla/room',
+    color: 'text-emerald-500'
+  },
   // {
   //   title: '커뮤니티',
   //   desc: '테슬라 오너들의 지식 공유 공간.',

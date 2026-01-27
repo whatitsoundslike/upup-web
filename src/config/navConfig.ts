@@ -8,6 +8,7 @@ import {
     Gamepad2,
     Star,
     BookOpen,
+    Baby,
     type LucideIcon
 } from 'lucide-react';
 
@@ -26,12 +27,17 @@ export const navConfigs: NavConfig = {
         { name: '뉴스', href: '/tesla/news', icon: Newspaper },
         { name: '보조금 현황', href: '/tesla/subsidy', icon: Coins },
         { name: 'Shop', href: '/tesla/shop', icon: ShoppingBag },
-        // { name: 'Room', href: '/tesla/room', icon: Handshake },
+        { name: 'Room', href: '/tesla/room', icon: Handshake },
     ],
     toy: [
         { name: '홈', href: '/toy', icon: Home },
         { name: 'Shop', href: '/toy/shop', icon: ShoppingBag },
         // { name: 'Room', href: '/toy/room', icon: BookOpen },
+    ],
+    baby: [
+        { name: '육아정보', href: '/baby/info', icon: Newspaper },
+        { name: 'Shop', href: '/baby/shop', icon: ShoppingBag },
+        { name: 'Room', href: '/baby/room', icon: Handshake },
     ],
 };
 
@@ -39,14 +45,17 @@ export const navConfigs: NavConfig = {
 export const defaultNavItems: NavItem[] = [
     { name: 'Tesla', href: '/tesla', icon: Home },
     { name: 'Toy', href: '/toy', icon: Gamepad2 },
+    { name: 'Baby', href: '/baby', icon: Baby },
 ];
 
 export const navRoomLogo: Record<string, string> = {
     tesla: '/room-icon/tesla.png',
     toy: '/room-icon/toy.png',
+    baby: '/room-icon/baby.png',
 }
 
 export const navRoomDescription: Record<string, string> = {
     tesla: '테슬라 관련 정보 및 커뮤니티',
     toy: '장난감 관련 정보 및 커뮤니티',
+    baby: '육아 정보 및 커뮤니티',
 }
