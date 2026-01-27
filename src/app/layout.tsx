@@ -7,8 +7,9 @@ import Script from "next/script";
 
 
 export const metadata: Metadata = {
-  title: "Tesla EV Service",
-  description: "테슬라 오너와 팬들을 위한 프리미엄 웹 서비스",
+  title: "ZROOM - 취미로 연결되는 우리들의 공간",
+  description: "아직도 혼자 해? ZROOM에서 너와 딱 맞는 취미 방에 입장해 봐. 지금 가장 핫한 취향들이 실시간으로 모이는 곳!",
+  keywords: "ZROOM, 지룸, 취미SNS, 관심사채팅, 덕질공유, 크루모임, 실시간소통",
 };
 
 export default function RootLayout({

@@ -3,24 +3,27 @@
 import { motion } from 'framer-motion';
 import { ShoppingBag, Tag, Heart } from 'lucide-react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 interface Product {
-    id: number;
-    thumb: string;
+    id: string;
     name: string;
     price: string;
     link: string;
-    category: string;
-    rating: number | null;
+    thumbnail: string | null;
+}
+
+// 4시간 단위 버전 값 생성
+export function get4HourVersion(date = new Date()) {
+    const FOUR_HOURS = 4 * 60 * 60 * 1000;
+    return Math.floor(date.getTime() / FOUR_HOURS);
 }
 
 interface ShopPageProps {
     category: 'tesla' | 'toy';
-    products: Product[];
 }
 
-export default function Shop({ category, products }: ShopPageProps) {
+export default function Shop({ category }: ShopPageProps) {
     const categoryTitles = {
         tesla: {
             title: 'Tesla Accessory Store',
@@ -33,6 +36,25 @@ export default function Shop({ category, products }: ShopPageProps) {
     };
 
     const config = categoryTitles[category];
+
+    const [products, setProducts] = useState<Product[]>([]);
+        const [isLoading, setIsLoading] = useState(true);
+        useEffect(() => {
+                const fetchNews = async () => {
+                    
+                    try {
+                        const response = await fetch('https://cdn.jsdelivr.net/gh/grapheople/jroom@main/json/tesla_products.json?v=' + get4HourVersion());
+                        const data = await response.json();
+                        setProducts(data);
+                    } catch (error) {
+                        console.error('Failed to fetch news:', error);
+                    } finally {
+                        setIsLoading(false);
+                    }
+                };
+        
+                fetchNews();
+            }, []);
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-16">
@@ -58,9 +80,9 @@ export default function Shop({ category, products }: ShopPageProps) {
                                         <Heart className="h-5 w-5" />
                                     </button>
                                 </div>
-                                {product.thumb ? (
+                                {product.thumbnail ? (
                                     <img
-                                        src={product.thumb}
+                                        src={product.thumbnail}
                                         alt={product.name}
                                         className="w-full h-full object-cover"
                                         loading="lazy"
