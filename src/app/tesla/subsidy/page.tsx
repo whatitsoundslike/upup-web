@@ -79,8 +79,16 @@ export default function SubsidyPage() {
                         />
                     </div>
 
-                    <div className="glass overflow-hidden rounded-3xl border border-white/10 shadow-2xl">
-                        <table className="w-full text-left">
+                    {/* Mobile Scroll Tip */}
+                    <div className="lg:hidden bg-tesla-red/10 border border-tesla-red/20 rounded-2xl px-4 py-3 flex items-center gap-3">
+                        <Info className="h-4 w-4 text-tesla-red flex-shrink-0" />
+                        <p className="text-xs text-tesla-red font-medium">
+                            좌우로 스크롤하여 모든 정보를 확인할 수 있습니다
+                        </p>
+                    </div>
+
+                    <div className="glass overflow-hidden rounded-3xl border border-white/10 shadow-2xl overflow-x-auto">
+                        <table className="w-full text-left min-w-[800px]">
                             <thead className="bg-foreground/5">
                                 <tr>
                                     <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-foreground/50">지역/도시</th>
