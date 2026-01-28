@@ -38,23 +38,23 @@ export default function Shop({ category }: ShopPageProps) {
     const config = categoryTitles[category];
 
     const [products, setProducts] = useState<Product[]>([]);
-        const [isLoading, setIsLoading] = useState(true);
-        useEffect(() => {
-                const fetchNews = async () => {
-                    
-                    try {
-                        const response = await fetch('https://cdn.jsdelivr.net/gh/grapheople/jroom@main/json/tesla_products.json?v=' + get4HourVersion());
-                        const data = await response.json();
-                        setProducts(data);
-                    } catch (error) {
-                        console.error('Failed to fetch news:', error);
-                    } finally {
-                        setIsLoading(false);
-                    }
-                };
-        
-                fetchNews();
-            }, []);
+    const [isLoading, setIsLoading] = useState(true);
+    useEffect(() => {
+        const fetchNews = async () => {
+
+            try {
+                const response = await fetch('https://cdn.jsdelivr.net/gh/grapheople/jroom@main/json/tesla_products.json?v=' + get4HourVersion());
+                const data = await response.json();
+                setProducts(data);
+            } catch (error) {
+                console.error('Failed to fetch news:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchNews();
+    }, []);
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-16">

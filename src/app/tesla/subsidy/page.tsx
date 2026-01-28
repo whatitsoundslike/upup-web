@@ -72,48 +72,36 @@ export default function SubsidyPage() {
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-foreground/40 group-focus-within:text-tesla-red transition-colors" />
                         <input
                             type="text"
-                            placeholder="지역명 또는 도시명을 검색하세요 (예: 서울, 수원, 경기)"
+                            placeholder="지역명을 검색하세요 (예: 서울, 수원, 경기)"
                             className="w-full bg-foreground/5 border border-foreground/10 h-14 pl-12 pr-4 rounded-2xl outline-none focus:border-tesla-red/50 focus:ring-4 focus:ring-tesla-red/5 transition-all text-lg font-medium"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
 
-                    {/* Mobile Scroll Tip */}
-                    <div className="lg:hidden bg-tesla-red/10 border border-tesla-red/20 rounded-2xl px-4 py-3 flex items-center gap-3">
-                        <Info className="h-4 w-4 text-tesla-red flex-shrink-0" />
-                        <p className="text-xs text-tesla-red font-medium">
-                            좌우로 스크롤하여 모든 정보를 확인할 수 있습니다
-                        </p>
-                    </div>
-
                     <div className="glass overflow-hidden rounded-3xl border border-white/10 shadow-2xl overflow-x-auto">
                         <table className="w-full text-left min-w-[800px]">
                             <thead className="bg-foreground/5">
                                 <tr>
-                                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-foreground/50">지역/도시</th>
-                                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-foreground/50 text-right">전체 공고</th>
+                                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-foreground/50 text-center w-[100px]">지역/도시</th>
+                                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-foreground/50 text-right hidden md:table-cell">전체 공고</th>
                                     <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-foreground/50 text-right">접수대수</th>
                                     <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-foreground/50 text-right">출고대수</th>
                                     <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-foreground/50 text-right">잔여대수</th>
-                                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-foreground/50 text-right">잔여율</th>
-                                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-foreground/50 text-right hidden lg:table-cell w-[300px]">비고</th>
+                                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-foreground/50 text-right hidden md:table-cell">잔여율</th>
+                                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-foreground/50 text-right hidden md:table-cell">비고</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-white/5">
+                            <tbody className="">
                                 {filteredCities.map((city) => {
                                     const rate = Math.round((city.remainCount / city.totalCount) * 1000) / 10;
                                     return (
-                                        <tr key={`${city.locationName1}-${city.locationName2}`} className="hover:bg-white/5 transition-colors group">
-                                            <td className="px-6 py-5">
-                                                <div className="flex items-center gap-3">
-                                                    <span className="px-2 py-1 bg-foreground/5 rounded-md text-[10px] font-black uppercase tracking-widest text-foreground/40 group-hover:bg-tesla-red/20 group-hover:text-tesla-red transition-colors">
-                                                        {city.locationName1}
-                                                    </span>
-                                                    <span className="font-bold text-sm">{city.locationName2}</span>
-                                                </div>
+                                        <tr key={`${city.locationName1}-${city.locationName2}`} className="">
+                                            <td className="px-2 py-5 font-medium text-center w-[100px]">
+                                                {city.locationName1}
+                                                {!['서울', '부산', '대구', '인천', '광주', '대전', '울산', '세종', '공단', '제주'].includes(city.locationName1) && ` ${city.locationName2}`}
                                             </td>
-                                            <td className="px-6 py-5 font-mono text-sm text-foreground/60 text-right">
+                                            <td className="px-6 py-5 font-mono text-sm text-foreground/60 text-right hidden md:table-cell">
                                                 {city.totalCount.toLocaleString()}
                                             </td>
                                             <td className="px-6 py-5 font-mono text-sm text-foreground/60 text-right">
@@ -123,13 +111,11 @@ export default function SubsidyPage() {
                                                 {city.releaseCount.toLocaleString()}
                                             </td>
                                             <td className="px-6 py-5 text-right">
-                                                <span className={`font-bold text-sm ${rate < 10 ? 'text-tesla-red' : 'text-foreground'}`}>
-                                                    {city.remainCount.toLocaleString()}
-                                                </span>
+                                                {city.remainCount.toLocaleString()}
                                             </td>
-                                            <td className="px-6 py-5 text-right">
+                                            <td className="px-6 py-5 text-righ hidden md:table-cell">
                                                 {city.totalCount > 0 ? (
-                                                    <span className={`font-mono font-bold text-xs ${rate < 10 ? 'text-tesla-red' : 'text-foreground/40'}`}>
+                                                    <span className="text-foreground/40">
                                                         {rate}%
                                                     </span>
                                                 ) : (
