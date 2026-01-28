@@ -17,7 +17,7 @@ interface Product {
 // 1시간 단위 버전 값 생성
 
 interface ShopPageProps {
-    category: 'tesla' | 'toy';
+    category: 'tesla' | 'toy' | 'baby';
 }
 
 export default function Shop({ category }: ShopPageProps) {
@@ -30,6 +30,10 @@ export default function Shop({ category }: ShopPageProps) {
             title: 'Toy Shop',
             subtitle: '최고의 장난감을 만나보세요.',
         },
+        baby: {
+            title: 'Baby Shop',
+            subtitle: '우리 아가를 위한 최고의 육아용품을 만나보세요.',
+        },
     };
 
     const config = categoryTitles[category];
@@ -40,7 +44,7 @@ export default function Shop({ category }: ShopPageProps) {
         const fetchNews = async () => {
 
             try {
-                const response = await fetch('https://raw.githubusercontent.com/grapheople/jroom/refs/heads/main/json/tesla_products.json?v=' + get1HourVersion());
+                const response = await fetch('https://raw.githubusercontent.com/grapheople/jroom/refs/heads/main/json/' + category + '_shop.json?v=' + get1HourVersion());
                 const data = await response.json();
                 setProducts(data);
             } catch (error) {
