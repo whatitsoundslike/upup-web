@@ -3,7 +3,8 @@
 import { motion } from 'framer-motion';
 import { ShoppingBag, Tag, Heart } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { get1HourVersion } from '@/lib/utils';
 
 interface Product {
     id: string;
@@ -13,11 +14,7 @@ interface Product {
     thumbnail: string | null;
 }
 
-// 4시간 단위 버전 값 생성
-export function get4HourVersion(date = new Date()) {
-    const FOUR_HOURS = 4 * 60 * 60 * 1000;
-    return Math.floor(date.getTime() / FOUR_HOURS);
-}
+// 1시간 단위 버전 값 생성
 
 interface ShopPageProps {
     category: 'tesla' | 'toy';
@@ -43,7 +40,7 @@ export default function Shop({ category }: ShopPageProps) {
         const fetchNews = async () => {
 
             try {
-                const response = await fetch('https://cdn.jsdelivr.net/gh/grapheople/jroom@main/json/tesla_products.json?v=' + get4HourVersion());
+                const response = await fetch('https://raw.githubusercontent.com/grapheople/jroom/refs/heads/main/json/tesla_products.json?v=' + get1HourVersion());
                 const data = await response.json();
                 setProducts(data);
             } catch (error) {
@@ -99,7 +96,7 @@ export default function Shop({ category }: ShopPageProps) {
                                     {product.name}
                                 </h3>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xl font-black">{product.price}원</span>
+                                    <span className="text-xl font-black">{product.price}</span>
                                     <Tag className="h-4 w-4 text-tesla-red" />
                                 </div>
                             </div>

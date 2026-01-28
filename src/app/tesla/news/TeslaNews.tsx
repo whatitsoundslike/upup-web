@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Calendar, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { get1HourVersion } from '@/lib/utils';
 
 interface NewsItem {
     source: string;
@@ -14,10 +15,6 @@ interface NewsItem {
     published_at: string | null;
 }
 
-export function get4HourVersion(date = new Date()) {
-    const FOUR_HOURS = 4 * 60 * 60 * 1000;
-    return Math.floor(date.getTime() / FOUR_HOURS);
-}
 
 export default function TeslaNews() {
     const [newsData, setNewsData] = useState<NewsItem[]>([]);
@@ -26,7 +23,7 @@ export default function TeslaNews() {
     useEffect(() => {
         const fetchNews = async () => {
             try {
-                const response = await fetch('https://cdn.jsdelivr.net/gh/grapheople/jroom@main/json/tesla_news.json?v=' + get4HourVersion());
+                const response = await fetch('https://raw.githubusercontent.com/grapheople/jroom/refs/heads/main/json/tesla_news.json?v=' + get1HourVersion());
                 const data = await response.json();
                 setNewsData(data);
             } catch (error) {

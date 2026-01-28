@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Zap, ShieldCheck, Cpu, ArrowRight, DockIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { get1HourVersion } from '@/lib/utils';
 
 const features = [
     {
@@ -45,10 +46,6 @@ interface NewsItem {
     published_at: string | null;
 }
 
-export function get4HourVersion(date = new Date()) {
-    const FOUR_HOURS = 4 * 60 * 60 * 1000;
-    return Math.floor(date.getTime() / FOUR_HOURS);
-}
 
 export default function TeslaHome() {
     const [newsData, setNewsData] = useState<NewsItem[]>([]);
@@ -57,7 +54,7 @@ export default function TeslaHome() {
     useEffect(() => {
         const fetchNews = async () => {
             try {
-                const response = await fetch('https://cdn.jsdelivr.net/gh/grapheople/jroom@main/json/tesla_news.json?v=' + get4HourVersion());
+                const response = await fetch('https://raw.githubusercontent.com/grapheople/jroom/refs/heads/main/json/tesla_news.json?v=' + get1HourVersion());
                 const data = await response.json();
                 const shuffled = [...data].sort(() => Math.random() - 0.5);
                 setNewsData(shuffled.slice(0, 3));

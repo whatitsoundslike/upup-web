@@ -1,12 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { get1HourVersion } from '@/lib/utils';
 import { AlertTriangle, Search } from 'lucide-react';
 
-export function get4HourVersion(date = new Date()) {
-    const FOUR_HOURS = 4 * 60 * 60 * 1000;
-    return Math.floor(date.getTime() / FOUR_HOURS);
-}
 
 interface City {
     locationName1: string;
@@ -26,7 +23,7 @@ export default function TeslaSubsidy() {
     useEffect(() => {
         const fetchCities = async () => {
             try {
-                const response = await fetch('https://cdn.jsdelivr.net/gh/grapheople/jroom@main/json/electriccar_subside.json?v=1' + get4HourVersion());
+                const response = await fetch('https://raw.githubusercontent.com/grapheople/jroom/refs/heads/main/json/electriccar_subside.json?v=' + get1HourVersion());
                 const data = await response.json();
                 setCities(data);
             } catch (error) {
