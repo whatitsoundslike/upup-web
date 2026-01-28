@@ -1,60 +1,23 @@
-'use client';
+import type { Metadata } from 'next';
+import ToyHome from './ToyHome';
 
-import { motion } from 'framer-motion';
-import { Gamepad2, Star, TrendingUp } from 'lucide-react';
-import Link from 'next/link';
+export const metadata: Metadata = {
+    title: "토이 & 피규어 컬렉터들의 성지 - ZROOM Toy",
+    description: "레고, 피규어, RC카까지! 나만의 수집품을 자랑하고 정보를 나누는 즐거운 공간.",
+    keywords: "피규어수집, 레고마니아, 건담프라모델, RC카, 토이커뮤니티, 키덜트",
+    openGraph: {
+        title: "토이 & 피규어 컬렉터들의 성지 - ZROOM Toy",
+        description: "레고, 피규어, RC카까지! 나만의 수집품을 자랑하고 정보를 나누는 즐거운 공간.",
+        url: "https://zroom.io/toy",
+        siteName: "ZROOM",
+        locale: "ko_KR",
+        type: "website",
+    },
+    alternates: {
+        canonical: "https://zroom.io/toy",
+    },
+};
 
-export default function ToyPage() {
-    return (
-        <div className="max-w-7xl mx-auto px-4 py-16">
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center mb-16"
-            >
-                <h1 className="text-5xl font-black tracking-tighter mb-4 uppercase">
-                    <Gamepad2 className="inline-block h-12 w-12 mr-4 text-tesla-red" />
-                    Toy Store
-                </h1>
-                <p className="text-foreground/60 text-xl">
-                    최고의 장난감과 게임을 만나보세요
-                </p>
-            </motion.div>
-
-            <div className="grid md:grid-cols-3 gap-8">
-                <Link href="/toy/catalog">
-                    <motion.div
-                        whileHover={{ scale: 1.05 }}
-                        className="p-8 rounded-2xl border border-foreground/10 hover:border-tesla-red transition-all cursor-pointer"
-                    >
-                        <Gamepad2 className="h-12 w-12 mb-4 text-tesla-red" />
-                        <h2 className="text-2xl font-bold mb-2">카탈로그</h2>
-                        <p className="text-foreground/60">다양한 장난감을 둘러보세요</p>
-                    </motion.div>
-                </Link>
-
-                <Link href="/toy/reviews">
-                    <motion.div
-                        whileHover={{ scale: 1.05 }}
-                        className="p-8 rounded-2xl border border-foreground/10 hover:border-tesla-red transition-all cursor-pointer"
-                    >
-                        <Star className="h-12 w-12 mb-4 text-tesla-red" />
-                        <h2 className="text-2xl font-bold mb-2">리뷰</h2>
-                        <p className="text-foreground/60">사용자 리뷰를 확인하세요</p>
-                    </motion.div>
-                </Link>
-
-                <Link href="/toy/guide">
-                    <motion.div
-                        whileHover={{ scale: 1.05 }}
-                        className="p-8 rounded-2xl border border-foreground/10 hover:border-tesla-red transition-all cursor-pointer"
-                    >
-                        <TrendingUp className="h-12 w-12 mb-4 text-tesla-red" />
-                        <h2 className="text-2xl font-bold mb-2">가이드</h2>
-                        <p className="text-foreground/60">선택 가이드를 읽어보세요</p>
-                    </motion.div>
-                </Link>
-            </div>
-        </div>
-    );
+export default function Page() {
+    return <ToyHome />;
 }

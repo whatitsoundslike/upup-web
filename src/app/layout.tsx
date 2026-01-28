@@ -7,11 +7,11 @@ import Script from "next/script";
 
 
 export const metadata: Metadata = {
-  title: "ZROOM - 취미로 연결되는 우리들의 공간",
+  title: "ZROOM - 관심사로 연결되는 우리들의 공간",
   description: "아직도 혼자 해? ZROOM에서 너와 딱 맞는 취미 방에 입장해 봐. 지금 가장 핫한 취향들이 실시간으로 모이는 곳!",
   keywords: "ZROOM, 지룸, 취미SNS, 관심사채팅, 덕질공유, 크루모임, 실시간소통",
   openGraph: {
-    title: "ZROOM - 취미로 연결되는 우리들의 공간",
+    title: "ZROOM - 관심사로 연결되는 우리들의 공간",
     description: "아직도 혼자 해? ZROOM에서 너와 딱 맞는 취미 방에 입장해 봐. 지금 가장 핫한 취향들이 실시간으로 모이는 곳!",
     type: "website",
     locale: "ko_KR",
