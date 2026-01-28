@@ -14,7 +14,9 @@ interface City {
     locationName1: string;
     locationName2: string;
     totalCount: number;
-    applyCount: number;
+    recievedCount: number;
+    releaseCount: number;
+    remainCount: number;
     etc: string;
 }
 
@@ -25,7 +27,7 @@ export default function SubsidyPage() {
     useEffect(() => {
         const fetchCities = async () => {
             try {
-                const response = await fetch('https://cdn.jsdelivr.net/gh/grapheople/jroom@main/json/electriccar_subside.json?v=' + get4HourVersion());
+                const response = await fetch('https://cdn.jsdelivr.net/gh/grapheople/jroom@main/json/electriccar_subside.json?v=1' + get4HourVersion());
                 const data = await response.json();
                 setCities(data);
             } catch (error) {
@@ -62,7 +64,7 @@ export default function SubsidyPage() {
                 <p className="text-foreground/60 text-lg">2026년 지자체별 전기차 보조금 실시간 접수 현황 (전기승용 기준)</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Main Content */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* Search Input */}
@@ -83,6 +85,8 @@ export default function SubsidyPage() {
                                 <tr>
                                     <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-foreground/50">지역/도시</th>
                                     <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-foreground/50 text-right">전체 공고</th>
+                                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-foreground/50 text-right">접수대수</th>
+                                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-foreground/50 text-right">출고대수</th>
                                     <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-foreground/50 text-right">잔여대수</th>
                                     <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-foreground/50 text-right">잔여율</th>
                                     <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-foreground/50 text-right hidden lg:table-cell w-[300px]">비고</th>
@@ -90,8 +94,7 @@ export default function SubsidyPage() {
                             </thead>
                             <tbody className="divide-y divide-white/5">
                                 {filteredCities.map((city) => {
-                                    const remainCount = city.totalCount - city.applyCount;
-                                    const rate = Math.round((remainCount / city.totalCount) * 1000) / 10;
+                                    const rate = Math.round((city.remainCount / city.totalCount) * 1000) / 10;
                                     return (
                                         <tr key={`${city.locationName1}-${city.locationName2}`} className="hover:bg-white/5 transition-colors group">
                                             <td className="px-6 py-5">
@@ -105,9 +108,15 @@ export default function SubsidyPage() {
                                             <td className="px-6 py-5 font-mono text-sm text-foreground/60 text-right">
                                                 {city.totalCount.toLocaleString()}
                                             </td>
+                                            <td className="px-6 py-5 font-mono text-sm text-foreground/60 text-right">
+                                                {city.recievedCount.toLocaleString()}
+                                            </td>
+                                            <td className="px-6 py-5 font-mono text-sm text-foreground/60 text-right">
+                                                {city.releaseCount.toLocaleString()}
+                                            </td>
                                             <td className="px-6 py-5 text-right">
                                                 <span className={`font-bold text-sm ${rate < 10 ? 'text-tesla-red' : 'text-foreground'}`}>
-                                                    {remainCount.toLocaleString()}
+                                                    {city.remainCount.toLocaleString()}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-5 text-right">
@@ -141,42 +150,6 @@ export default function SubsidyPage() {
                                 )}
                             </tbody>
                         </table>
-                    </div>
-                </div>
-
-                {/* Sidebar Info (Keeping previous UI style for consistency) */}
-                <div className="space-y-6">
-                    <div className="glass p-8 rounded-3xl border border-white/10">
-                        <h3 className="text-xl font-bold mb-4 flex items-center gap-2 italic uppercase">Guidelines</h3>
-                        <ul className="space-y-4 text-sm text-foreground/50 font-medium">
-                            <li className="flex gap-3">
-                                <div className="mt-1 w-1 h-1 rounded-full bg-tesla-red border-[3px] border-tesla-red/20" />
-                                본 현황은 무공해차 통합누리집 데이터를 바탕으로 실시간 업데이트됩니다.
-                            </li>
-                            <li className="flex gap-3">
-                                <div className="mt-1 w-1 h-1 rounded-full bg-tesla-red border-[3px] border-tesla-red/20" />
-                                지자체별 상세 공고 내용에 따라 실제 접수 가능 여부가 다를 수 있습니다.
-                            </li>
-                            <li className="flex gap-3">
-                                <div className="mt-1 w-1 h-1 rounded-full bg-tesla-red border-[3px] border-tesla-red/20" />
-                                보조금 소진 임박 지역은 서둘러 신청하시기 바랍니다.
-                            </li>
-                        </ul>
-                    </div>
-
-                    <div className="relative overflow-hidden rounded-3xl p-8 bg-zinc-900 border border-white/5 group">
-                        <div className="relative z-10">
-                            <h3 className="text-2xl font-black mb-2 italic text-white uppercase tracking-tighter">Tesla Advisor</h3>
-                            <p className="text-zinc-500 text-xs mb-8 leading-relaxed font-bold uppercase tracking-widest">
-                                Expert assistance with subsidies and purchase procedures.
-                            </p>
-                            <button className="w-full bg-white text-black py-4 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-tesla-red hover:text-white transition-all active:scale-[0.98]">
-                                Contact Advisor
-                            </button>
-                        </div>
-                        <div className="absolute -bottom-10 -right-10 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Coins className="w-48 h-48 text-white" />
-                        </div>
                     </div>
                 </div>
             </div>
