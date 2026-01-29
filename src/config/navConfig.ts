@@ -28,10 +28,10 @@ export interface NavConfig {
 export const navConfigs: NavConfig = {
     tesla: [
         { name: '뉴스', href: '/tesla/news', icon: Newspaper },
+        { name: 'Shop', href: '/tesla/shop', icon: ShoppingBag },
+        { name: '팁', href: '/tesla/tips', icon: Warehouse },
         { name: '슈퍼차저', href: '/tesla/charger', icon: Zap },
         { name: '보조금 현황', href: '/tesla/subsidy', icon: CircleDollarSign },
-        { name: 'Shop', href: '/tesla/shop', icon: ShoppingBag },
-        { name: 'Room', href: '/tesla/room', icon: Warehouse },
     ],
     toy: [
         { name: '홈', href: '/toy', icon: Home },

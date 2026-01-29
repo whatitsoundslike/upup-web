@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Zap, ShieldCheck, Cpu, ArrowRight, DockIcon, ShoppingBag, Calculator, CircleDollarSign, Newspaper, Warehouse } from 'lucide-react';
+import { Zap, ShieldCheck, Cpu, ArrowRight, DockIcon, ShoppingBag, Calculator, CircleDollarSign, Newspaper, Warehouse, Lightbulb } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { get1HourVersion } from '@/lib/utils';
@@ -9,10 +9,24 @@ import { get1HourVersion } from '@/lib/utils';
 const features = [
     {
         title: '뉴스',
-        desc: '테슬라 뉴스를 확인하세요.',
+        desc: '테슬라 및 전기차 시장 뉴스를 확인하세요.',
         icon: Newspaper,
         href: '/tesla/news',
         color: 'text-purple-500'
+    },
+    {
+        title: 'Shop',
+        desc: '당신의 테슬라를 위한 추천 아이템.',
+        icon: ShoppingBag,
+        href: '/tesla/shop',
+        color: 'text-tesla-red'
+    },
+    {
+        title: '팁게시판',
+        desc: '테슬라 오너들을 위한 유용한 꿀팁과 가이드를 확인하세요.',
+        icon: Lightbulb,
+        href: '/tesla/tips',
+        color: 'text-yellow-500'
     },
     {
         title: '슈퍼차저',
@@ -26,22 +40,15 @@ const features = [
         desc: '2026년 지자체별 전기차 보조금 잔여 현황을 확인하세요.',
         icon: CircleDollarSign,
         href: '/tesla/subsidy',
-        color: 'text-yellow-500'
+        color: 'text-amber-500'
     },
-    {
-        title: '악세사리 Shop',
-        desc: '당신의 테슬라를 위한 머스트-해브 아이템.',
-        icon: ShoppingBag,
-        href: '/tesla/shop',
-        color: 'text-tesla-red'
-    },
-    {
-        title: '룸',
-        desc: '테슬라 오너들의 차에는 무엇이 있을까요? 사용자들의 꿀팁 확인하기.',
-        icon: Warehouse,
-        href: '/tesla/room',
-        color: 'text-emerald-500'
-    },
+    // {
+    //     title: '룸',
+    //     desc: '테슬라 오너들의 차에는 무엇이 있을까요? 사용자들의 꿀팁 확인하기.',
+    //     icon: Warehouse,
+    //     href: '/tesla/room',
+    //     color: 'text-emerald-500'
+    // },
 ];
 
 interface NewsItem {
