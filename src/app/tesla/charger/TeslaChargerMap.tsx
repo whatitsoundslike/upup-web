@@ -6,7 +6,7 @@ import { APIProvider, Map, AdvancedMarker, InfoWindow, useMap } from '@vis.gl/re
 // 한국 내 테슬라 슈퍼차저 위치 데이터 (테슬라 공식 웹사이트 기준)
 const SUPERCHARGERS = [
     // 서울
-    { id: 1, name: "서울 대치 - KT&G", position: { lat: 37.4979, lng: 127.0621 }, address: "서울특별시 강남구 영동대로 416", stalls: 8 },
+    { id: 1, name: "서울 대치 - KT&G", position: { lat: 37.4979, lng: 127.0621 }, address: "서울특별시 강남구 영동대로 416", stalls: 9 },
     { id: 2, name: "서울 강남 - 파르나스", position: { lat: 37.5081, lng: 127.0594 }, address: "서울특별시 강남구 테헤란로 521", stalls: 12 },
     { id: 3, name: "서울 압구정 - 안다즈", position: { lat: 37.5271, lng: 127.0380 }, address: "서울특별시 강남구 논현로 854", stalls: 10 },
     { id: 4, name: "서울 강남 - 센터필드", position: { lat: 37.5048, lng: 127.0396 }, address: "서울특별시 강남구 테헤란로 231", stalls: 8 },
@@ -318,9 +318,9 @@ export default function TeslaChargerMap() {
 
     return (
         <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
-            <div className="relative w-full h-screen flex flex-col md:flex-row">
-                {/* Mobile Header with Search and Toggle */}
-                <div className="md:hidden w-full bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 z-20">
+            <div className="relative w-full h-screen md:flex md:flex-row overflow-hidden">
+                {/* Mobile Header with Search and Toggle - Fixed */}
+                <div className="md:hidden fixed top-0 left-0 right-0 w-full bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 z-50">
                     <div className="flex items-center gap-2 mb-3">
                         <button
                             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -339,6 +339,7 @@ export default function TeslaChargerMap() {
                             placeholder="충전소 이름 또는 주소 검색..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
+                            onFocus={() => setIsSidebarOpen(true)}
                             className="w-full px-4 py-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
                         />
                         <svg
@@ -358,15 +359,15 @@ export default function TeslaChargerMap() {
                         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
                         md:translate-x-0
                         fixed md:relative
-                        top-0 left-0
+                        top-0 md:top-0 left-0
                         w-80 md:w-96
-                        h-full
+                        h-full md:h-full
                         bg-white dark:bg-gray-900
                         border-r border-gray-200 dark:border-gray-700
                         overflow-y-auto
                         transition-transform duration-300 ease-in-out
                         z-30
-                        pt-20 md:pt-0
+                        pt-[120px] md:pt-0
                     `}
                 >
                     {/* Desktop Search */}
@@ -432,7 +433,7 @@ export default function TeslaChargerMap() {
                 )}
 
                 {/* Map */}
-                <div className="flex-1 relative">
+                <div className="flex-1 relative pt-[60px] md:pt-0 h-screen md:h-full">
                     <Map
                         defaultCenter={initialCenter}
                         defaultZoom={initialZoom}
@@ -440,6 +441,7 @@ export default function TeslaChargerMap() {
                         disableDefaultUI={false}
                         mapTypeControl={false}
                         mapId="tesla-supercharger-map"
+                        className="w-full h-full"
                     >
                         <MapController center={targetCenter} zoom={targetZoom} />
 
@@ -490,15 +492,13 @@ export default function TeslaChargerMap() {
                                 onClick={() => handleChargerClick(charger)}
                             >
                                 <div className="relative cursor-pointer transform hover:scale-110 transition-transform">
-                                    <svg
-                                        width="32"
-                                        height="32"
-                                        viewBox="0 0 24 24"
-                                        fill="#DC2626"
-                                        className="drop-shadow-lg"
-                                    >
-                                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-                                    </svg>
+                                    <img
+                                        src="/icon/ic_tesla_super_charger.png"
+                                        alt="Tesla Supercharger"
+                                        width={35}
+                                        height={35}
+                                        className="drop-shadow-lg rounded-full"
+                                    />
                                 </div>
                             </AdvancedMarker>
                         ))}
@@ -549,7 +549,6 @@ export default function TeslaChargerMap() {
                                                     d="M13 10V3L4 14h7v7l9-11h-7z"
                                                 />
                                             </svg>
-                                            <span className="font-medium">충전기 {selectedCharger.stalls}개</span>
                                         </div>
                                         {selectedCharger.distance && (
                                             <span className="text-red-600 font-bold">

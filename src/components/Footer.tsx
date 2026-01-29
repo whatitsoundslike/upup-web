@@ -10,6 +10,11 @@ export function Footer() {
     const pathname = usePathname();
     const firstSegment = pathname.split('/')[1] || '';
 
+    // Hide footer on charger page
+    if (pathname === '/tesla/charger') {
+        return null;
+    }
+
     const logoSrc: string = navRoomLogo[firstSegment] || '/room-icon/logo.png';
     const navItems: NavItem[] = navConfigs[firstSegment] || defaultNavItems;
 
