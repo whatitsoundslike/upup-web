@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { APIProvider, Map, AdvancedMarker, InfoWindow } from '@vis.gl/react-google-maps';
+import { APIProvider, Map, AdvancedMarker, InfoWindow, useMap } from '@vis.gl/react-google-maps';
 
 // 한국 내 테슬라 슈퍼차저 위치 데이터 (테슬라 공식 웹사이트 기준)
 const SUPERCHARGERS = [
@@ -204,13 +204,30 @@ interface SuperchargerLocation {
     distance?: number;
 }
 
+// MapController component to handle programmatic map movements
+function MapController({ center, zoom }: { center: { lat: number; lng: number } | null; zoom: number | null }) {
+    const map = useMap();
+
+    useEffect(() => {
+        if (!map || !center) return;
+        map.panTo(center);
+        if (zoom) {
+            map.setZoom(zoom);
+        }
+    }, [map, center, zoom]);
+
+    return null;
+}
+
 export default function TeslaChargerMap() {
     const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
     const [selectedCharger, setSelectedCharger] = useState<SuperchargerLocation | null>(null);
     const [sortedChargers, setSortedChargers] = useState<SuperchargerLocation[]>(SUPERCHARGERS);
     const [filteredChargers, setFilteredChargers] = useState<SuperchargerLocation[]>(SUPERCHARGERS);
-    const [mapCenter, setMapCenter] = useState({ lat: 37.5665, lng: 126.9780 }); // 서울 기본 위치
-    const [mapZoom, setMapZoom] = useState(11);
+    const [initialCenter] = useState({ lat: 37.5665, lng: 126.9780 }); // 서울 기본 위치
+    const [initialZoom] = useState(11);
+    const [targetCenter, setTargetCenter] = useState<{ lat: number; lng: number } | null>(null);
+    const [targetZoom, setTargetZoom] = useState<number | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -250,8 +267,8 @@ export default function TeslaChargerMap() {
                 (position) => {
                     const { latitude, longitude } = position.coords;
                     setUserLocation({ lat: latitude, lng: longitude });
-                    setMapCenter({ lat: latitude, lng: longitude });
-                    setMapZoom(12);
+                    setTargetCenter({ lat: latitude, lng: longitude });
+                    setTargetZoom(12);
 
                     // 거리 계산 및 정렬
                     const chargersWithDistance = SUPERCHARGERS.map(charger => ({
@@ -284,11 +301,18 @@ export default function TeslaChargerMap() {
 
     const handleChargerClick = (charger: SuperchargerLocation) => {
         setSelectedCharger(charger);
-        setMapCenter(charger.position);
-        setMapZoom(15);
+        setTargetCenter(charger.position);
+        setTargetZoom(15);
         // 모바일에서는 사이드바 닫기
         if (window.innerWidth < 768) {
             setIsSidebarOpen(false);
+        }
+    };
+
+    const handleReturnToLocation = () => {
+        if (userLocation) {
+            setTargetCenter(userLocation);
+            setTargetZoom(12);
         }
     };
 
@@ -410,14 +434,44 @@ export default function TeslaChargerMap() {
                 {/* Map */}
                 <div className="flex-1 relative">
                     <Map
-                        defaultCenter={mapCenter}
-                        center={mapCenter}
-                        defaultZoom={mapZoom}
-                        zoom={mapZoom}
+                        defaultCenter={initialCenter}
+                        defaultZoom={initialZoom}
                         gestureHandling={'greedy'}
                         disableDefaultUI={false}
+                        mapTypeControl={false}
                         mapId="tesla-supercharger-map"
                     >
+                        <MapController center={targetCenter} zoom={targetZoom} />
+
+                        {/* 현재 위치로 돌아가기 버튼 */}
+                        {userLocation && (
+                            <button
+                                onClick={handleReturnToLocation}
+                                className="absolute bottom-24 right-4 bg-white dark:bg-gray-800 p-3 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 border-2 border-gray-200 dark:border-gray-700 z-10"
+                                aria-label="현재 위치로 돌아가기"
+                                title="현재 위치로 돌아가기"
+                            >
+                                <svg
+                                    className="w-6 h-6 text-blue-600 dark:text-blue-400"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                                    />
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                                    />
+                                </svg>
+                            </button>
+                        )}
                         {/* 사용자 위치 마커 */}
                         {userLocation && (
                             <AdvancedMarker position={userLocation}>
@@ -449,18 +503,21 @@ export default function TeslaChargerMap() {
                             </AdvancedMarker>
                         ))}
 
-                        {/* 선택된 충전소 정보 */}
+                        {/* 선택된 충전소 정보 - 커스텀 팝업 */}
                         {selectedCharger && (
-                            <InfoWindow
+                            <AdvancedMarker
                                 position={selectedCharger.position}
-                                onCloseClick={() => setSelectedCharger(null)}
+                                zIndex={1000}
                             >
-                                <div className="p-2">
-                                    <h3 className="color-black-600 font-bold text-lg mb-1">{selectedCharger.name}</h3>
-                                    <p className="text-sm text-gray-800 mb-2">{selectedCharger.address}</p>
-                                    <div className="flex items-center text-sm text-gray-700">
+                                <div className="relative bg-white rounded-lg shadow-xl border-2 border-gray-200 p-4 min-w-[280px] max-w-[320px]">
+                                    {/* 닫기 버튼 */}
+                                    <button
+                                        onClick={() => setSelectedCharger(null)}
+                                        className="absolute top-2 right-2 p-1.5 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+                                        aria-label="닫기"
+                                    >
                                         <svg
-                                            className="w-4 h-4 mr-1"
+                                            className="w-4 h-4 text-gray-700"
                                             fill="none"
                                             stroke="currentColor"
                                             viewBox="0 0 24 24"
@@ -468,19 +525,43 @@ export default function TeslaChargerMap() {
                                             <path
                                                 strokeLinecap="round"
                                                 strokeLinejoin="round"
-                                                strokeWidth={2}
-                                                d="M13 10V3L4 14h7v7l9-11h-7z"
+                                                strokeWidth={2.5}
+                                                d="M6 18L18 6M6 6l12 12"
                                             />
                                         </svg>
-                                        <span>충전기 {selectedCharger.stalls}개</span>
+                                    </button>
+
+                                    {/* 내용 */}
+                                    <h3 className="text-gray-900 font-bold text-lg mb-2 pr-8">{selectedCharger.name}</h3>
+                                    <p className="text-sm text-gray-700 mb-3">{selectedCharger.address}</p>
+                                    <div className="flex items-center justify-between text-sm">
+                                        <div className="flex items-center text-gray-900">
+                                            <svg
+                                                className="w-4 h-4 mr-1.5 text-red-600"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                                                />
+                                            </svg>
+                                            <span className="font-medium">충전기 {selectedCharger.stalls}개</span>
+                                        </div>
                                         {selectedCharger.distance && (
-                                            <span className="ml-3 text-red-600 font-medium">
+                                            <span className="text-red-600 font-bold">
                                                 {selectedCharger.distance.toFixed(1)}km
                                             </span>
                                         )}
                                     </div>
+
+                                    {/* 하단 화살표 */}
+                                    <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-white border-r-2 border-b-2 border-gray-200 rotate-45"></div>
                                 </div>
-                            </InfoWindow>
+                            </AdvancedMarker>
                         )}
                     </Map>
                 </div>
