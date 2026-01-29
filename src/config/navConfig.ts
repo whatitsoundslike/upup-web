@@ -9,7 +9,10 @@ import {
     Star,
     BookOpen,
     Baby,
-    type LucideIcon
+    type LucideIcon,
+    Zap,
+    CircleDollarSign,
+    Warehouse
 } from 'lucide-react';
 
 export interface NavItem {
@@ -25,9 +28,10 @@ export interface NavConfig {
 export const navConfigs: NavConfig = {
     tesla: [
         { name: '뉴스', href: '/tesla/news', icon: Newspaper },
-        { name: '보조금 현황', href: '/tesla/subsidy', icon: Coins },
+        { name: '슈퍼차저', href: '/tesla/charger', icon: Zap },
+        { name: '보조금 현황', href: '/tesla/subsidy', icon: CircleDollarSign },
         { name: 'Shop', href: '/tesla/shop', icon: ShoppingBag },
-        { name: 'Room', href: '/tesla/room', icon: Handshake },
+        { name: 'Room', href: '/tesla/room', icon: Warehouse },
     ],
     toy: [
         { name: '홈', href: '/toy', icon: Home },
