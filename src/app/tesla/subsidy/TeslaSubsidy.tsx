@@ -72,16 +72,16 @@ export default function TeslaSubsidy() {
                     </div>
 
                     <div className="glass overflow-hidden rounded-3xl border border-white/10 shadow-2xl overflow-x-auto">
-                        <table className="w-full text-left min-w-[800px]">
+                        <table className="w-full text-left min-w-[320px] md:min-w-[800px]">
                             <thead className="bg-foreground/5">
                                 <tr>
-                                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-foreground/50 text-center w-[100px]">지역/도시</th>
-                                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-foreground/50 text-right hidden lg:table-cell">전체 공고</th>
-                                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-foreground/50 text-right">접수대수</th>
-                                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-foreground/50 text-right">출고대수</th>
-                                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-foreground/50 text-right">잔여대수</th>
-                                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-foreground/50 text-right hidden lg:table-cell">잔여율</th>
-                                    <th className="px-4 py-4 text-xs font-bold uppercase tracking-wider text-foreground/50 text-right hidden lg:table-cell">비고</th>
+                                    <th className="px-1 py-2.5 text-[11px] md:text-xs font-bold uppercase tracking-tight text-foreground/50 text-center">지역</th>
+                                    <th className="px-1 py-2.5 text-[11px] md:text-xs font-bold uppercase tracking-tight text-foreground/50 text-right hidden md:table-cell">전체</th>
+                                    <th className="px-1 py-2.5 text-[11px] md:text-xs font-bold uppercase tracking-tight text-foreground/50 text-right">접수</th>
+                                    <th className="px-1 py-2.5 text-[11px] md:text-xs font-bold uppercase tracking-tight text-foreground/50 text-right">출고</th>
+                                    <th className="px-1 py-2.5 text-[11px] md:text-xs font-bold uppercase tracking-tight text-foreground/50 text-right">잔여</th>
+                                    <th className="px-1 py-2.5 text-[11px] md:text-xs font-bold uppercase tracking-tight text-foreground/50 text-right hidden md:table-cell">잔여율</th>
+                                    <th className="px-1 py-2.5 text-[11px] md:text-xs font-bold uppercase tracking-tight text-foreground/50 text-right hidden md:table-cell">비고</th>
                                 </tr>
                             </thead>
                             <tbody className="">
@@ -89,23 +89,23 @@ export default function TeslaSubsidy() {
                                     const rate = Math.round((city.remainCount / city.totalCount) * 1000) / 10;
                                     return (
                                         <tr key={`${city.locationName1}-${city.locationName2}`} className="">
-                                            <td className="px-2 py-5 font-medium text-center w-[100px]">
+                                            <td className="px-0.5 py-2.5 md:px-2 md:py-5 font-medium text-center text-xs md:text-sm w-[50px] md:w-auto">
                                                 {city.locationName1}
                                                 {!['서울', '부산', '대구', '인천', '광주', '대전', '울산', '세종', '공단', '제주'].includes(city.locationName1) && ` ${city.locationName2}`}
                                             </td>
-                                            <td className="px-6 py-5 font-mono text-sm text-foreground/60 text-right hidden lg:table-cell">
+                                            <td className="px-0.5 py-2.5 md:px-6 md:py-5 font-mono text-xs md:text-sm text-foreground/60 text-right hidden md:table-cell w-[50px] md:w-auto">
                                                 {city.totalCount.toLocaleString()}
                                             </td>
-                                            <td className="px-6 py-5 font-mono text-sm text-foreground/60 text-right">
+                                            <td className="px-0.5 py-2.5 md:px-6 md:py-5 font-mono text-xs md:text-sm text-foreground/60 text-right w-[50px] md:w-auto">
                                                 {city.recievedCount.toLocaleString()}
                                             </td>
-                                            <td className="px-6 py-5 font-mono text-sm text-foreground/60 text-right">
+                                            <td className="px-0.5 py-2.5 md:px-6 md:py-5 font-mono text-xs md:text-sm text-foreground/60 text-right w-[50px] md:w-auto">
                                                 {city.releaseCount.toLocaleString()}
                                             </td>
-                                            <td className="px-6 py-5 text-right">
+                                            <td className="px-0.5 py-2.5 md:px-6 md:py-5 font-mono text-xs md:text-sm text-right w-[50px] md:w-auto">
                                                 {city.remainCount.toLocaleString()}
                                             </td>
-                                            <td className="px-6 py-5 text-right hidden lg:table-cell">
+                                            <td className="px-0.5 py-2.5 md:px-6 md:py-5 text-right hidden md:table-cell">
                                                 {city.totalCount > 0 ? (
                                                     <span className="text-foreground/40">
                                                         {rate}%
@@ -114,7 +114,7 @@ export default function TeslaSubsidy() {
                                                     <span className="text-foreground/20">-</span>
                                                 )}
                                             </td>
-                                            <td className="px-6 py-5 text-right hidden lg:table-cell max-w-[300px] break-words">
+                                            <td className="px-0.5 py-2.5 md:px-6 md:py-5 text-right hidden md:table-cell max-w-[300px] break-words">
                                                 <span className="text-xs text-foreground/50 font-medium whitespace-pre-line">
                                                     {city.etc || '-'}
                                                 </span>
