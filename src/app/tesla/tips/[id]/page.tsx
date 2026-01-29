@@ -86,40 +86,40 @@ export default function TipDetailPage({ params }: { params: Promise<{ id: string
     }
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950">
             {/* Hero Section with Image */}
-            <div className="relative h-[60vh] overflow-hidden">
+            <div className="relative h-[40vh] overflow-hidden">
                 <img
                     src={tip.thumbnail}
                     alt={tip.title}
                     className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
             </div>
 
             {/* Content */}
-            <div className="relative -mt-32 max-w-4xl mx-auto px-4 pb-16">
+            <div className="relative max-w-4xl mx-auto px-4 mt-[-40px] pb-16">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="glass rounded-3xl p-8 md:p-12 shadow-2xl"
+                    className="bg-white dark:bg-zinc-900 rounded-3xl p-8 md:p-12 shadow-2xl border border-zinc-200 dark:border-zinc-800"
                 >
                     {/* Back Button */}
                     <Link
                         href="/tesla/tips"
-                        className="inline-flex items-center gap-2 text-sm text-foreground/60 hover:text-tesla-red transition-colors mb-6 group"
+                        className="inline-flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400 hover:text-tesla-red transition-colors mb-6 group"
                     >
                         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                         목록으로 돌아가기
                     </Link>
 
                     {/* Title */}
-                    <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-4">
+                    <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-4 text-zinc-900 dark:text-white">
                         {tip.title}
                     </h1>
 
                     {/* Meta Info */}
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-foreground/60 mb-8 pb-8 border-b border-foreground/10">
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400 mb-8 pb-8 border-b border-zinc-200 dark:border-zinc-700">
                         <button
                             onClick={() => {
                                 if (navigator.share) {
@@ -138,9 +138,9 @@ export default function TipDetailPage({ params }: { params: Promise<{ id: string
                     </div>
 
                     {/* Content */}
-                    <div className="prose prose-lg prose-invert max-w-none">
+                    <div className="prose prose-lg max-w-none">
                         <div
-                            className="whitespace-pre-line text-foreground/80 leading-relaxed"
+                            className="whitespace-pre-line text-zinc-700 dark:text-zinc-300 leading-relaxed"
                             dangerouslySetInnerHTML={{ __html: tip.content.replace(/\n## /g, '\n<h2 class="text-2xl font-bold mt-8 mb-4">').replace(/\n/g, '<br />') }}
                         />
                     </div>
@@ -153,7 +153,7 @@ export default function TipDetailPage({ params }: { params: Promise<{ id: string
                     transition={{ delay: 0.2 }}
                     className="mt-12"
                 >
-                    <h2 className="text-2xl font-bold mb-6">다른 팁</h2>
+                    <h2 className="text-2xl font-bold mb-6 text-zinc-900 dark:text-white">다른 팁</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {dummyTips
                             .filter((t) => t.id !== tip.id)
@@ -162,7 +162,7 @@ export default function TipDetailPage({ params }: { params: Promise<{ id: string
                                 <Link
                                     key={relatedTip.id}
                                     href={`/tesla/tips/${relatedTip.id}`}
-                                    className="glass rounded-xl overflow-hidden group hover:shadow-xl transition-all"
+                                    className="bg-white dark:bg-zinc-900 rounded-xl overflow-hidden group hover:shadow-xl transition-all border border-zinc-200 dark:border-zinc-800"
                                 >
                                     <div className="relative h-40 overflow-hidden">
                                         <img
@@ -172,10 +172,10 @@ export default function TipDetailPage({ params }: { params: Promise<{ id: string
                                         />
                                     </div>
                                     <div className="p-4">
-                                        <h3 className="font-bold mb-2 group-hover:text-tesla-red transition-colors line-clamp-2">
+                                        <h3 className="font-bold mb-2 text-zinc-900 dark:text-white group-hover:text-tesla-red transition-colors line-clamp-2">
                                             {relatedTip.title}
                                         </h3>
-                                        <p className="text-sm text-foreground/60 line-clamp-2">
+                                        <p className="text-sm text-zinc-600 dark:text-zinc-400 line-clamp-2">
                                             {relatedTip.summary}
                                         </p>
                                     </div>
