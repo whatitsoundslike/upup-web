@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ShoppingBag, Tag, Heart } from 'lucide-react';
+import { ShoppingBag, Tag, Heart, Search, X } from 'lucide-react';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { get1HourVersion } from '@/lib/utils';
@@ -38,7 +38,12 @@ export default function Shop({ category }: ShopPageProps) {
 
     const config = categoryTitles[category];
     const [products, setProducts] = useState<Product[]>([]);
+    const [searchQuery, setSearchQuery] = useState('');
     const [isLoading, setIsLoading] = useState(true);
+
+    const filteredProducts = searchQuery
+        ? products.filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+        : products;
     useEffect(() => {
         const fetchNews = async () => {
             try {
@@ -68,15 +73,33 @@ export default function Shop({ category }: ShopPageProps) {
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-16">
-            <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-12">
+            <div className="flex flex-col md:flex-row justify-between gap-6 mb-6">
                 <div>
                     <h1 className="text-4xl font-black tracking-tighter mb-4 uppercase">{config.title}</h1>
                     <p className="text-foreground/60 text-lg">{config.subtitle}</p>
                 </div>
             </div>
+            <div className="relative w-full md:w-105 mb-6">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
+                <input
+                    type="text"
+                    placeholder="제품명 검색"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-9 py-2.5 rounded-xl border border-foreground/10 bg-foreground/5 text-sm focus:outline-none focus:border-tesla-red transition-colors"
+                />
+                {searchQuery && (
+                    <button
+                        onClick={() => setSearchQuery('')}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-foreground transition-colors"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
+                )}
+            </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-8">
-                {products.map((product, idx) => (
+                {filteredProducts.map((product, idx) => (
                     <Link href={product.link} target="_blank" key={product.id}>
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
