@@ -37,14 +37,12 @@ export default function Shop({ category }: ShopPageProps) {
     };
 
     const config = categoryTitles[category];
-
     const [products, setProducts] = useState<Product[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     useEffect(() => {
         const fetchNews = async () => {
-
             try {
-                const response = await fetch('https://raw.githubusercontent.com/grapheople/jroom/refs/heads/main/json/' + category + '_shop.json?v=' + get1HourVersion());
+                const response = await fetch('https://raw.githubusercontent.com/whatitsoundslike/upup-admin/refs/heads/main/data/' + category + '_shop.json?v=' + get1HourVersion());
                 const data = await response.json();
                 setProducts(data);
             } catch (error) {
@@ -56,6 +54,17 @@ export default function Shop({ category }: ShopPageProps) {
 
         fetchNews();
     }, []);
+
+    if (isLoading) {
+        return (
+            <div className="max-w-7xl mx-auto px-4 py-16 flex items-center justify-center min-h-[60vh]">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 border-4 border-tesla-red/20 border-t-tesla-red rounded-full animate-spin" />
+                    <p className="text-foreground/60 font-medium">상품을 불러오는 중입니다...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-16">
@@ -109,12 +118,12 @@ export default function Shop({ category }: ShopPageProps) {
                 ))}
             </div>
             <a className="flex mt-12 justify-center"
-                href="https://link.coupang.com/a/dAkm6t"
+                href="https://link.coupang.com/a/dCQO0Y"
                 target="_blank"
                 referrerPolicy="unsafe-url"
             >
                 <img
-                    src="https://ads-partners.coupang.com/banners/960739?subId=zroomzroom&traceId=V0-301-5079b8362432a905-I960739&w=728&h=90"
+                    src="https://ads-partners.coupang.com/banners/961892?subId=&traceId=V0-301-5079b8362432a905-I961892&w=728&h=90"
                     alt=""
                 />
             </a>

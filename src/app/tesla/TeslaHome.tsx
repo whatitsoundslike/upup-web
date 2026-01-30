@@ -30,13 +30,13 @@ const features = [
     },
     {
         title: '슈퍼차저',
-        desc: '테슬라 슈퍼차저를 확인하세요.',
+        desc: '테슬라 슈퍼차저 위치를 확인하세요.',
         icon: Zap,
         href: '/tesla/charger',
         color: 'text-blue-500'
     },
     {
-        title: '보조금 현황',
+        title: '보조금현황',
         desc: '2026년 지자체별 전기차 보조금 잔여 현황을 확인하세요.',
         icon: CircleDollarSign,
         href: '/tesla/subsidy',
@@ -68,7 +68,7 @@ export default function TeslaHome() {
     useEffect(() => {
         const fetchNews = async () => {
             try {
-                const response = await fetch('https://raw.githubusercontent.com/grapheople/jroom/refs/heads/main/json/tesla_news.json?v=' + get1HourVersion());
+                const response = await fetch('https://raw.githubusercontent.com/whatitsoundslike/upup-admin/refs/heads/main/data/tesla_news.json?v=' + get1HourVersion());
                 const data = await response.json();
                 const shuffled = [...data].sort(() => Math.random() - 0.5);
                 setNewsData(shuffled.slice(0, 3));
@@ -86,7 +86,7 @@ export default function TeslaHome() {
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-gradient-to-b -z-10" />
             <section className="py-5 bg-foreground/5">
                 <div className="max-w-7xl mx-auto px-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                         {features.map((feature, idx) => (
                             <motion.div
                                 key={feature.title}
@@ -94,12 +94,9 @@ export default function TeslaHome() {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: idx * 0.1 }}
                                 whileHover={{ y: -5 }}
-                                className="glass p-8 rounded-2xl group transition-all shadow-lg"
+                                className="glass p-4 rounded-2xl group transition-all shadow-lg"
                             >
-                                <div className={`p-3 rounded-xl bg-white/10 w-fit mb-6 ${feature.color}`}>
-                                    <feature.icon className="h-6 w-6" />
-                                </div>
-                                <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
+                                <h3 className="text-xl font-bold mb-3 flex items-center gap-2"><feature.icon className={`h-6 w-6 ${feature.color}`} />{feature.title}</h3>
                                 <p className="text-sm text-foreground/60 leading-relaxed mb-6">
                                     {feature.desc}
                                 </p>

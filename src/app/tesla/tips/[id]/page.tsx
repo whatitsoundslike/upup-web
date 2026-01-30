@@ -1,85 +1,30 @@
 'use client';
 
-import { use } from 'react';
+import { use, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Calendar, Clock, Share2 } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-
-interface TipItem {
-    id: string;
-    title: string;
-    thumbnail: string;
-    summary: string;
-    content: string;
-}
-
-const dummyTips: TipItem[] = [
-    {
-        id: "1",
-        title: "겨울철 주행거리 최적화 팁",
-        thumbnail: "https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&q=80&w=800",
-        summary: "겨울철에는 프리컨디셔닝을 적극 활용하세요. 충전 중 미리 배터리 온도를 높여두면 주행 거리를 보존할 수 있습니다.",
-        content: `
-겨울철에는 배터리 성능이 저하되어 주행거리가 줄어들 수 있습니다. 하지만 몇 가지 팁을 활용하면 이를 최소화할 수 있습니다.
-
-## 프리컨디셔닝 활용
-충전 중 미리 배터리 온도를 높여두면 주행 거리를 보존할 수 있습니다. 출발 전 Tesla 앱에서 프리컨디셔닝을 예약하세요.
-
-## 회생 제동 활용
-겨울철에는 회생 제동이 제한될 수 있습니다. 부드러운 운전으로 브레이크 사용을 최소화하세요.
-
-## 히팅 시스템 관리
-시트 히터를 히터보다 우선적으로 사용하면 에너지를 절약할 수 있습니다.
-        `
-    },
-    {
-        id: "2",
-        title: "오토파일럿 안전한 사용법",
-        thumbnail: "https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&q=80&w=800",
-        summary: "오토파일럿 사용 시 항상 핸들을 잡고 전방을 주시해야 합니다. 악천후 시에는 사용을 자제하는 것이 좋습니다.",
-        content: `
-오토파일럿은 편리한 기능이지만, 안전하게 사용하는 것이 중요합니다.
-
-## 항상 집중력 유지
-오토파일럿은 운전 보조 기능입니다. 항상 핸들을 잡고 전방을 주시해야 합니다.
-
-## 악천후 시 주의
-비, 눈, 안개 등 악천후 시에는 오토파일럿의 성능이 제한될 수 있습니다. 이런 경우 사용을 자제하는 것이 좋습니다.
-
-## 정기적인 카메라 청소
-오토파일럿은 카메라에 의존합니다. 정기적으로 카메라를 깨끗하게 유지하세요.
-
-## 소프트웨어 업데이트
-Tesla는 지속적으로 오토파일럿 기능을 개선하고 있습니다. 항상 최신 소프트웨어를 유지하세요.
-        `,
-    },
-    {
-        id: "3",
-        title: "슈퍼차저 이용 에티켓",
-        thumbnail: "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?auto=format&fit=crop&q=80&w=800",
-        summary: "충전이 완료되면 즉시 이동하여 다음 차량을 배려해주세요. 점거 수수료가 발생할 수 있습니다.",
-        content: `
-슈퍼차저를 이용할 때는 다른 Tesla 오너들을 배려하는 것이 중요합니다.
-
-## 충전 완료 후 즉시 이동
-충전이 완료되면 가능한 한 빨리 차량을 이동시켜주세요. 점거 수수료가 발생할 수 있습니다.
-
-## 80% 충전 규칙
-배터리가 80% 이상이면 충전 속도가 크게 느려집니다. 다른 사람을 위해 80%까지만 충전하고 이동하는 것을 고려해보세요.
-
-## 케이블 정리
-충전이 끝나면 케이블을 깔끔하게 정리해주세요.
-
-## 주차 공간 활용
-가능한 한 충전기 가까이 주차하여 케이블이 충분히 닿도록 하고, 다른 차량의 주차를 방해하지 않도록 주의하세요.
-        `,
-    }
-];
+import ReactMarkdown from 'react-markdown';
+import { fetchTipData, type TipItem } from '../tipData';
 
 export default function TipDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
-    const tip = dummyTips.find((t) => t.id === id);
+    const [tip, setTip] = useState<TipItem | null>(null);
+    const [allTips, setAllTips] = useState<TipItem[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchTipData().then((data) => {
+            setAllTips(data);
+            setTip(data.find((t) => t.id === id) ?? null);
+            setLoading(false);
+        });
+    }, [id]);
+
+    if (loading) {
+        return <div className="min-h-screen bg-zinc-100 dark:bg-zinc-950" />;
+    }
 
     if (!tip) {
         notFound();
@@ -114,7 +59,7 @@ export default function TipDetailPage({ params }: { params: Promise<{ id: string
                     </Link>
 
                     {/* Title */}
-                    <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-4 text-zinc-900 dark:text-white">
+                    <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-4 text-zinc-900 dark:text-white leading-snug">
                         {tip.title}
                     </h1>
 
@@ -138,11 +83,14 @@ export default function TipDetailPage({ params }: { params: Promise<{ id: string
                     </div>
 
                     {/* Content */}
-                    <div className="prose prose-lg max-w-none">
-                        <div
-                            className="whitespace-pre-line text-zinc-700 dark:text-zinc-300 leading-relaxed"
-                            dangerouslySetInnerHTML={{ __html: tip.content.replace(/\n## /g, '\n<h2 class="text-2xl font-bold mt-8 mb-4">').replace(/\n/g, '<br />') }}
-                        />
+                    <div className="prose prose-lg max-w-none prose-zinc dark:prose-invert prose-headings:font-bold prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4 prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-3 prose-p:text-zinc-700 dark:prose-p:text-zinc-300 prose-li:text-zinc-700 dark:prose-li:text-zinc-300 prose-strong:text-zinc-900 dark:prose-strong:text-white prose-blockquote:border-tesla-red">
+                        <ReactMarkdown
+                            components={{
+                                hr: () => <hr className="my-12 border-zinc-200 dark:border-zinc-700" />,
+                            }}
+                        >
+                            {tip.content}
+                        </ReactMarkdown>
                     </div>
                 </motion.div>
 
@@ -155,7 +103,7 @@ export default function TipDetailPage({ params }: { params: Promise<{ id: string
                 >
                     <h2 className="text-2xl font-bold mb-6 text-zinc-900 dark:text-white">다른 팁</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {dummyTips
+                        {allTips
                             .filter((t) => t.id !== tip.id)
                             .slice(0, 2)
                             .map((relatedTip) => (

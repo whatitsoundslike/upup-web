@@ -23,7 +23,7 @@ export default function TeslaNews() {
     useEffect(() => {
         const fetchNews = async () => {
             try {
-                const response = await fetch('https://raw.githubusercontent.com/grapheople/jroom/refs/heads/main/json/tesla_news.json?v=' + get1HourVersion());
+                const response = await fetch('https://raw.githubusercontent.com/whatitsoundslike/upup-admin/refs/heads/main/data/tesla_news.json?v=' + get1HourVersion());
                 const data = await response.json();
                 setNewsData(data);
             } catch (error) {

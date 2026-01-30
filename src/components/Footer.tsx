@@ -19,7 +19,7 @@ export function Footer() {
     const navItems: NavItem[] = navConfigs[firstSegment] || defaultNavItems;
 
     return (
-        <footer className="border-t dark:border-white/10 bg-background pt-12 pb-24 md:pb-12 mt-20">
+        <footer className="dark:border-white/10 bg-background pt-12 pb-24 md:pb-12 mt-20">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div className="mt-12 pt-8 border-t dark:border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
                     <p className="text-xs text-foreground/40">
