@@ -23,7 +23,7 @@ export default function TeslaSubsidy() {
     useEffect(() => {
         const fetchCities = async () => {
             try {
-                const response = await fetch('https://raw.githubusercontent.com/grapheople/jroom/refs/heads/main/json/electriccar_subside.json?v=' + get1HourVersion());
+                const response = await fetch('https://raw.githubusercontent.com/grapheople/jroom/refs/heads/main/json/electriccar_subside.json?v=' + get1HourVersion(), { cache: "no-store" });
                 const data = await response.json();
                 setCities(data);
             } catch (error) {
@@ -76,10 +76,10 @@ export default function TeslaSubsidy() {
                             <thead className="bg-foreground/5">
                                 <tr>
                                     <th className="px-1 py-2.5 text-[11px] md:text-xs font-bold uppercase tracking-tight text-foreground/50 text-center">지역</th>
-                                    <th className="px-1 py-2.5 text-[11px] md:text-xs font-bold uppercase tracking-tight text-foreground/50 text-right hidden md:table-cell">전체</th>
+                                    <th className="px-1 py-2.5 text-[11px] md:text-xs font-bold uppercase tracking-tight text-foreground/50 text-center">전체</th>
                                     <th className="px-1 py-2.5 text-[11px] md:text-xs font-bold uppercase tracking-tight text-foreground/50 text-right">접수</th>
                                     <th className="px-1 py-2.5 text-[11px] md:text-xs font-bold uppercase tracking-tight text-foreground/50 text-right">출고</th>
-                                    <th className="px-1 py-2.5 text-[11px] md:text-xs font-bold uppercase tracking-tight text-foreground/50 text-right">잔여</th>
+                                    <th className="px-1 py-2.5 text-[11px] md:text-xs font-bold uppercase tracking-tight text-foreground/50 text-right hidden md:table-cell">잔여</th>
                                     <th className="px-1 py-2.5 text-[11px] md:text-xs font-bold uppercase tracking-tight text-foreground/50 text-right hidden md:table-cell">잔여율</th>
                                     <th className="px-1 py-2.5 text-[11px] md:text-xs font-bold uppercase tracking-tight text-foreground/50 text-right hidden md:table-cell">비고</th>
                                 </tr>
@@ -93,7 +93,7 @@ export default function TeslaSubsidy() {
                                                 {city.locationName1}
                                                 {!['서울', '부산', '대구', '인천', '광주', '대전', '울산', '세종', '공단', '제주'].includes(city.locationName1) && ` ${city.locationName2}`}
                                             </td>
-                                            <td className="px-0.5 py-2.5 md:px-6 md:py-5 font-mono text-xs md:text-sm text-foreground/60 text-right hidden md:table-cell w-[50px] md:w-auto">
+                                            <td className="px-0.5 py-2.5 md:px-6 md:py-5 font-mono text-xs md:text-sm text-foreground/60 text-right w-[50px] md:w-auto">
                                                 {city.totalCount.toLocaleString()}
                                             </td>
                                             <td className="px-0.5 py-2.5 md:px-6 md:py-5 font-mono text-xs md:text-sm text-foreground/60 text-right w-[50px] md:w-auto">
@@ -102,7 +102,7 @@ export default function TeslaSubsidy() {
                                             <td className="px-0.5 py-2.5 md:px-6 md:py-5 font-mono text-xs md:text-sm text-foreground/60 text-right w-[50px] md:w-auto">
                                                 {city.releaseCount.toLocaleString()}
                                             </td>
-                                            <td className="px-0.5 py-2.5 md:px-6 md:py-5 font-mono text-xs md:text-sm text-right w-[50px] md:w-auto">
+                                            <td className="px-0.5 py-2.5 md:px-6 md:py-5 font-mono text-xs md:text-sm text-right w-[50px] md:w-auto hidden md:table-cell">
                                                 {city.remainCount.toLocaleString()}
                                             </td>
                                             <td className="px-0.5 py-2.5 md:px-6 md:py-5 text-right hidden md:table-cell">
