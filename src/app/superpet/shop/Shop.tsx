@@ -91,9 +91,9 @@ export default function Shop() {
     const shopItems = activeTab === 'gold' ? getGoldShopItems() : getGemShopItems();
 
     return (
-        <div className="max-w-4xl mx-auto px-4 py-2">
+        <div className="max-w-4xl mx-auto px-4 py-2 lg:p-12">
             {/* 헤더 */}
-            <div className="text-center mb-4">
+            <div className="text-center mb-4 lg:mb-12">
                 <motion.h1
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}

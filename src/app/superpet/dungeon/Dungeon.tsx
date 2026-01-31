@@ -687,12 +687,12 @@ export default function Dungeon() {
 
     // 던전 목록
     return (
-        <div className="max-w-4xl mx-auto px-4 py-2">
+        <div className="max-w-4xl mx-auto px-4 py-2 lg:p-12">
             <div className="text-center mb-4">
                 <motion.h1
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-4xl font-black tracking-tighter mb-3"
+                    className="text-4xl font-black tracking-tighter mb-3 lg:mb-12"
                 >
                     던전 <span className="text-red-500">탐험</span>
                 </motion.h1>

@@ -173,7 +173,7 @@ export default function Room() {
     });
 
     return (
-        <div className="max-w-4xl mx-auto px-4 py-2">
+        <div className="max-w-4xl mx-auto px-4 py-2 lg:p-12">
             {/* 헤더 */}
             <div className="text-center mb-4">
                 <motion.h1
@@ -187,7 +187,7 @@ export default function Room() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.1 }}
-                    className="text-foreground/60"
+                    className="text-foreground/60 lg:mb-12"
                 >
                     던전에서 획득한 아이템을 확인하세요
                 </motion.p>
