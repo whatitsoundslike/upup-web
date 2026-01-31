@@ -19,74 +19,236 @@ interface DroppedItem {
     quantity: number;
 }
 
-interface DungeonData {
-    id: number;
+interface MonsterData {
     name: string;
-    difficulty: '쉬움' | '보통' | '어려움';
-    description: string;
-    monsterName: string;
-    monsterEmoji: string;
-    monsterHp: number;
-    monsterAttack: number;
+    emoji: string;
+    level: number;
+    hp: number;
+    attack: number;
+    isBoss: boolean;
+    spawnChance: number; // 등장 확률 (0~100)
     drops: MonsterDrop[];
 }
 
-const DIFFICULTY_COLORS: Record<string, string> = {
-    '쉬움': 'bg-green-500',
-    '보통': 'bg-yellow-500',
-    '어려움': 'bg-red-500',
-};
+interface DungeonData {
+    id: number;
+    name: string;
+    levelRange: string; // "1~10" 형식
+    minLevel: number;
+    maxLevel: number;
+    description: string;
+    monsters: MonsterData[];
+}
 
 const dungeons: DungeonData[] = [
     {
         id: 1,
-        name: '고양이 골목',
-        difficulty: '쉬움',
-        description: '장난꾸러기 고양이들이 숨어있는 골목길',
-        monsterName: '장난꾸러기 냥이',
-        monsterEmoji: '🐱',
-        monsterHp: 80,
-        monsterAttack: 8,
-        drops: [
-            { itemId: 'potion', chance: 60 },
-            { itemId: 'enhanced_feed', chance: 15 },
-            { itemId: 'agility_feather', chance: 10 },
-            { itemId: 'magic_snack', chance: 3 },
-            { itemId: 'legend_necklace', chance: 100 },
-            { itemId: 'iron_helmet', chance: 100 },
-            { itemId: 'leather_armor', chance: 100 },
-            { itemId: 'knight_helmet', chance: 100 },
+        name: '한강',
+        levelRange: 'LV 1~10',
+        minLevel: 1,
+        maxLevel: 10,
+        description: '도심 속 평화로운 강변. 초보 모험가들이 처음 발걸음을 내딛는 곳',
+        monsters: [
+            {
+                name: '떠돌이 비둘기',
+                emoji: '🕊️',
+                level: 3,
+                hp: 60,
+                attack: 6,
+                isBoss: false,
+                spawnChance: 50,
+                drops: [
+                    { itemId: 'potion', chance: 50 },
+                    { itemId: 'iron_helmet', chance: 5 },
+                ],
+            },
+            {
+                name: '길고양이',
+                emoji: '🐱',
+                level: 5,
+                hp: 80,
+                attack: 8,
+                isBoss: false,
+                spawnChance: 35,
+                drops: [
+                    { itemId: 'potion', chance: 60 },
+                    { itemId: 'enhanced_feed', chance: 10 },
+                    { itemId: 'cloth_gloves', chance: 8 },
+                ],
+            },
+            {
+                name: '한강 괴물',
+                emoji: '🦖',
+                level: 10,
+                hp: 150,
+                attack: 12,
+                isBoss: true,
+                spawnChance: 15,
+                drops: [
+                    { itemId: 'enhanced_feed', chance: 40 },
+                    { itemId: 'leather_armor', chance: 20 },
+                    { itemId: 'running_shoes', chance: 15 },
+                ],
+            },
         ],
     },
     {
         id: 2,
-        name: '어둠의 숲',
-        difficulty: '보통',
-        description: '미스터리한 숲속에 강력한 적이 도사리고 있다',
-        monsterName: '그림자 늑대',
-        monsterEmoji: '🐺',
-        monsterHp: 150,
-        monsterAttack: 18,
-        drops: [
-            { itemId: 'potion', chance: 70 },
-            { itemId: 'enhanced_feed', chance: 25 },
-            { itemId: 'magic_snack', chance: 8 },
+        name: '관악산',
+        levelRange: 'LV 11~20',
+        minLevel: 11,
+        maxLevel: 20,
+        description: '서울의 진산. 울창한 숲과 험준한 바위가 모험가를 시험한다',
+        monsters: [
+            {
+                name: '산토끼',
+                emoji: '🐰',
+                level: 13,
+                hp: 120,
+                attack: 14,
+                isBoss: false,
+                spawnChance: 45,
+                drops: [
+                    { itemId: 'potion', chance: 65 },
+                    { itemId: 'enhanced_feed', chance: 20 },
+                    { itemId: 'running_shoes', chance: 10 },
+                ],
+            },
+            {
+                name: '멧돼지',
+                emoji: '🐗',
+                level: 17,
+                hp: 180,
+                attack: 18,
+                isBoss: false,
+                spawnChance: 35,
+                drops: [
+                    { itemId: 'enhanced_feed', chance: 30 },
+                    { itemId: 'magic_snack', chance: 8 },
+                    { itemId: 'knight_helmet', chance: 12 },
+                ],
+            },
+            {
+                name: '산신령',
+                emoji: '👹',
+                level: 20,
+                hp: 280,
+                attack: 24,
+                isBoss: true,
+                spawnChance: 20,
+                drops: [
+                    { itemId: 'magic_snack', chance: 25 },
+                    { itemId: 'wind_boots', chance: 18 },
+                    { itemId: 'simple_cloak', chance: 20 },
+                    { itemId: 'wooden_sword', chance: 15 },
+                ],
+            },
         ],
     },
     {
         id: 3,
-        name: '드래곤 화산',
-        difficulty: '어려움',
-        description: '전설의 드래곤이 잠들어있는 화산',
-        monsterName: '화염 드래곤',
-        monsterEmoji: '🐉',
-        monsterHp: 300,
-        monsterAttack: 30,
-        drops: [
-            { itemId: 'potion', chance: 80 },
-            { itemId: 'enhanced_feed', chance: 40 },
-            { itemId: 'magic_snack', chance: 15 },
-            { itemId: 'legend_necklace', chance: 0.05 },
+        name: '지리산',
+        levelRange: 'LV 21~30',
+        minLevel: 21,
+        maxLevel: 30,
+        description: '영남의 명산. 깊은 계곡과 높은 봉우리에 강력한 존재들이 깃들어 있다',
+        monsters: [
+            {
+                name: '산악 독수리',
+                emoji: '🦅',
+                level: 23,
+                hp: 220,
+                attack: 26,
+                isBoss: false,
+                spawnChance: 45,
+                drops: [
+                    { itemId: 'enhanced_feed', chance: 40 },
+                    { itemId: 'magic_snack', chance: 15 },
+                    { itemId: 'power_gloves', chance: 8 },
+                ],
+            },
+            {
+                name: '반달가슴곰',
+                emoji: '🐻',
+                level: 27,
+                hp: 320,
+                attack: 32,
+                isBoss: false,
+                spawnChance: 35,
+                drops: [
+                    { itemId: 'magic_snack', chance: 20 },
+                    { itemId: 'starlight_armor', chance: 10 },
+                    { itemId: 'holy_shield', chance: 8 },
+                ],
+            },
+            {
+                name: '천왕봉 수호자',
+                emoji: '🦄',
+                level: 30,
+                hp: 450,
+                attack: 38,
+                isBoss: true,
+                spawnChance: 20,
+                drops: [
+                    { itemId: 'magic_snack', chance: 35 },
+                    { itemId: 'shadow_cloak', chance: 15 },
+                    { itemId: 'flame_sword', chance: 5 },
+                    { itemId: 'legend_necklace', chance: 3 },
+                ],
+            },
+        ],
+    },
+    {
+        id: 4,
+        name: '한라산',
+        levelRange: 'LV 31~40',
+        minLevel: 31,
+        maxLevel: 40,
+        description: '제주의 영봉. 신비로운 기운이 감도는 이곳엔 전설의 존재들이 살고 있다',
+        monsters: [
+            {
+                name: '백록',
+                emoji: '🦌',
+                level: 33,
+                hp: 380,
+                attack: 42,
+                isBoss: false,
+                spawnChance: 40,
+                drops: [
+                    { itemId: 'magic_snack', chance: 30 },
+                    { itemId: 'legend_food', chance: 5 },
+                    { itemId: 'wind_boots', chance: 20 },
+                ],
+            },
+            {
+                name: '화산 정령',
+                emoji: '🔥',
+                level: 37,
+                hp: 480,
+                attack: 48,
+                isBoss: false,
+                spawnChance: 35,
+                drops: [
+                    { itemId: 'legend_food', chance: 8 },
+                    { itemId: 'dragon_armor', chance: 6 },
+                    { itemId: 'flame_sword', chance: 10 },
+                ],
+            },
+            {
+                name: '백두산 신룡',
+                emoji: '🐉',
+                level: 40,
+                hp: 650,
+                attack: 55,
+                isBoss: true,
+                spawnChance: 25,
+                drops: [
+                    { itemId: 'legend_food', chance: 15 },
+                    { itemId: 'dragon_armor', chance: 12 },
+                    { itemId: 'flame_sword', chance: 15 },
+                    { itemId: 'legend_necklace', chance: 8 },
+                ],
+            },
         ],
     },
 ];
@@ -96,11 +258,13 @@ type BattleState = 'idle' | 'fighting' | 'won' | 'lost';
 export default function Dungeon() {
     const [character, setCharacter] = useState<Character | null>(null);
     const [selectedDungeon, setSelectedDungeon] = useState<DungeonData | null>(null);
+    const [selectedMonster, setSelectedMonster] = useState<MonsterData | null>(null);
     const [battleState, setBattleState] = useState<BattleState>('idle');
     const [playerHp, setPlayerHp] = useState(0);
     const [monsterHp, setMonsterHp] = useState(0);
     const [battleLog, setBattleLog] = useState<string[]>([]);
     const [droppedItems, setDroppedItems] = useState<DroppedItem[]>([]);
+    const [lowHpWarning, setLowHpWarning] = useState(false);
     const logRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -113,19 +277,49 @@ export default function Dungeon() {
         }
     }, [battleLog]);
 
+    // 몬스터 랜덤 선택 함수
+    const selectRandomMonster = (dungeon: DungeonData): MonsterData => {
+        const totalChance = dungeon.monsters.reduce((sum, m) => sum + m.spawnChance, 0);
+        let random = Math.random() * totalChance;
+
+        for (const monster of dungeon.monsters) {
+            random -= monster.spawnChance;
+            if (random <= 0) {
+                return monster;
+            }
+        }
+
+        // 혹시 모를 경우를 대비해 첫 번째 몬스터 반환
+        return dungeon.monsters[0];
+    };
+
     const startBattle = (dungeon: DungeonData) => {
-        if (!character || character.currentHp <= 0) return;
+        if (!character) return;
+
+        // 체력이 0 이하인 경우 경고 모달 표시
+        if (character.currentHp <= 0) {
+            setLowHpWarning(true);
+            return;
+        }
+
+        // 랜덤 몬스터 선택
+        const monster = selectRandomMonster(dungeon);
+
         setSelectedDungeon(dungeon);
+        setSelectedMonster(monster);
         const hp = character.currentHp > 0 && !isNaN(character.currentHp) ? character.currentHp : character.hp;
         setPlayerHp(hp);
-        setMonsterHp(dungeon.monsterHp);
+        setMonsterHp(monster.hp);
         setBattleState('fighting');
-        setBattleLog([`${dungeon.monsterName}이(가) 나타났다!`]);
+        setBattleLog([
+            `${monster.name}${monster.isBoss ? ' (보스)' : ''}이(가) 나타났다!`,
+            `LV.${monster.level} | HP ${monster.hp} | 공격력 ${monster.attack}`
+        ]);
         setDroppedItems([]);
     };
 
     const handleAttack = useCallback(() => {
-        if (battleState !== 'fighting' || !character || !selectedDungeon) return;
+        if (battleState !== 'fighting' || !character || !selectedDungeon || !selectedMonster) return;
 
         // speed 기반 확률: 더블 어택 (최대 50%), 회피 (최대 40%)
         const doubleAttackChance = Math.min(character.speed / 200, 0.5);
@@ -148,10 +342,10 @@ export default function Dungeon() {
         setMonsterHp(currentMonsterHp);
 
         if (currentMonsterHp <= 0) {
-            newLog.push(`${selectedDungeon.monsterName}을(를) 쓰러뜨렸다!`);
+            newLog.push(`${selectedMonster.name}을(를) 쓰러뜨렸다!`);
             // 각 아이템별 독립 확률 판정
             const drops: DroppedItem[] = [];
-            for (const { itemId, chance } of selectedDungeon.drops) {
+            for (const { itemId, chance } of selectedMonster.drops) {
                 if (Math.random() * 100 < chance) {
                     const item = GAME_ITEMS[itemId];
                     if (!item) continue;
@@ -167,7 +361,8 @@ export default function Dungeon() {
                 newLog.push('드롭된 아이템이 없다...');
             }
             setDroppedItems(drops);
-            const earnedExp = DUNGEON_EXP[selectedDungeon.difficulty] ?? 30;
+            // 몬스터 레벨 기반 경험치 (레벨 * 10 + 보스 보너스)
+            const earnedExp = selectedMonster.level * 10 + (selectedMonster.isBoss ? 50 : 0);
             const { character: updated, leveledUp, levelsGained } = addExpToCharacter(earnedExp);
             // 남은 HP 저장
             updated.currentHp = playerHp;
@@ -187,12 +382,12 @@ export default function Dungeon() {
             newLog.push(`💨 ${character.name}이(가) 재빠르게 회피했다!`);
         } else {
             const monsterDmg = Math.max(
-                Math.floor(selectedDungeon.monsterAttack * (0.8 + Math.random() * 0.4) - character.defense * 0.3),
+                Math.floor(selectedMonster.attack * (0.8 + Math.random() * 0.4) - character.defense * 0.3),
                 1
             );
             const newPlayerHp = Math.max(playerHp - monsterDmg, 0);
             setPlayerHp(newPlayerHp);
-            newLog.push(`${selectedDungeon.monsterName}의 반격! ${monsterDmg} 데미지!`);
+            newLog.push(`${selectedMonster.name}의 반격! ${monsterDmg} 데미지!`);
 
             if (newPlayerHp <= 0) {
                 newLog.push(`${character.name}이(가) 쓰러졌다...`);
@@ -248,9 +443,9 @@ export default function Dungeon() {
     }
 
     // 배틀 화면
-    if (selectedDungeon) {
+    if (selectedDungeon && selectedMonster) {
         const playerHpPct = Math.max((playerHp / character.hp) * 100, 0);
-        const monsterHpPct = Math.max((monsterHp / selectedDungeon.monsterHp) * 100, 0);
+        const monsterHpPct = Math.max((monsterHp / selectedMonster.hp) * 100, 0);
 
         return (
             <div className="max-w-3xl mx-auto px-4 py-12">
@@ -314,17 +509,17 @@ export default function Dungeon() {
                         className="glass p-6 rounded-2xl bg-white/5"
                     >
                         <div className="text-center mb-4">
-                            <div className="text-4xl mb-2">{selectedDungeon.monsterEmoji}</div>
-                            <h3 className="font-bold text-lg">{selectedDungeon.monsterName}</h3>
-                            <span className={`inline-block px-2 py-0.5 rounded-full text-white text-xs font-bold ${DIFFICULTY_COLORS[selectedDungeon.difficulty]}`}>
-                                {selectedDungeon.difficulty}
+                            <div className="text-4xl mb-2">{selectedMonster?.emoji}</div>
+                            <h3 className="font-bold text-lg">{selectedMonster?.name}</h3>
+                            <span className={`inline-block px-2 py-0.5 rounded-full text-white text-xs font-bold ${selectedMonster?.isBoss ? 'bg-purple-500' : 'bg-blue-500'}`}>
+                                LV.{selectedMonster?.level} {selectedMonster?.isBoss ? '보스' : ''}
                             </span>
                         </div>
                         <div className="mb-2 flex justify-between text-sm">
                             <span className="flex items-center gap-1">
                                 <Heart className="h-3.5 w-3.5 text-red-500" /> HP
                             </span>
-                            <span className="font-bold">{monsterHp} / {selectedDungeon.monsterHp}</span>
+                            <span className="font-bold">{monsterHp} / {selectedMonster?.hp}</span>
                         </div>
                         <div className="h-4 rounded-full bg-foreground/10 overflow-hidden">
                             <motion.div
@@ -400,17 +595,17 @@ export default function Dungeon() {
                             </div>
                             <div className="flex gap-3 justify-center">
                                 <button
-                                    onClick={exitBattle}
-                                    className="px-6 py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 transition-colors"
+                                    onClick={() => startBattle(selectedDungeon)}
+                                    className="px-6 py-3 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors flex items-center gap-2"
                                 >
-                                    다른 던전 도전하기
+                                    <Swords className="h-4 w-4" /> 다시 도전하기
                                 </button>
-                                <Link
-                                    href="/superpet/room"
+                                <button
+                                    onClick={exitBattle}
                                     className="px-6 py-3 rounded-xl bg-foreground/10 text-foreground/60 font-bold hover:bg-foreground/20 transition-colors"
                                 >
-                                    인벤토리 보기
-                                </Link>
+                                    다른 던전 선택
+                                </button>
                             </div>
                         </motion.div>
                     )}
@@ -431,12 +626,12 @@ export default function Dungeon() {
                                 >
                                     다시 도전
                                 </button>
-                                <button
-                                    onClick={exitBattle}
+                                <Link
+                                    href="/superpet/room"
                                     className="px-6 py-3 rounded-xl bg-foreground/10 text-foreground/60 font-bold hover:bg-foreground/20 transition-colors"
                                 >
-                                    던전 목록
-                                </button>
+                                    인벤토리
+                                </Link>
                             </div>
                         </motion.div>
                     )}
@@ -487,10 +682,14 @@ export default function Dungeon() {
                         className="glass p-6 rounded-2xl bg-white/5 shadow-lg flex flex-col"
                     >
                         <div className="text-center mb-4">
-                            <div className="text-4xl mb-3">{dungeon.monsterEmoji}</div>
+                            <div className="flex justify-center gap-1 text-3xl mb-3">
+                                {dungeon.monsters.map((m, i) => (
+                                    <span key={i}>{m.emoji}</span>
+                                ))}
+                            </div>
                             <h3 className="text-lg font-bold mb-1">{dungeon.name}</h3>
-                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-white text-xs font-bold ${DIFFICULTY_COLORS[dungeon.difficulty]}`}>
-                                {dungeon.difficulty}
+                            <span className="inline-block px-2.5 py-0.5 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs font-bold">
+                                {dungeon.levelRange}
                             </span>
                         </div>
                         <p className="text-sm text-foreground/60 leading-relaxed mb-4 flex-1">
@@ -498,9 +697,9 @@ export default function Dungeon() {
                         </p>
                         <div className="flex flex-wrap gap-1 text-xs text-foreground/50 mb-4">
                             <Gift className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                            {dungeon.drops.map((d) => {
-                                const item = GAME_ITEMS[d.itemId];
-                                return item ? <span key={d.itemId} title={`${d.chance}%`}>{item.emoji}</span> : null;
+                            {Array.from(new Set(dungeon.monsters.flatMap(m => m.drops.map(d => d.itemId)))).map((itemId) => {
+                                const item = GAME_ITEMS[itemId];
+                                return item ? <span key={itemId}>{item.emoji}</span> : null;
                             })}
                         </div>
                         <motion.button
@@ -514,6 +713,51 @@ export default function Dungeon() {
                     </motion.div>
                 ))}
             </div>
+
+            {/* 체력 부족 경고 모달 */}
+            <AnimatePresence>
+                {lowHpWarning && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+                        onClick={() => setLowHpWarning(false)}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="relative w-full max-w-sm p-6 rounded-2xl shadow-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-red-500"
+                        >
+                            <div className="text-center mb-6">
+                                <Heart className="h-16 w-16 text-red-500 mx-auto mb-3" />
+                                <h3 className="text-xl font-black mb-2">체력이 부족합니다!</h3>
+                                <p className="text-sm text-foreground/60">
+                                    던전에 도전하려면 체력이 필요합니다.<br />
+                                    인벤토리에서 회복 아이템을 사용하세요.
+                                </p>
+                            </div>
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setLowHpWarning(false)}
+                                    className="flex-1 py-3 rounded-xl bg-foreground/10 text-foreground/60 font-bold hover:bg-foreground/20 transition-colors"
+                                >
+                                    닫기
+                                </button>
+                                <Link
+                                    href="/superpet/room"
+                                    className="flex-1 py-3 rounded-xl bg-green-500 text-white font-bold hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <Heart className="h-4 w-4" /> 인벤토리
+                                </Link>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
