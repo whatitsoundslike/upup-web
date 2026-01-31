@@ -2,6 +2,7 @@ import {
     Newspaper,
     Coins,
     ShoppingBag,
+    ShoppingCart,
     Users,
     Handshake,
     Home,
@@ -15,6 +16,7 @@ import {
     Warehouse,
     Swords,
     PawPrint,
+    Briefcase,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -43,7 +45,8 @@ export const navConfigs: NavConfig = {
     superpet: [
         { name: '홈', href: '/superpet', icon: Home },
         { name: '던전', href: '/superpet/dungeon', icon: Swords },
-        { name: '룸', href: '/superpet/room', icon: Handshake },
+        { name: '상점', href: '/superpet/shop', icon: ShoppingCart },
+        { name: '룸', href: '/superpet/room', icon: Warehouse },
     ],
 };
 

@@ -222,6 +222,8 @@ export interface GameItem {
     stats: ItemStats;
     type: ItemType;
     equipmentSlot?: EquipmentSlot; // equipment 타입일 경우 장착 부위
+    shopGoldPrice?: number; // 골드 상점 구매가
+    shopGemPrice?: number; // 젬 상점 구매가
 }
 
 export interface InventoryItem {
@@ -273,6 +275,7 @@ export const GAME_ITEMS: Record<string, GameItem> = {
         description: '체력을 회복시켜주는 기본 포션.',
         stats: { hp: 10, attack: 0, defense: 0, speed: 0 },
         type: 'food',
+        shopGoldPrice: 50,
     },
     // 고급 - 음식
     enhanced_feed: {
