@@ -658,8 +658,8 @@ export default function Dungeon() {
 
     // 던전 목록
     return (
-        <div className="max-w-4xl mx-auto px-4 py-12">
-            <div className="text-center mb-12">
+        <div className="max-w-4xl mx-auto px-4 py-2">
+            <div className="text-center mb-4">
                 <motion.h1
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -695,7 +695,7 @@ export default function Dungeon() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.1 }}
                         whileHover={{ y: -5 }}
-                        className="glass p-6 rounded-2xl bg-white/5 shadow-lg flex flex-col"
+                        className="p-6 rounded-2xl bg-white/5 shadow-lg flex flex-col border-1 border-foreground/20"
                     >
                         <div className="text-center mb-4">
                             <div className="flex justify-center gap-1 text-3xl mb-3">

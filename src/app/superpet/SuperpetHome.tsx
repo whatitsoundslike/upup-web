@@ -89,9 +89,9 @@ export default function SuperpetHome() {
     return (
         <div className="relative overflow-hidden">
             {/* Hero */}
-            <section className="py-16 bg-foreground/5 min-h-[80vh] flex items-center">
+            <section className="py-2 bg-foreground/5 min-h-[80vh] flex items-center">
                 <div className="max-w-3xl mx-auto px-4 w-full">
-                    <div className="text-center mb-12">
+                    <div className="text-center mb-4">
                         <motion.h1
                             initial={{ opacity: 0, y: -20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -105,7 +105,7 @@ export default function SuperpetHome() {
                             transition={{ delay: 0.1 }}
                             className="text-foreground/60 text-xl"
                         >
-                            내 반려동물을 슈퍼 영웅으로 만들어보세요!
+                            <img className='mx-auto' src="/superpet_thumbnail.webp" alt="logo" />
                         </motion.p>
                     </div>
 
@@ -209,19 +209,19 @@ export default function SuperpetHome() {
                     {/* 캐릭터 카드 그리드 */}
                     {characters.length > 0 && !showForm && !createdCharacter && (
                         <div className="mb-8">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
                                 {characters.map((char, idx) => (
                                     <motion.div
                                         key={char.id}
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: idx * 0.1 }}
-                                        className="glass p-6 rounded-2xl shadow-lg bg-white/5 relative group"
+                                        className="p-6 rounded-2xl shadow-lg bg-white/5 backdrop-blur-md relative group border-1 border-foreground/20"
                                     >
                                         {/* 삭제 버튼 */}
                                         <button
                                             onClick={() => setDeleteConfirm(char.id)}
-                                            className="absolute top-3 right-3 p-1.5 rounded-lg bg-red-500/10 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20"
+                                            className="absolute top-3 right-3 p-1.5 rounded-lg bg-red-500/10 text-red-500 md:opacity-0 md:group-hover:opacity-100 transition-opacity hover:bg-red-500/20"
                                         >
                                             <Trash2 className="h-4 w-4" />
                                         </button>

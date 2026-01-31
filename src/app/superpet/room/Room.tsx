@@ -203,7 +203,7 @@ export default function Room() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.15 }}
-                        className="glass p-5 rounded-xl bg-white/5 mb-8"
+                        className="p-5 rounded-xl bg-white/5 shadow-lg border border-foreground/10"
                     >
                         <div className="flex items-center gap-4 mb-3">
                             <div className="text-3xl">🐾</div>
@@ -259,8 +259,8 @@ export default function Room() {
                         </div>
                         {/* 경험치 바 */}
                         <div>
-                            <div className="flex justify-between text-xs mb-1">
-                                <span className="text-foreground/50">EXP</span>
+                            <div className="flex gap-2 text-xs mb-1">
+                                <span className="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 font-bold text-[10px]">EXP</span>
                                 <span className="text-foreground/60 font-medium">{character.exp} / {nextExp}</span>
                             </div>
                             <div className="h-2.5 rounded-full bg-foreground/10 overflow-hidden">
@@ -276,38 +276,16 @@ export default function Room() {
                 );
             })()}
 
-            {/* 요약 */}
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="flex items-center justify-between mb-6"
-            >
-                <div className="flex items-center gap-2 text-sm text-foreground/60">
-                    <Package className="h-4 w-4" />
-                    <span>아이템 <span className="font-bold text-foreground">{inventory.length}</span>종 / 총 <span className="font-bold text-foreground">{totalItems}</span>개</span>
-                </div>
-                <Link
-                    href="/superpet/dungeon"
-                    className="text-sm font-semibold text-red-500 hover:text-red-600 flex items-center gap-1 transition-colors"
-                >
-                    <Swords className="h-4 w-4" /> 던전 가기
-                </Link>
-            </motion.div>
-
             {/* 장착 장비 */}
             {character && (
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.22 }}
-                    className="glass p-5 rounded-xl bg-white/5 mb-8"
+                    className="glass p-5 rounded-xl bg-white/5 mb-8 shadow-lg"
                 >
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="font-bold">장착 장비</h3>
-                        <span className="text-xs text-foreground/50">
-                            {equippedEntries.filter(([, item]) => item).length}/{equippedEntries.length}
-                        </span>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {equippedEntries.map(([slot, item]) => (
@@ -326,7 +304,7 @@ export default function Room() {
                                     }
                                 }}
                                 disabled={!item}
-                                className={`flex items-center gap-3 rounded-xl border-2 px-3 py-2 text-left transition-all ${item?.rarity ? ITEM_RARITY_COLORS[item.rarity] : 'border-foreground/10 bg-white/5'
+                                className={`flex items-center gap-3 rounded-xl border-1 px-3 py-2 text-left transition-all ${item?.rarity ? ITEM_RARITY_COLORS[item.rarity] : 'border-foreground/10 bg-white/5'
                                     } ${item ? 'hover:scale-[1.02] cursor-pointer' : 'cursor-default'}`}
                             >
                                 <div className="text-2xl">{item?.emoji ?? '—'}</div>
@@ -378,16 +356,6 @@ export default function Room() {
                     transition={{ delay: 0.25 }}
                     className="flex gap-3 mb-6"
                 >
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/40" />
-                        <input
-                            type="text"
-                            placeholder="아이템 이름 검색"
-                            value={searchName}
-                            onChange={(e) => setSearchName(e.target.value)}
-                            className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-foreground/5 border border-foreground/10 text-sm placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
-                        />
-                    </div>
                     <select
                         value={slotFilter}
                         onChange={(e) => setSlotFilter(e.target.value as EquipmentSlot | 'all')}
@@ -404,6 +372,16 @@ export default function Room() {
                         <option value="목걸이">목걸이</option>
                         <option value="반지">반지</option>
                     </select>
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/40" />
+                        <input
+                            type="text"
+                            placeholder="아이템 이름 검색"
+                            value={searchName}
+                            onChange={(e) => setSearchName(e.target.value)}
+                            className="w-50 pl-9 pr-3 py-2.5 rounded-xl bg-foreground/5 border border-foreground/10 text-sm placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                        />
+                    </div>
                 </motion.div>
             )}
 
