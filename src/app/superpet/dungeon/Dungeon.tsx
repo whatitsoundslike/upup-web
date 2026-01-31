@@ -6,8 +6,13 @@ import {
     Heart, Skull, Zap, PawPrint, Gift,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useState, useEffect, useCallback } from 'react';
-import { type Character, type GameItem, addItemToInventory, addExpToCharacter, DUNGEON_EXP, DUNGEON_DROP_COUNT, ITEM_RARITY_TEXT, rollItemDrop, loadCharacter } from '../types';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { type Character, type GameItem, GAME_ITEMS, addItemToInventory, addExpToCharacter, DUNGEON_EXP, ITEM_RARITY_TEXT, loadCharacter, saveCharacter } from '../types';
+
+interface MonsterDrop {
+    itemId: string;
+    chance: number; // 0~100%
+}
 
 interface DroppedItem {
     item: GameItem;
@@ -23,6 +28,7 @@ interface DungeonData {
     monsterEmoji: string;
     monsterHp: number;
     monsterAttack: number;
+    drops: MonsterDrop[];
 }
 
 const DIFFICULTY_COLORS: Record<string, string> = {
@@ -41,6 +47,13 @@ const dungeons: DungeonData[] = [
         monsterEmoji: '🐱',
         monsterHp: 80,
         monsterAttack: 8,
+        drops: [
+            { itemId: 'bone', chance: 80 },
+            { itemId: 'potion', chance: 60 },
+            { itemId: 'enhanced_feed', chance: 15 },
+            { itemId: 'agility_feather', chance: 10 },
+            { itemId: 'magic_snack', chance: 3 },
+        ],
     },
     {
         id: 2,
@@ -51,6 +64,15 @@ const dungeons: DungeonData[] = [
         monsterEmoji: '🐺',
         monsterHp: 150,
         monsterAttack: 18,
+        drops: [
+            { itemId: 'bone', chance: 70 },
+            { itemId: 'potion', chance: 70 },
+            { itemId: 'enhanced_feed', chance: 25 },
+            { itemId: 'agility_feather', chance: 20 },
+            { itemId: 'magic_snack', chance: 8 },
+            { itemId: 'shield_charm', chance: 6 },
+            { itemId: 'dragon_claw', chance: 0.45 },
+        ],
     },
     {
         id: 3,
@@ -61,6 +83,16 @@ const dungeons: DungeonData[] = [
         monsterEmoji: '🐉',
         monsterHp: 300,
         monsterAttack: 30,
+        drops: [
+            { itemId: 'potion', chance: 80 },
+            { itemId: 'enhanced_feed', chance: 40 },
+            { itemId: 'agility_feather', chance: 35 },
+            { itemId: 'magic_snack', chance: 15 },
+            { itemId: 'shield_charm', chance: 12 },
+            { itemId: 'dragon_claw', chance: 2 },
+            { itemId: 'starlight_armor', chance: 2 },
+            { itemId: 'legend_necklace', chance: 0.05 },
+        ],
     },
 ];
 
@@ -74,15 +106,23 @@ export default function Dungeon() {
     const [monsterHp, setMonsterHp] = useState(0);
     const [battleLog, setBattleLog] = useState<string[]>([]);
     const [droppedItems, setDroppedItems] = useState<DroppedItem[]>([]);
+    const logRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         setCharacter(loadCharacter());
     }, []);
 
+    useEffect(() => {
+        if (logRef.current) {
+            logRef.current.scrollTop = logRef.current.scrollHeight;
+        }
+    }, [battleLog]);
+
     const startBattle = (dungeon: DungeonData) => {
-        if (!character) return;
+        if (!character || character.currentHp <= 0) return;
         setSelectedDungeon(dungeon);
-        setPlayerHp(character.hp);
+        const hp = character.currentHp > 0 && !isNaN(character.currentHp) ? character.currentHp : character.hp;
+        setPlayerHp(hp);
         setMonsterHp(dungeon.monsterHp);
         setBattleState('fighting');
         setBattleLog([`${dungeon.monsterName}이(가) 나타났다!`]);
@@ -114,25 +154,29 @@ export default function Dungeon() {
 
         if (currentMonsterHp <= 0) {
             newLog.push(`${selectedDungeon.monsterName}을(를) 쓰러뜨렸다!`);
-            // 확률 기반 랜덤 드롭
-            const dropCount = DUNGEON_DROP_COUNT[selectedDungeon.difficulty] ?? 2;
+            // 각 아이템별 독립 확률 판정
             const drops: DroppedItem[] = [];
-            for (let i = 0; i < dropCount; i++) {
-                const { itemId, item } = rollItemDrop();
-                addItemToInventory(itemId, 1);
-                const existing = drops.find((d) => d.item.id === itemId);
-                if (existing) {
-                    existing.quantity += 1;
-                } else {
+            for (const { itemId, chance } of selectedDungeon.drops) {
+                if (Math.random() * 100 < chance) {
+                    const item = GAME_ITEMS[itemId];
+                    if (!item) continue;
+                    addItemToInventory(itemId, 1);
                     drops.push({ item, quantity: 1 });
                 }
             }
-            for (const drop of drops) {
-                newLog.push(`${drop.item.emoji} ${drop.item.name} x${drop.quantity} 획득!`);
+            if (drops.length > 0) {
+                for (const drop of drops) {
+                    newLog.push(`${drop.item.emoji} ${drop.item.name} 획득!`);
+                }
+            } else {
+                newLog.push('드롭된 아이템이 없다...');
             }
             setDroppedItems(drops);
             const earnedExp = DUNGEON_EXP[selectedDungeon.difficulty] ?? 30;
             const { character: updated, leveledUp, levelsGained } = addExpToCharacter(earnedExp);
+            // 남은 HP 저장
+            updated.currentHp = playerHp;
+            saveCharacter(updated);
             setCharacter(updated);
             newLog.push(`EXP +${earnedExp} 획득!`);
             if (leveledUp) {
@@ -157,6 +201,10 @@ export default function Dungeon() {
 
             if (newPlayerHp <= 0) {
                 newLog.push(`${character.name}이(가) 쓰러졌다...`);
+                // 패배 시 HP 전체 회복
+                const revived = { ...character, currentHp: character.hp };
+                saveCharacter(revived);
+                setCharacter(revived);
                 setBattleLog((prev) => [...prev, ...newLog]);
                 setBattleState('lost');
                 return;
@@ -167,6 +215,12 @@ export default function Dungeon() {
     }, [battleState, character, selectedDungeon, monsterHp, playerHp]);
 
     const exitBattle = () => {
+        // 전투 중 도망 시 현재 HP 저장
+        if (battleState === 'fighting' && character) {
+            const updated = { ...character, currentHp: playerHp };
+            saveCharacter(updated);
+            setCharacter(updated);
+        }
         setSelectedDungeon(null);
         setBattleState('idle');
         setBattleLog([]);
@@ -223,7 +277,16 @@ export default function Dungeon() {
                 </motion.h2>
 
                 {/* 배틀 필드 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className="relative grid grid-cols-2 gap-6 mb-8">
+                    {/* VS 표시 */}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.3, type: 'spring', stiffness: 300 }}
+                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-red-500 flex items-center justify-center shadow-lg"
+                    >
+                        <span className="text-white font-black text-sm">VS</span>
+                    </motion.div>
                     {/* 플레이어 */}
                     <motion.div
                         initial={{ opacity: 0, x: -30 }}
@@ -278,7 +341,7 @@ export default function Dungeon() {
                 </div>
 
                 {/* 배틀 로그 */}
-                <div className="glass p-4 rounded-xl bg-white/5 mb-6 max-h-40 overflow-y-auto">
+                <div ref={logRef} className="glass p-4 rounded-xl bg-white/5 mb-6 h-40 overflow-y-auto">
                     {battleLog.map((log, i) => (
                         <motion.p
                             key={i}
@@ -328,13 +391,17 @@ export default function Dungeon() {
                                 <p className="text-foreground/60 text-sm mb-2 flex items-center justify-center gap-1">
                                     <Gift className="h-4 w-4" /> 획득 아이템
                                 </p>
-                                <div className="flex flex-wrap gap-2 justify-center">
-                                    {droppedItems.map((drop) => (
-                                        <span key={drop.item.id} className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-foreground/5 text-sm font-medium ${ITEM_RARITY_TEXT[drop.item.rarity]}`}>
-                                            {drop.item.emoji} {drop.item.name} x{drop.quantity}
-                                        </span>
-                                    ))}
-                                </div>
+                                {droppedItems.length > 0 ? (
+                                    <div className="flex flex-wrap gap-2 justify-center">
+                                        {droppedItems.map((drop) => (
+                                            <span key={drop.item.id} className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-foreground/5 text-sm font-medium ${ITEM_RARITY_TEXT[drop.item.rarity]}`}>
+                                                {drop.item.emoji} {drop.item.name}
+                                            </span>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-foreground/40 text-sm">드롭된 아이템이 없습니다</p>
+                                )}
                             </div>
                             <div className="flex gap-3 justify-center">
                                 <button
@@ -402,6 +469,16 @@ export default function Dungeon() {
                 >
                     <span className="font-bold text-foreground">{character.name}</span> (Lv.{character.level} {character.className}) 으로 도전!
                 </motion.p>
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.15 }}
+                    className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-foreground/5 text-sm"
+                >
+                    <Heart className="h-4 w-4 text-red-500" />
+                    <span className="font-bold">{character.currentHp}</span>
+                    <span className="text-foreground/40">/ {character.hp}</span>
+                </motion.div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
@@ -424,8 +501,12 @@ export default function Dungeon() {
                         <p className="text-sm text-foreground/60 leading-relaxed mb-4 flex-1">
                             {dungeon.description}
                         </p>
-                        <div className="flex items-center gap-1.5 text-xs text-foreground/50 mb-4">
-                            <Gift className="h-3.5 w-3.5" /> 드롭 {DUNGEON_DROP_COUNT[dungeon.difficulty] ?? 2}개 (랜덤)
+                        <div className="flex flex-wrap gap-1 text-xs text-foreground/50 mb-4">
+                            <Gift className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                            {dungeon.drops.map((d) => {
+                                const item = GAME_ITEMS[d.itemId];
+                                return item ? <span key={d.itemId} title={`${d.chance}%`}>{item.emoji}</span> : null;
+                            })}
                         </div>
                         <motion.button
                             whileHover={{ scale: 1.02 }}

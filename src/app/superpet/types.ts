@@ -2,6 +2,7 @@ export interface Character {
     name: string;
     className: string;
     hp: number;
+    currentHp: number;
     attack: number;
     defense: number;
     speed: number;
@@ -34,6 +35,7 @@ export function loadCharacter(): Character | null {
         if (char.exp == null || isNaN(char.exp)) char.exp = 0;
         if (char.gold == null || isNaN(char.gold)) char.gold = 0;
         if (char.gem == null || isNaN(char.gem)) char.gem = 0;
+        if (char.currentHp == null || isNaN(char.currentHp)) char.currentHp = char.hp;
         return char;
     } catch {
         return null;
@@ -69,6 +71,7 @@ export function addExpToCharacter(exp: number): { character: Character; leveledU
 
         // 레벨업 시 스탯 증가
         character.hp += 5;
+        character.currentHp += 5;
         character.attack += 2;
         character.defense += 2;
         character.speed += 2;
@@ -95,15 +98,13 @@ export interface ItemStats {
     speed: number;
 }
 
-export type StatRange = [number, number];
-
 export interface GameItem {
     id: string;
     name: string;
     emoji: string;
     rarity: ItemRarity;
     description: string;
-    statRanges: Partial<Record<keyof ItemStats, StatRange>>;
+    stats: ItemStats;
 }
 
 export interface InventoryItem {
@@ -144,22 +145,6 @@ export const ITEM_RARITY_TEXT: Record<ItemRarity, string> = {
     '전설': 'text-amber-500',
 };
 
-// 등급별 드롭 확률
-export const ITEM_DROP_RATES: { rarity: ItemRarity; weight: number }[] = [
-    { rarity: '일반', weight: 80.0 },
-    { rarity: '고급', weight: 15.0 },
-    { rarity: '희귀', weight: 4.5 },
-    { rarity: '에픽', weight: 0.45 },
-    { rarity: '전설', weight: 0.05 },
-];
-
-// 난이도별 드롭 개수
-export const DUNGEON_DROP_COUNT: Record<string, number> = {
-    '쉬움': 2,
-    '보통': 3,
-    '어려움': 4,
-};
-
 export const GAME_ITEMS: Record<string, GameItem> = {
     // 일반
     bone: {
@@ -168,7 +153,7 @@ export const GAME_ITEMS: Record<string, GameItem> = {
         emoji: '🦴',
         rarity: '일반',
         description: '기본적인 전리품. 펫에게 간식으로 줄 수 있다.',
-        statRanges: { attack: [1, 5] },
+        stats: { hp: 0, attack: 3, defense: 0, speed: 0 },
     },
     potion: {
         id: 'potion',
@@ -176,7 +161,7 @@ export const GAME_ITEMS: Record<string, GameItem> = {
         emoji: '🧪',
         rarity: '일반',
         description: '체력을 회복시켜주는 기본 포션.',
-        statRanges: { hp: [5, 15] },
+        stats: { hp: 10, attack: 0, defense: 0, speed: 0 },
     },
     // 고급
     enhanced_feed: {
@@ -185,7 +170,7 @@ export const GAME_ITEMS: Record<string, GameItem> = {
         emoji: '🥩',
         rarity: '고급',
         description: '영양이 풍부한 특제 사료. 근력이 올라간다.',
-        statRanges: { attack: [3, 8], hp: [2, 6] },
+        stats: { hp: 4, attack: 5, defense: 0, speed: 0 },
     },
     agility_feather: {
         id: 'agility_feather',
@@ -193,7 +178,7 @@ export const GAME_ITEMS: Record<string, GameItem> = {
         emoji: '🪶',
         rarity: '고급',
         description: '바람의 기운이 깃든 깃털. 발놀림이 빨라진다.',
-        statRanges: { speed: [4, 10], defense: [1, 4] },
+        stats: { hp: 0, attack: 0, defense: 2, speed: 7 },
     },
     // 희귀
     magic_snack: {
@@ -202,7 +187,7 @@ export const GAME_ITEMS: Record<string, GameItem> = {
         emoji: '✨',
         rarity: '희귀',
         description: '마법이 깃든 특별한 간식. 먹으면 기분이 좋아진다.',
-        statRanges: { attack: [3, 10], speed: [2, 8] },
+        stats: { hp: 0, attack: 6, defense: 0, speed: 5 },
     },
     shield_charm: {
         id: 'shield_charm',
@@ -210,7 +195,7 @@ export const GAME_ITEMS: Record<string, GameItem> = {
         emoji: '🛡️',
         rarity: '희귀',
         description: '방어력을 일시적으로 높여주는 부적.',
-        statRanges: { defense: [5, 12], hp: [3, 10] },
+        stats: { hp: 6, attack: 0, defense: 8, speed: 0 },
     },
     // 에픽
     dragon_claw: {
@@ -219,7 +204,7 @@ export const GAME_ITEMS: Record<string, GameItem> = {
         emoji: '🐲',
         rarity: '에픽',
         description: '고대 용의 발톱. 엄청난 파괴력이 느껴진다.',
-        statRanges: { attack: [8, 18], speed: [4, 12] },
+        stats: { hp: 0, attack: 13, defense: 0, speed: 8 },
     },
     starlight_armor: {
         id: 'starlight_armor',
@@ -227,7 +212,7 @@ export const GAME_ITEMS: Record<string, GameItem> = {
         emoji: '🌟',
         rarity: '에픽',
         description: '별의 축복을 받은 갑옷. 튼튼하면서도 가볍다.',
-        statRanges: { defense: [8, 18], hp: [6, 15] },
+        stats: { hp: 10, attack: 0, defense: 13, speed: 0 },
     },
     // 전설
     legend_necklace: {
@@ -236,26 +221,9 @@ export const GAME_ITEMS: Record<string, GameItem> = {
         emoji: '📿',
         rarity: '전설',
         description: '드래곤의 비늘로 만든 전설적인 목걸이.',
-        statRanges: { hp: [8, 20], attack: [5, 15], defense: [5, 15], speed: [5, 15] },
+        stats: { hp: 14, attack: 10, defense: 10, speed: 10 },
     },
 };
-
-function rollRarity(): ItemRarity {
-    const roll = Math.random() * 100;
-    let cumulative = 0;
-    for (const { rarity, weight } of ITEM_DROP_RATES) {
-        cumulative += weight;
-        if (roll < cumulative) return rarity;
-    }
-    return '일반';
-}
-
-export function rollItemDrop(): { itemId: string; item: GameItem } {
-    const rarity = rollRarity();
-    const candidates = Object.values(GAME_ITEMS).filter((i) => i.rarity === rarity);
-    const picked = candidates[Math.floor(Math.random() * candidates.length)];
-    return { itemId: picked.id, item: picked };
-}
 
 export function loadInventory(): InventoryItem[] {
     if (typeof window === 'undefined') return [];
@@ -279,20 +247,6 @@ export function saveInventory(inventory: InventoryItem[]) {
     localStorage.setItem('superpet-inventory', JSON.stringify(inventory));
 }
 
-function rollStat(range: StatRange): number {
-    return Math.floor(Math.random() * (range[1] - range[0] + 1)) + range[0];
-}
-
-function generateItemStats(item: GameItem): ItemStats {
-    const ranges = item.statRanges;
-    return {
-        hp: ranges.hp ? rollStat(ranges.hp) : 0,
-        attack: ranges.attack ? rollStat(ranges.attack) : 0,
-        defense: ranges.defense ? rollStat(ranges.defense) : 0,
-        speed: ranges.speed ? rollStat(ranges.speed) : 0,
-    };
-}
-
 export function addItemToInventory(itemId: string, quantity: number) {
     const item = GAME_ITEMS[itemId];
     if (!item) return;
@@ -301,7 +255,7 @@ export function addItemToInventory(itemId: string, quantity: number) {
     if (existing) {
         existing.quantity += quantity;
     } else {
-        inventory.push({ item, quantity, stats: generateItemStats(item) });
+        inventory.push({ item, quantity, stats: { ...item.stats } });
     }
     saveInventory(inventory);
 }
@@ -382,5 +336,5 @@ export function generateCharacter(name: string, type: PetInfo['type'], traits: s
         .sort((a, b) => b[1] - a[1])[0][0];
     const className = CLASS_MAP[topStat];
 
-    return { name, className, hp, attack, defense, speed, element, level: 1, exp: 0, gold: 0, gem: 0 };
+    return { name, className, hp, currentHp: hp, attack, defense, speed, element, level: 1, exp: 0, gold: 0, gem: 0 };
 }

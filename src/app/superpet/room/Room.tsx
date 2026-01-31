@@ -116,7 +116,8 @@ export default function Room() {
                             <div className="flex gap-3 text-xs text-foreground/60">
                                 {(Object.entries(STAT_ICONS) as [keyof typeof STAT_ICONS, typeof Heart][]).map(([key, Icon]) => (
                                     <span key={key} className="flex items-center gap-0.5">
-                                        <Icon className="h-3 w-3" /> {character[key]}
+                                        <Icon className="h-3 w-3" />
+                                        {key === 'hp' ? `${character.currentHp}/${character.hp}` : character[key]}
                                     </span>
                                 ))}
                             </div>
