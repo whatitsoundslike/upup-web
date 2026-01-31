@@ -301,9 +301,23 @@ export default function Room() {
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {equippedEntries.map(([slot, item]) => (
-                            <div
+                            <button
                                 key={slot}
-                                className="flex items-center gap-3 rounded-xl border border-foreground/10 bg-white/5 px-3 py-2"
+                                onClick={() => {
+                                    if (item) {
+                                        // 장착된 아이템을 InventoryItem 형식으로 변환
+                                        const inventoryFormat: InventoryItem = {
+                                            item: item,
+                                            quantity: 0, // 장착된 아이템은 수량 0
+                                            stats: { ...item.stats },
+                                            equipedItem: [item]
+                                        };
+                                        setSelectedItem(inventoryFormat);
+                                    }
+                                }}
+                                disabled={!item}
+                                className={`flex items-center gap-3 rounded-xl border-2 px-3 py-2 text-left transition-all ${item?.rarity ? ITEM_RARITY_COLORS[item.rarity] : 'border-foreground/10 bg-white/5'
+                                    } ${item ? 'hover:scale-[1.02] cursor-pointer' : 'cursor-default'}`}
                             >
                                 <div className="text-2xl">{item?.emoji ?? '—'}</div>
                                 <div className="min-w-0 flex-1">
@@ -316,22 +330,10 @@ export default function Room() {
                                             >
                                                 {item.rarity}
                                             </span>
-                                            {item.stats.hp > 0 && <span>HP +{item.stats.hp}</span>}
-                                            {item.stats.attack > 0 && <span>ATK +{item.stats.attack}</span>}
-                                            {item.stats.defense > 0 && <span>DEF +{item.stats.defense}</span>}
-                                            {item.stats.speed > 0 && <span>SPD +{item.stats.speed}</span>}
                                         </div>
                                     )}
                                 </div>
-                                {item && (
-                                    <button
-                                        onClick={() => handleUnequip(slot)}
-                                        className="text-xs font-semibold text-red-500 hover:text-red-600 transition-colors"
-                                    >
-                                        해제
-                                    </button>
-                                )}
-                            </div>
+                            </button>
                         ))}
                     </div>
                 </motion.div>
@@ -420,7 +422,9 @@ export default function Room() {
                                         <span className={`text-sm font-semibold ${ITEM_RARITY_TEXT[modalItem.rarity]}`}>
                                             {modalItem.rarity}
                                         </span>
-                                        <span className="text-sm text-foreground/50 ml-2">x{selectedItem.quantity}</span>
+                                        <span className="text-sm text-foreground/50 ml-2">
+                                            {selectedItem.quantity > 0 ? `x${selectedItem.quantity}` : '장착중'}
+                                        </span>
                                     </div>
 
                                     <p className="text-sm text-foreground/60 leading-relaxed text-center mb-4">
@@ -492,23 +496,25 @@ export default function Room() {
                                         })()}
                                     </div>
 
-                                    {/* 판매 버튼 */}
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => handleSellRequest(selectedItem.item.id, false)}
-                                            className="flex-1 py-3 rounded-xl bg-amber-500/10 text-amber-600 font-semibold text-sm hover:bg-amber-500/20 transition-colors flex items-center justify-center gap-1.5"
-                                        >
-                                            <Coins className="h-4 w-4" /> 1개 판매 ({ITEM_SELL_PRICE[modalItem.rarity]}G)
-                                        </button>
-                                        {selectedItem.quantity > 1 && (
+                                    {/* 판매 버튼 - 인벤토리에 있는 아이템만 판매 가능 */}
+                                    {selectedItem.quantity > 0 && (
+                                        <div className="flex gap-2">
                                             <button
-                                                onClick={() => handleSellRequest(selectedItem.item.id, true)}
-                                                className="py-3 px-4 rounded-xl bg-amber-500/10 text-amber-600 font-semibold text-sm hover:bg-amber-500/20 transition-colors"
+                                                onClick={() => handleSellRequest(selectedItem.item.id, false)}
+                                                className="flex-1 py-3 rounded-xl bg-amber-500/10 text-amber-600 font-semibold text-sm hover:bg-amber-500/20 transition-colors flex items-center justify-center gap-1.5"
                                             >
-                                                전부 판매 ({ITEM_SELL_PRICE[modalItem.rarity] * selectedItem.quantity}G)
+                                                <Coins className="h-4 w-4" /> 1개 판매 ({ITEM_SELL_PRICE[modalItem.rarity]}G)
                                             </button>
-                                        )}
-                                    </div>
+                                            {selectedItem.quantity > 1 && (
+                                                <button
+                                                    onClick={() => handleSellRequest(selectedItem.item.id, true)}
+                                                    className="py-3 px-4 rounded-xl bg-amber-500/10 text-amber-600 font-semibold text-sm hover:bg-amber-500/20 transition-colors"
+                                                >
+                                                    전부 판매 ({ITEM_SELL_PRICE[modalItem.rarity] * selectedItem.quantity}G)
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
                                 </motion.div>
                             );
                         })()}

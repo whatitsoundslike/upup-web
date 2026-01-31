@@ -5,11 +5,11 @@ export type EquipmentSlot = '투구' | '갑옷' | '장갑' | '부츠' | '망토'
 export interface EquippedItems {
     투구: GameItem | null;
     갑옷: GameItem | null;
-    장갑: GameItem | null;
-    부츠: GameItem | null;
     망토: GameItem | null;
     무기: GameItem | null;
     방패: GameItem | null;
+    장갑: GameItem | null;
+    부츠: GameItem | null;
     악세사리1: GameItem | null;
     악세사리2: GameItem | null;
 }
@@ -58,11 +58,11 @@ export function loadCharacter(): Character | null {
             char.equipment = {
                 투구: null,
                 갑옷: null,
-                장갑: null,
-                부츠: null,
                 망토: null,
                 무기: null,
                 방패: null,
+                장갑: null,
+                부츠: null,
                 악세사리1: null,
                 악세사리2: null,
             };
@@ -102,10 +102,12 @@ export function addExpToCharacter(exp: number): { character: Character; leveledU
 
         // 레벨업 시 스탯 증가
         character.hp += 5;
-        character.currentHp += 5;
         character.attack += 2;
         character.defense += 2;
         character.speed += 2;
+
+        // 레벨업 시 체력 완전 회복
+        character.currentHp = character.hp;
 
         needed = getExpForNextLevel(character.level);
     }

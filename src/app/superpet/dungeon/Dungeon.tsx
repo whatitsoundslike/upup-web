@@ -53,6 +53,9 @@ const dungeons: DungeonData[] = [
             { itemId: 'agility_feather', chance: 10 },
             { itemId: 'magic_snack', chance: 3 },
             { itemId: 'legend_necklace', chance: 100 },
+            { itemId: 'iron_helmet', chance: 100 },
+            { itemId: 'leather_armor', chance: 100 },
+            { itemId: 'knight_helmet', chance: 100 },
         ],
     },
     {
