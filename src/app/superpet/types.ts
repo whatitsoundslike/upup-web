@@ -273,7 +273,7 @@ export const GAME_ITEMS: Record<string, GameItem> = {
         emoji: '🧪',
         rarity: '일반',
         description: '체력을 회복시켜주는 기본 포션.',
-        stats: { hp: 10, attack: 0, defense: 0, speed: 0 },
+        stats: { hp: 50, attack: 0, defense: 0, speed: 0 },
         type: 'food',
         shopGoldPrice: 50,
     },
@@ -284,7 +284,7 @@ export const GAME_ITEMS: Record<string, GameItem> = {
         emoji: '🥩',
         rarity: '고급',
         description: '영양이 풍부한 특제 사료. 체력을 회복한다.',
-        stats: { hp: 15, attack: 0, defense: 0, speed: 0 },
+        stats: { hp: 100, attack: 0, defense: 0, speed: 0 },
         type: 'food',
     },
     // 희귀 - 음식
@@ -294,7 +294,7 @@ export const GAME_ITEMS: Record<string, GameItem> = {
         emoji: '✨',
         rarity: '희귀',
         description: '마법이 깃든 특별한 간식. 먹으면 체력이 회복된다.',
-        stats: { hp: 25, attack: 0, defense: 0, speed: 0 },
+        stats: { hp: 150, attack: 0, defense: 0, speed: 0 },
         type: 'food',
     },
     starlight_armor: {
@@ -314,7 +314,7 @@ export const GAME_ITEMS: Record<string, GameItem> = {
         emoji: '🍖',
         rarity: '전설',
         description: '전설의 요리사가 만든 최고급 요리. 엄청난 체력을 회복한다.',
-        stats: { hp: 60, attack: 0, defense: 0, speed: 0 },
+        stats: { hp: 200, attack: 0, defense: 0, speed: 0 },
         type: 'food',
     },
 

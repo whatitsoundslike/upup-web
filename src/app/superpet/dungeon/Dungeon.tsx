@@ -55,7 +55,7 @@ const dungeons: DungeonData[] = [
                 emoji: '🕊️',
                 level: 3,
                 hp: 60,
-                attack: 15,
+                attack: 10,
                 isBoss: false,
                 spawnChance: 55,
                 drops: [
@@ -68,7 +68,7 @@ const dungeons: DungeonData[] = [
                 emoji: '🐱',
                 level: 5,
                 hp: 80,
-                attack: 17,
+                attack: 12,
                 isBoss: false,
                 spawnChance: 40,
                 drops: [
@@ -82,7 +82,7 @@ const dungeons: DungeonData[] = [
                 emoji: '🦖',
                 level: 10,
                 hp: 150,
-                attack: 20,
+                attack: 17,
                 isBoss: true,
                 spawnChance: 5,
                 drops: [
@@ -113,6 +113,7 @@ const dungeons: DungeonData[] = [
                     { itemId: 'potion', chance: 65 },
                     { itemId: 'enhanced_feed', chance: 20 },
                     { itemId: 'running_shoes', chance: 10 },
+                    { itemId: 'wooden_sword', chance: 10 },
                 ],
             },
             {
@@ -266,11 +267,14 @@ export default function Dungeon() {
     const [battleLog, setBattleLog] = useState<string[]>([]);
     const [droppedItems, setDroppedItems] = useState<DroppedItem[]>([]);
     const [lowHpWarning, setLowHpWarning] = useState(false);
+    const [autoBattle, setAutoBattle] = useState(false);
     const logRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
 
     useEffect(() => {
         setCharacter(loadCharacter());
+        const saved = localStorage.getItem('superpet_autoBattle');
+        if (saved !== null) setAutoBattle(saved === 'true');
     }, []);
 
     useEffect(() => {
@@ -278,6 +282,17 @@ export default function Dungeon() {
             logRef.current.scrollTop = logRef.current.scrollHeight;
         }
     }, [battleLog]);
+
+    useEffect(() => {
+        if (battleState === 'won' || battleState === 'lost') {
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+    }, [battleState]);
+
+    const toggleAutoBattle = (checked: boolean) => {
+        setAutoBattle(checked);
+        localStorage.setItem('superpet_autoBattle', String(checked));
+    };
 
     // 몬스터 랜덤 선택 함수
     const selectRandomMonster = (dungeon: DungeonData): MonsterData => {
@@ -303,6 +318,8 @@ export default function Dungeon() {
             setLowHpWarning(true);
             return;
         }
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
 
         // 랜덤 몬스터 선택
         const monster = selectRandomMonster(dungeon);
@@ -423,6 +440,15 @@ export default function Dungeon() {
         setBattleLog((prev) => [...prev, ...newLog]);
     }, [battleState, character, selectedDungeon, monsterHp, playerHp]);
 
+    // 자동 전투 인터벌
+    useEffect(() => {
+        if (!autoBattle || battleState !== 'fighting') return;
+        const interval = setInterval(() => {
+            handleAttack();
+        }, 500);
+        return () => clearInterval(interval);
+    }, [autoBattle, battleState, handleAttack]);
+
     const exitBattle = () => {
         // 전투 중 도망 시 현재 HP 저장
         if (battleState === 'fighting' && character) {
@@ -469,26 +495,17 @@ export default function Dungeon() {
         const monsterHpPct = Math.max((monsterHp / selectedMonster.hp) * 100, 0);
 
         return (
-            <div className="max-w-3xl mx-auto px-4 py-12">
-                <motion.button
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    onClick={exitBattle}
-                    className="flex items-center gap-1 text-foreground/60 hover:text-foreground mb-8 text-sm font-semibold"
-                >
-                    <ArrowLeft className="h-4 w-4" /> 던전 목록으로
-                </motion.button>
-
+            <div className="max-w-3xl mx-auto px-4 py-2">
                 <motion.h2
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-2xl font-black mb-8 text-center"
+                    className="text-2xl font-black mb-2 text-center"
                 >
                     {selectedDungeon.name}
                 </motion.h2>
 
                 {/* 배틀 필드 */}
-                <div className="relative grid grid-cols-2 gap-6 mb-8">
+                <div className="relative grid grid-cols-2 gap-6">
                     {/* VS 표시 */}
                     <motion.div
                         initial={{ opacity: 0, scale: 0 }}
@@ -567,23 +584,35 @@ export default function Dungeon() {
 
                 {/* 액션 버튼 */}
                 {battleState === 'fighting' && (
-                    <div className="flex gap-4">
-                        <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={handleAttack}
-                            className="flex-1 py-4 rounded-xl bg-red-500 text-white font-bold text-lg flex items-center justify-center gap-2 hover:bg-red-600 transition-colors"
-                        >
-                            <Swords className="h-5 w-5" /> 공격!
-                        </motion.button>
-                        <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={exitBattle}
-                            className="px-6 py-4 rounded-xl bg-foreground/10 text-foreground/60 font-bold hover:bg-foreground/20 transition-colors"
-                        >
-                            도망치기
-                        </motion.button>
+                    <div className="space-y-3">
+                        <div className="flex gap-4">
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={handleAttack}
+                                disabled={autoBattle}
+                                className={`flex-1 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-colors ${autoBattle ? 'bg-red-500/50 text-white/50 cursor-not-allowed' : 'bg-red-500 text-white hover:bg-red-600'}`}
+                            >
+                                <Swords className="h-5 w-5" /> {autoBattle ? '자동 전투 중...' : '공격!'}
+                            </motion.button>
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={exitBattle}
+                                className="px-6 py-4 rounded-xl bg-foreground/10 text-foreground/60 font-bold hover:bg-foreground/20 transition-colors"
+                            >
+                                도망치기
+                            </motion.button>
+                        </div>
+                        <label className="flex items-center justify-center gap-2 cursor-pointer select-none">
+                            <input
+                                type="checkbox"
+                                checked={autoBattle}
+                                onChange={(e) => toggleAutoBattle(e.target.checked)}
+                                className="w-4 h-4 rounded accent-red-500"
+                            />
+                            <span className="text-sm text-foreground/60 font-semibold">자동 전투</span>
+                        </label>
                     </div>
                 )}
 
@@ -594,7 +623,7 @@ export default function Dungeon() {
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0 }}
-                            className="mt-6 glass p-8 rounded-2xl bg-white/5 text-center"
+                            className="glass px-8 rounded-2xl bg-white/5 text-center"
                         >
                             <Trophy className="h-16 w-16 text-amber-500 mx-auto mb-4" />
                             <h3 className="text-2xl font-black mb-2">승리!</h3>
@@ -617,13 +646,13 @@ export default function Dungeon() {
                             <div className="flex gap-3 justify-center">
                                 <button
                                     onClick={() => startBattle(selectedDungeon)}
-                                    className="px-6 py-3 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors flex items-center gap-2"
+                                    className="px-3 py-1.5 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors flex items-center gap-2"
                                 >
-                                    <Swords className="h-4 w-4" /> 다시 도전하기
+                                    <Swords className="h-4 w-4" /> 다시 도전
                                 </button>
                                 <button
                                     onClick={exitBattle}
-                                    className="px-6 py-3 rounded-xl bg-foreground/10 text-foreground/60 font-bold hover:bg-foreground/20 transition-colors"
+                                    className="px-3 py-1.5 rounded-xl bg-foreground/10 text-foreground/60 font-bold hover:bg-foreground/20 transition-colors"
                                 >
                                     다른 던전 선택
                                 </button>

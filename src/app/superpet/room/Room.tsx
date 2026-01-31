@@ -173,9 +173,9 @@ export default function Room() {
     });
 
     return (
-        <div className="max-w-4xl mx-auto px-4 py-12">
+        <div className="max-w-4xl mx-auto px-4 py-2">
             {/* 헤더 */}
-            <div className="text-center mb-10">
+            <div className="text-center mb-4">
                 <motion.h1
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -553,7 +553,7 @@ export default function Room() {
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 16 }}
-                        className="fixed inset-x-0 bottom-6 z-50 flex justify-center px-4"
+                        className="fixed inset-x-0 bottom-20 z-50 flex justify-center px-4"
                     >
                         <div
                             className={`w-full max-w-sm rounded-full px-4 py-3 text-sm font-semibold shadow-lg ${activeToast.tone === 'success'

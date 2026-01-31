@@ -223,7 +223,7 @@ export default function Shop() {
                         initial={{ opacity: 0, y: 40 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 40 }}
-                        className={`fixed bottom-6 left-1/2 -translate-x-1/2 px-6 py-3 rounded-xl shadow-lg font-bold text-sm z-50 ${toast.tone === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
+                        className={`fixed bottom-20 left-1/2 -translate-x-1/2 px-6 py-3 rounded-xl shadow-lg font-bold text-sm z-50 ${toast.tone === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
                             }`}
                     >
                         {toast.message}
