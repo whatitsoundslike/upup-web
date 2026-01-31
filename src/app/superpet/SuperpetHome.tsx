@@ -1,10 +1,21 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Swords, Users, ArrowRight, PawPrint, Shield, Zap, Heart, Gauge, Sparkles } from 'lucide-react';
+import { Swords, Users, PawPrint, Shield, Zap, Heart, Gauge, Sparkles, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
-import { generateCharacter, PET_TYPES, PET_TRAITS, type Character, type PetInfo } from './types';
+import { useState, useEffect } from 'react';
+import {
+    generateCharacter,
+    PET_TYPES,
+    PET_TRAITS,
+    loadAllCharacters,
+    addCharacter,
+    deleteCharacter,
+    setActiveCharacter,
+    migrateCharacterData,
+    type Character,
+    type PetInfo
+} from './types';
 
 const ELEMENT_COLORS: Record<string, string> = {
     '불': 'bg-red-500',
@@ -13,35 +24,29 @@ const ELEMENT_COLORS: Record<string, string> = {
     '땅': 'bg-amber-600',
 };
 
-const STAT_CONFIG = [
-    { key: 'hp' as const, label: 'HP', icon: Heart, color: 'bg-red-500', max: 200 },
-    { key: 'attack' as const, label: '공격력', icon: Zap, color: 'bg-orange-500', max: 80 },
-    { key: 'defense' as const, label: '방어력', icon: Shield, color: 'bg-blue-500', max: 80 },
-    { key: 'speed' as const, label: '속도', icon: Gauge, color: 'bg-green-500', max: 80 },
-];
-
-const features = [
-    {
-        title: '던전',
-        desc: '생성한 캐릭터로 던전에 도전하세요!',
-        icon: Swords,
-        href: '/superpet/dungeon',
-        color: 'text-red-500',
-    },
-    {
-        title: '룸',
-        desc: '다른 반려동물 영웅들과 소통하세요.',
-        icon: Users,
-        href: '/superpet/room',
-        color: 'text-emerald-500',
-    },
-];
-
 export default function SuperpetHome() {
     const [petName, setPetName] = useState('');
     const [petType, setPetType] = useState<PetInfo['type']>('dog');
     const [traits, setTraits] = useState<string[]>([]);
-    const [character, setCharacter] = useState<Character | null>(null);
+    const [characters, setCharacters] = useState<Character[]>([]);
+    const [showForm, setShowForm] = useState(false);
+    const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+    const [activeCharacterId, setActiveCharacterId] = useState<string | null>(null);
+
+    // 페이지 로드 시 기존 캐릭터 불러오기
+    useEffect(() => {
+        migrateCharacterData(); // 기존 데이터 마이그레이션
+        const allChars = loadAllCharacters();
+        setCharacters(allChars);
+
+        // 활성 캐릭터 ID 로드
+        const activeId = localStorage.getItem('superpet-active-character');
+        setActiveCharacterId(activeId);
+
+        if (allChars.length === 0) {
+            setShowForm(true); // 캐릭터가 없으면 폼 표시
+        }
+    }, []);
 
     const toggleTrait = (trait: string) => {
         setTraits((prev) =>
@@ -54,8 +59,24 @@ export default function SuperpetHome() {
     const handleGenerate = () => {
         if (!petName.trim()) return;
         const char = generateCharacter(petName.trim(), petType, traits);
-        setCharacter(char);
-        localStorage.setItem('superpet-character', JSON.stringify(char));
+        const success = addCharacter(char);
+        if (success) {
+            setCharacters(loadAllCharacters());
+            setPetName('');
+            setTraits([]);
+            setShowForm(false);
+        }
+    };
+
+    const handleSelectCharacter = (characterId: string) => {
+        setActiveCharacter(characterId);
+        setActiveCharacterId(characterId);
+    };
+
+    const handleDeleteCharacter = (characterId: string) => {
+        deleteCharacter(characterId);
+        setCharacters(loadAllCharacters());
+        setDeleteConfirm(null);
     };
 
     return (
@@ -81,179 +102,228 @@ export default function SuperpetHome() {
                         </motion.p>
                     </div>
 
-                    {/* 캐릭터 생성 폼 */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="glass p-8 rounded-2xl shadow-lg bg-white/5 mb-8"
-                    >
-                        <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                            <PawPrint className="h-5 w-5 text-amber-500" />
-                            캐릭터 생성
-                        </h2>
+                    {/* 캐릭터 카드 그리드 */}
+                    {characters.length > 0 && !showForm && (
+                        <div className="mb-8">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                {characters.map((char, idx) => (
+                                    <motion.div
+                                        key={char.id}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: idx * 0.1 }}
+                                        className="glass p-6 rounded-2xl shadow-lg bg-white/5 relative group"
+                                    >
+                                        {/* 삭제 버튼 */}
+                                        <button
+                                            onClick={() => setDeleteConfirm(char.id)}
+                                            className="absolute top-3 right-3 p-1.5 rounded-lg bg-red-500/10 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </button>
 
-                        {/* 펫 이름 */}
-                        <div className="mb-6">
-                            <label className="block text-sm font-semibold mb-2 text-foreground/80">
-                                펫 이름
-                            </label>
-                            <input
-                                type="text"
-                                value={petName}
-                                onChange={(e) => setPetName(e.target.value)}
-                                placeholder="반려동물 이름을 입력하세요"
-                                className="w-full px-4 py-3 rounded-xl bg-foreground/5 border border-foreground/10 focus:border-amber-500 focus:outline-none transition-colors"
-                                maxLength={20}
-                            />
+                                        <div className="text-center mb-4">
+                                            <h3 className="text-xl font-black mb-1">{char.name}</h3>
+                                            <p className="text-foreground/60 text-sm mb-2">
+                                                {char.className} | LV.{char.level}
+                                            </p>
+                                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-white text-xs font-bold ${ELEMENT_COLORS[char.element]}`}>
+                                                {char.element}
+                                            </span>
+                                        </div>
+
+                                        {/* HP 바 */}
+                                        <div className="mb-4">
+                                            <div className="flex items-center justify-between mb-1">
+                                                <span className="text-xs text-foreground/60">HP</span>
+                                                <span className="text-xs font-bold">{char.currentHp} / {char.hp}</span>
+                                            </div>
+                                            <div className="h-2 rounded-full bg-foreground/10 overflow-hidden">
+                                                <div
+                                                    style={{ width: `${Math.max((char.currentHp / char.hp) * 100, 0)}%` }}
+                                                    className="h-full rounded-full bg-red-500 transition-all"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* 선택 버튼 */}
+                                        {activeCharacterId === char.id ? (
+                                            <div className="w-full py-2.5 rounded-lg bg-foreground/10 text-foreground/50 text-sm font-bold text-center flex items-center justify-center gap-2 cursor-not-allowed">
+                                                <PawPrint className="h-4 w-4" />
+                                                선택됨
+                                            </div>
+                                        ) : (
+                                            <Link
+                                                href="/superpet/dungeon"
+                                                onClick={() => handleSelectCharacter(char.id)}
+                                                className="w-full py-2.5 rounded-lg bg-amber-500 text-white text-sm font-bold text-center hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
+                                            >
+                                                <PawPrint className="h-4 w-4" />
+                                                선택
+                                            </Link>
+                                        )}
+                                    </motion.div>
+                                ))}
+
+                                {/* 새 캐릭터 추가 카드 */}
+                                {characters.length < 3 && (
+                                    <motion.button
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: characters.length * 0.1 }}
+                                        onClick={() => setShowForm(true)}
+                                        className="glass p-6 rounded-2xl shadow-lg bg-white/5 hover:bg-white/10 transition-colors flex flex-col items-center justify-center min-h-[200px] border-2 border-dashed border-foreground/20"
+                                    >
+                                        <Plus className="h-12 w-12 text-amber-500 mb-3" />
+                                        <span className="text-sm font-bold text-foreground/60">새 캐릭터 만들기</span>
+                                        <span className="text-xs text-foreground/40 mt-1">({characters.length}/3)</span>
+                                    </motion.button>
+                                )}
+                            </div>
                         </div>
+                    )}
 
-                        {/* 종류 선택 */}
-                        <div className="mb-6">
-                            <label className="block text-sm font-semibold mb-2 text-foreground/80">
-                                종류
-                            </label>
-                            <div className="flex gap-3">
-                                {PET_TYPES.map((pt) => (
-                                    <button
-                                        key={pt.key}
-                                        onClick={() => setPetType(pt.key)}
-                                        className={`flex-1 py-3 rounded-xl font-semibold text-sm transition-all ${
-                                            petType === pt.key
+                    {/* 캐릭터 생성 폼 */}
+                    {showForm && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="glass p-8 rounded-2xl shadow-lg bg-white/5 mb-8"
+                        >
+                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                                <PawPrint className="h-5 w-5 text-amber-500" />
+                                캐릭터 생성
+                            </h2>
+
+                            {/* 펫 이름 */}
+                            <div className="mb-6">
+                                <label className="block text-sm font-semibold mb-2 text-foreground/80">
+                                    펫 이름
+                                </label>
+                                <input
+                                    type="text"
+                                    value={petName}
+                                    onChange={(e) => setPetName(e.target.value)}
+                                    placeholder="반려동물 이름을 입력하세요"
+                                    className="w-full px-4 py-3 rounded-xl bg-foreground/5 border border-foreground/10 focus:border-amber-500 focus:outline-none transition-colors"
+                                    maxLength={20}
+                                />
+                            </div>
+
+                            {/* 종류 선택 */}
+                            <div className="mb-6">
+                                <label className="block text-sm font-semibold mb-2 text-foreground/80">
+                                    종류
+                                </label>
+                                <div className="flex gap-3">
+                                    {PET_TYPES.map((pt) => (
+                                        <button
+                                            key={pt.key}
+                                            onClick={() => setPetType(pt.key)}
+                                            className={`flex-1 py-3 rounded-xl font-semibold text-sm transition-all ${petType === pt.key
                                                 ? 'bg-amber-500 text-white shadow-lg'
                                                 : 'bg-foreground/5 text-foreground/60 hover:bg-foreground/10'
-                                        }`}
-                                    >
-                                        {pt.label}
-                                    </button>
-                                ))}
+                                                }`}
+                                        >
+                                            {pt.label}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
 
-                        {/* 특성 선택 */}
-                        <div className="mb-8">
-                            <label className="block text-sm font-semibold mb-2 text-foreground/80">
-                                특성 선택 <span className="text-foreground/40 font-normal">(최대 3개)</span>
-                            </label>
-                            <div className="flex flex-wrap gap-2">
-                                {PET_TRAITS.map((trait) => (
-                                    <button
-                                        key={trait}
-                                        onClick={() => toggleTrait(trait)}
-                                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                                            traits.includes(trait)
+                            {/* 특성 선택 */}
+                            <div className="mb-8">
+                                <label className="block text-sm font-semibold mb-2 text-foreground/80">
+                                    특성 선택 <span className="text-foreground/40 font-normal">(최대 3개)</span>
+                                </label>
+                                <div className="flex flex-wrap gap-2">
+                                    {PET_TRAITS.map((trait) => (
+                                        <button
+                                            key={trait}
+                                            onClick={() => toggleTrait(trait)}
+                                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${traits.includes(trait)
                                                 ? 'bg-amber-500 text-white shadow-md'
                                                 : 'bg-foreground/5 text-foreground/60 hover:bg-foreground/10'
-                                        }`}
-                                    >
-                                        {trait}
-                                    </button>
-                                ))}
+                                                }`}
+                                        >
+                                            {trait}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
 
-                        {/* 생성 버튼 */}
-                        <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={handleGenerate}
-                            disabled={!petName.trim()}
-                            className="w-full py-4 rounded-xl bg-amber-500 text-white font-bold text-lg shadow-lg hover:bg-amber-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            {/* 생성 버튼 */}
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={handleGenerate}
+                                disabled={!petName.trim()}
+                                className="w-full py-4 rounded-xl bg-amber-500 text-white font-bold text-lg shadow-lg hover:bg-amber-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                                <Sparkles className="h-5 w-5" />
+                                캐릭터 생성
+                            </motion.button>
+
+                            {/* 취소 버튼 */}
+                            {characters.length > 0 && (
+                                <button
+                                    onClick={() => setShowForm(false)}
+                                    className="mt-3 w-full py-2 text-sm text-foreground/60 hover:text-foreground/80 transition-colors"
+                                >
+                                    취소
+                                </button>
+                            )}
+                        </motion.div>
+                    )}
+
+                </div>
+            </section>
+
+            {/* 삭제 확인 모달 */}
+            <AnimatePresence>
+                {deleteConfirm && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+                        onClick={() => setDeleteConfirm(null)}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="relative w-full max-w-sm p-6 rounded-2xl shadow-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-red-500"
                         >
-                            <Sparkles className="h-5 w-5" />
-                            캐릭터 생성
-                        </motion.button>
-                    </motion.div>
-
-                    {/* 캐릭터 결과 */}
-                    <AnimatePresence>
-                        {character && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                                className="glass p-8 rounded-2xl shadow-lg bg-white/5 mb-8"
-                            >
-                                <div className="flex items-center justify-between mb-6">
-                                    <div>
-                                        <h3 className="text-2xl font-black">{character.name}</h3>
-                                        <p className="text-foreground/60 text-sm">{character.className}</p>
-                                    </div>
-                                    <span className={`px-3 py-1 rounded-full text-white text-sm font-bold ${ELEMENT_COLORS[character.element]}`}>
-                                        {character.element}
-                                    </span>
-                                </div>
-
-                                <div className="space-y-4">
-                                    {STAT_CONFIG.map((stat) => {
-                                        const value = character[stat.key];
-                                        const pct = Math.min((value / stat.max) * 100, 100);
-                                        return (
-                                            <div key={stat.key}>
-                                                <div className="flex items-center justify-between mb-1">
-                                                    <span className="flex items-center gap-1.5 text-sm font-semibold text-foreground/80">
-                                                        <stat.icon className="h-4 w-4" />
-                                                        {stat.label}
-                                                    </span>
-                                                    <span className="text-sm font-bold">{value}</span>
-                                                </div>
-                                                <div className="h-3 rounded-full bg-foreground/10 overflow-hidden">
-                                                    <motion.div
-                                                        initial={{ width: 0 }}
-                                                        animate={{ width: `${pct}%` }}
-                                                        transition={{ duration: 0.8, ease: 'easeOut' }}
-                                                        className={`h-full rounded-full ${stat.color}`}
-                                                    />
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-
-                                <Link
-                                    href="/superpet/dungeon"
-                                    className="mt-6 w-full py-3 rounded-xl bg-red-500 text-white font-bold text-center flex items-center justify-center gap-2 hover:bg-red-600 transition-colors"
-                                >
-                                    <Swords className="h-5 w-5" />
-                                    던전 탐험하기
-                                </Link>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </div>
-            </section>
-
-            {/* 퀵링크 */}
-            <section className="py-16">
-                <div className="max-w-3xl mx-auto px-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {features.map((feature, idx) => (
-                            <motion.div
-                                key={feature.title}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.3 + idx * 0.1 }}
-                                whileHover={{ y: -5 }}
-                                className="glass p-8 rounded-2xl group transition-all shadow-lg bg-white/5"
-                            >
-                                <div className={`p-3 rounded-xl bg-white/10 w-fit mb-6 ${feature.color}`}>
-                                    <feature.icon className="h-6 w-6" />
-                                </div>
-                                <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                                <p className="text-sm text-foreground/60 leading-relaxed mb-6">
-                                    {feature.desc}
+                            <div className="text-center mb-6">
+                                <Trash2 className="h-16 w-16 text-red-500 mx-auto mb-3" />
+                                <h3 className="text-xl font-black mb-2">캐릭터 삭제</h3>
+                                <p className="text-sm text-foreground/60">
+                                    정말로 이 캐릭터를 삭제하시겠습니까?<br />
+                                    이 작업은 되돌릴 수 없습니다.
                                 </p>
-                                <Link
-                                    href={feature.href}
-                                    className="text-sm font-bold flex items-center gap-1 hover:text-amber-500 transition-colors"
+                            </div>
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setDeleteConfirm(null)}
+                                    className="flex-1 py-3 rounded-xl bg-foreground/10 text-foreground/60 font-bold hover:bg-foreground/20 transition-colors"
                                 >
-                                    자세히 보기 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                                </Link>
-                            </motion.div>
-                        ))}
-                    </div>
-                </div>
-            </section>
+                                    취소
+                                </button>
+                                <button
+                                    onClick={() => handleDeleteCharacter(deleteConfirm)}
+                                    className="flex-1 py-3 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors"
+                                >
+                                    삭제
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

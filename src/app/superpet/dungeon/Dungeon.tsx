@@ -8,6 +8,7 @@ import {
 import Link from 'next/link';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { type Character, type GameItem, GAME_ITEMS, addItemToInventory, addExpToCharacter, DUNGEON_EXP, ITEM_RARITY_TEXT, loadCharacter, saveCharacter } from '../types';
+import { useRouter } from 'next/navigation';
 
 interface MonsterDrop {
     itemId: string;
@@ -266,6 +267,7 @@ export default function Dungeon() {
     const [droppedItems, setDroppedItems] = useState<DroppedItem[]>([]);
     const [lowHpWarning, setLowHpWarning] = useState(false);
     const logRef = useRef<HTMLDivElement>(null);
+    const router = useRouter();
 
     useEffect(() => {
         setCharacter(loadCharacter());
@@ -364,13 +366,18 @@ export default function Dungeon() {
             // 몬스터 레벨 기반 경험치 (레벨 * 10 + 보스 보너스)
             const earnedExp = selectedMonster.level * 10 + (selectedMonster.isBoss ? 50 : 0);
             const { character: updated, leveledUp, levelsGained } = addExpToCharacter(earnedExp);
-            // 남은 HP 저장
-            updated.currentHp = playerHp;
+
+            // 레벨업하지 않았을 때만 남은 HP 저장 (레벨업 시에는 이미 체력이 완전 회복됨)
+            if (!leveledUp) {
+                updated.currentHp = playerHp;
+            }
+
             saveCharacter(updated);
             setCharacter(updated);
             newLog.push(`EXP +${earnedExp} 획득!`);
             if (leveledUp) {
                 newLog.push(`레벨 업! Lv.${updated.level - levelsGained} → Lv.${updated.level}`);
+                newLog.push(`체력이 완전히 회복되었다!`);
             }
             setBattleLog((prev) => [...prev, ...newLog]);
             setBattleState('won');
@@ -621,17 +628,12 @@ export default function Dungeon() {
                             <p className="text-foreground/60 mb-4">다음에는 더 강해져서 돌아오자!</p>
                             <div className="flex gap-3 justify-center">
                                 <button
-                                    onClick={() => startBattle(selectedDungeon)}
+                                    onClick={() => { router.push("/superpet/room") }}
                                     className="px-6 py-3 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors"
                                 >
-                                    다시 도전
+                                    집으로...
                                 </button>
-                                <Link
-                                    href="/superpet/room"
-                                    className="px-6 py-3 rounded-xl bg-foreground/10 text-foreground/60 font-bold hover:bg-foreground/20 transition-colors"
-                                >
-                                    인벤토리
-                                </Link>
+
                             </div>
                         </motion.div>
                     )}

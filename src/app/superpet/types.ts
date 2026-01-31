@@ -15,6 +15,7 @@ export interface EquippedItems {
 }
 
 export interface Character {
+    id: string;
     name: string;
     className: string;
     hp: number;
@@ -42,12 +43,14 @@ export const DUNGEON_EXP: Record<string, number> = {
     '어려움': 120,
 };
 
-export function loadCharacter(): Character | null {
+// 기존 단일 캐릭터 데이터 로드 (마이그레이션용)
+function _loadSingleCharacterMigration(): Character | null {
     const saved = localStorage.getItem('superpet-character');
     if (!saved) return null;
     try {
         const char = JSON.parse(saved) as Character;
         // 기존 데이터 마이그레이션
+        if (!char.id) char.id = 'char-' + Date.now();
         if (char.level == null || isNaN(char.level)) char.level = 1;
         if (char.exp == null || isNaN(char.exp)) char.exp = 0;
         if (char.gold == null || isNaN(char.gold)) char.gold = 0;
@@ -73,8 +76,87 @@ export function loadCharacter(): Character | null {
     }
 }
 
+// 마이그레이션 로직: 기존 단일 캐릭터 데이터를 새 다중 캐릭터 시스템으로 옮김
+export function migrateCharacterData() {
+    const singleChar = _loadSingleCharacterMigration();
+    if (singleChar) {
+        const allChars = loadAllCharacters();
+        if (!allChars.some(c => c.id === singleChar.id)) {
+            allChars.push(singleChar);
+            saveAllCharacters(allChars);
+            setActiveCharacter(singleChar.id);
+            localStorage.removeItem('superpet-character'); // Remove old single character data
+        }
+    }
+}
+
+export function loadCharacter(): Character | null {
+    try {
+        const activeId = localStorage.getItem('superpet-active-character');
+        if (!activeId) return null;
+
+        const allChars = loadAllCharacters();
+        return allChars.find(c => c.id === activeId) || null;
+    } catch {
+        return null;
+    }
+}
+
 export function saveCharacter(character: Character) {
-    localStorage.setItem('superpet-character', JSON.stringify(character));
+    const allChars = loadAllCharacters();
+    const index = allChars.findIndex(c => c.id === character.id);
+    if (index >= 0) {
+        allChars[index] = character;
+        saveAllCharacters(allChars);
+    }
+}
+
+// 모든 캐릭터 로드
+export function loadAllCharacters(): Character[] {
+    try {
+        const data = localStorage.getItem('superpet-characters');
+        return data ? JSON.parse(data) : [];
+    } catch {
+        return [];
+    }
+}
+
+// 모든 캐릭터 저장
+export function saveAllCharacters(characters: Character[]) {
+    localStorage.setItem('superpet-characters', JSON.stringify(characters));
+}
+
+// 새 캐릭터 추가 (최대 3개)
+export function addCharacter(character: Character): boolean {
+    const allChars = loadAllCharacters();
+    if (allChars.length >= 3) return false;
+
+    allChars.push(character);
+    saveAllCharacters(allChars);
+    setActiveCharacter(character.id);
+    return true;
+}
+
+// 캐릭터 삭제
+export function deleteCharacter(characterId: string) {
+    const allChars = loadAllCharacters();
+    const filtered = allChars.filter(c => c.id !== characterId);
+    saveAllCharacters(filtered);
+
+    // 활성 캐릭터가 삭제된 경우 다른 캐릭터를 활성화
+    const activeId = localStorage.getItem('superpet-active-character');
+    if (activeId === characterId) {
+        if (filtered.length > 0) {
+            setActiveCharacter(filtered[0].id);
+        } else {
+            localStorage.removeItem('superpet-active-character');
+        }
+    }
+}
+
+// 활성 캐릭터 설정
+export function setActiveCharacter(characterId: string) {
+    localStorage.setItem('superpet-active-character', characterId);
 }
 
 export function addGoldToCharacter(amount: number): Character {
@@ -522,6 +604,7 @@ export function generateCharacter(name: string, type: PetInfo['type'], traits: s
     const className = CLASS_MAP[topStat];
 
     return {
+        id: 'char-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
         name,
         className,
         hp,
@@ -537,14 +620,14 @@ export function generateCharacter(name: string, type: PetInfo['type'], traits: s
         equipment: {
             투구: null,
             갑옷: null,
-            장갑: null,
-            부츠: null,
             망토: null,
             무기: null,
             방패: null,
+            장갑: null,
+            부츠: null,
             악세사리1: null,
             악세사리2: null,
-        }
+        },
     };
 }
 
