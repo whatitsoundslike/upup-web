@@ -6,6 +6,62 @@ export interface Character {
     defense: number;
     speed: number;
     element: string;
+    level: number;
+    exp: number;
+}
+
+// 레벨별 필요 경험치 (레벨 1→2: 100, 2→3: 150, ...)
+export function getExpForNextLevel(level: number): number {
+    return 100 + (level - 1) * 50;
+}
+
+// 던전 난이도별 경험치
+export const DUNGEON_EXP: Record<string, number> = {
+    '쉬움': 30,
+    '보통': 60,
+    '어려움': 120,
+};
+
+export function loadCharacter(): Character | null {
+    const saved = localStorage.getItem('superpet-character');
+    if (!saved) return null;
+    try {
+        const char = JSON.parse(saved) as Character;
+        // 기존 데이터 마이그레이션: level/exp 없으면 기본값
+        if (char.level == null || isNaN(char.level)) char.level = 1;
+        if (char.exp == null || isNaN(char.exp)) char.exp = 0;
+        return char;
+    } catch {
+        return null;
+    }
+}
+
+export function addExpToCharacter(exp: number): { character: Character; leveledUp: boolean; levelsGained: number } {
+    const character = loadCharacter();
+    if (!character) throw new Error('No character');
+
+    character.exp += exp;
+    let leveledUp = false;
+    let levelsGained = 0;
+
+    let needed = getExpForNextLevel(character.level);
+    while (character.exp >= needed) {
+        character.exp -= needed;
+        character.level += 1;
+        levelsGained += 1;
+        leveledUp = true;
+
+        // 레벨업 시 스탯 증가
+        character.hp += 5;
+        character.attack += 2;
+        character.defense += 2;
+        character.speed += 2;
+
+        needed = getExpForNextLevel(character.level);
+    }
+
+    localStorage.setItem('superpet-character', JSON.stringify(character));
+    return { character, leveledUp, levelsGained };
 }
 
 export interface PetInfo {
@@ -212,5 +268,5 @@ export function generateCharacter(name: string, type: PetInfo['type'], traits: s
         .sort((a, b) => b[1] - a[1])[0][0];
     const className = CLASS_MAP[topStat];
 
-    return { name, className, hp, attack, defense, speed, element };
+    return { name, className, hp, attack, defense, speed, element, level: 1, exp: 0 };
 }

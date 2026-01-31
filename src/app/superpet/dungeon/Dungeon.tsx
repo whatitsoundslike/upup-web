@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
-import { type Character, GAME_ITEMS, addItemToInventory } from '../types';
+import { type Character, GAME_ITEMS, addItemToInventory, addExpToCharacter, DUNGEON_EXP, loadCharacter } from '../types';
 
 interface RewardDrop {
     itemId: string;
@@ -92,12 +92,7 @@ export default function Dungeon() {
     const [battleLog, setBattleLog] = useState<string[]>([]);
 
     useEffect(() => {
-        const saved = localStorage.getItem('superpet-character');
-        if (saved) {
-            try {
-                setCharacter(JSON.parse(saved));
-            } catch { /* ignore */ }
-        }
+        setCharacter(loadCharacter());
     }, []);
 
     const startBattle = (dungeon: DungeonData) => {
@@ -127,6 +122,14 @@ export default function Dungeon() {
                 if (item) {
                     newLog.push(`${item.emoji} ${item.name} x${drop.quantity} 획득!`);
                 }
+            }
+            // 경험치 획득 및 레벨업
+            const earnedExp = DUNGEON_EXP[selectedDungeon.difficulty] ?? 30;
+            const { character: updated, leveledUp, levelsGained } = addExpToCharacter(earnedExp);
+            setCharacter(updated);
+            newLog.push(`EXP +${earnedExp} 획득!`);
+            if (leveledUp) {
+                newLog.push(`레벨 업! Lv.${updated.level - levelsGained} → Lv.${updated.level}`);
             }
             setBattleLog((prev) => [...prev, ...newLog]);
             setBattleState('won');
@@ -388,7 +391,7 @@ export default function Dungeon() {
                     transition={{ delay: 0.1 }}
                     className="text-foreground/60"
                 >
-                    <span className="font-bold text-foreground">{character.name}</span> ({character.className}) 으로 도전!
+                    <span className="font-bold text-foreground">{character.name}</span> (Lv.{character.level} {character.className}) 으로 도전!
                 </motion.p>
             </div>
 

@@ -12,6 +12,8 @@ import {
     ITEM_RARITY_TEXT,
     loadInventory,
     saveInventory,
+    getExpForNextLevel,
+    loadCharacter,
 } from '../types';
 
 const STAT_ICONS = {
@@ -28,10 +30,7 @@ export default function Inventory() {
 
     useEffect(() => {
         setInventory(loadInventory());
-        try {
-            const saved = localStorage.getItem('superpet-character');
-            if (saved) setCharacter(JSON.parse(saved));
-        } catch { /* ignore */ }
+        setCharacter(loadCharacter());
     }, []);
 
     const handleDiscard = (itemId: string) => {
@@ -80,28 +79,54 @@ export default function Inventory() {
                 </motion.p>
             </div>
 
-            {/* 캐릭터 미니 카드 */}
-            {character && (
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.15 }}
-                    className="glass p-4 rounded-xl bg-white/5 mb-8 flex items-center gap-4"
-                >
-                    <div className="text-3xl">🐾</div>
-                    <div className="flex-1 min-w-0">
-                        <h3 className="font-bold truncate">{character.name}</h3>
-                        <p className="text-xs text-foreground/50">{character.className} / {character.element}</p>
-                    </div>
-                    <div className="flex gap-3 text-xs text-foreground/60">
-                        {(Object.entries(STAT_ICONS) as [keyof typeof STAT_ICONS, typeof Heart][]).map(([key, Icon]) => (
-                            <span key={key} className="flex items-center gap-0.5">
-                                <Icon className="h-3 w-3" /> {character[key]}
-                            </span>
-                        ))}
-                    </div>
-                </motion.div>
-            )}
+            {/* 캐릭터 프로필 카드 */}
+            {character && (() => {
+                const nextExp = getExpForNextLevel(character.level);
+                const expPct = Math.min((character.exp / nextExp) * 100, 100);
+                return (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.15 }}
+                        className="glass p-5 rounded-xl bg-white/5 mb-8"
+                    >
+                        <div className="flex items-center gap-4 mb-3">
+                            <div className="text-3xl">🐾</div>
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                    <h3 className="font-bold truncate">{character.name}</h3>
+                                    <span className="px-2 py-0.5 rounded-full bg-amber-500 text-white text-xs font-bold shrink-0">
+                                        Lv.{character.level}
+                                    </span>
+                                </div>
+                                <p className="text-xs text-foreground/50">{character.className} / {character.element}</p>
+                            </div>
+                            <div className="flex gap-3 text-xs text-foreground/60">
+                                {(Object.entries(STAT_ICONS) as [keyof typeof STAT_ICONS, typeof Heart][]).map(([key, Icon]) => (
+                                    <span key={key} className="flex items-center gap-0.5">
+                                        <Icon className="h-3 w-3" /> {character[key]}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                        {/* 경험치 바 */}
+                        <div>
+                            <div className="flex justify-between text-xs mb-1">
+                                <span className="text-foreground/50">EXP</span>
+                                <span className="text-foreground/60 font-medium">{character.exp} / {nextExp}</span>
+                            </div>
+                            <div className="h-2.5 rounded-full bg-foreground/10 overflow-hidden">
+                                <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${expPct}%` }}
+                                    transition={{ duration: 0.8, ease: 'easeOut' }}
+                                    className="h-full rounded-full bg-amber-500"
+                                />
+                            </div>
+                        </div>
+                    </motion.div>
+                );
+            })()}
 
             {/* 요약 */}
             <motion.div
