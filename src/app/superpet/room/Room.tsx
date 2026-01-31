@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Swords, Coins, Gem, X, Heart, Shield, Zap, Gauge } from 'lucide-react';
+import { Package, Swords, Coins, Gem, X, Heart, Shield, Zap, Gauge, Search, Sword, Feather } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import {
@@ -27,10 +27,10 @@ import {
 } from '../types';
 
 const STAT_ICONS = {
-    hp: Heart,
-    attack: Zap,
-    defense: Shield,
-    speed: Gauge,
+    hp: { icon: Heart, color: 'text-red-500 fill-red-500' },
+    attack: { icon: Sword, color: 'text-red-500' },
+    defense: { icon: Shield, color: 'text-blue-500 fill-blue-500' },
+    speed: { icon: Feather, color: 'text-green-500' },
 };
 
 export default function Room() {
@@ -40,6 +40,8 @@ export default function Room() {
     const [toastQueue, setToastQueue] = useState<{ message: string; tone: 'success' | 'error'; count: number }[]>([]);
     const [activeToast, setActiveToast] = useState<{ message: string; tone: 'success' | 'error'; count: number } | null>(null);
     const [sellConfirm, setSellConfirm] = useState<{ itemId: string; sellAll: boolean } | null>(null);
+    const [searchName, setSearchName] = useState('');
+    const [slotFilter, setSlotFilter] = useState<EquipmentSlot | 'all'>('all');
 
     useEffect(() => {
         setInventory(loadInventory());
@@ -162,6 +164,14 @@ export default function Room() {
         ? (Object.entries(character.equipment) as [EquipmentSlot, GameItem | null][])
         : [];
 
+    const filteredInventory = inventory.filter((entry) => {
+        if (searchName && !entry.item.name.includes(searchName)) return false;
+        if (slotFilter !== 'all') {
+            if (entry.item.type !== 'equipment' || entry.item.equipmentSlot !== slotFilter) return false;
+        }
+        return true;
+    });
+
     return (
         <div className="max-w-4xl mx-auto px-4 py-12">
             {/* 헤더 */}
@@ -207,14 +217,14 @@ export default function Room() {
                                 <p className="text-xs text-foreground/50">{character.className} / {character.element}</p>
                             </div>
                             <div className="flex flex-col gap-1 text-[11px] sm:flex-row sm:flex-wrap sm:gap-x-3 sm:gap-y-1 sm:text-xs text-foreground/60">
-                                {(Object.entries(STAT_ICONS) as [keyof typeof STAT_ICONS, typeof Heart][]).map(([key, Icon]) => {
+                                {(Object.entries(STAT_ICONS) as [keyof typeof STAT_ICONS, (typeof STAT_ICONS)[keyof typeof STAT_ICONS]][]).map(([key, { icon: Icon, color }]) => {
                                     const bonus = equipmentStats[key];
                                     const baseValue = character[key];
                                     if (key === 'hp') {
                                         const totalHp = character.hp + bonus;
                                         return (
                                             <span key={key} className="flex items-center gap-0.5">
-                                                <Icon className="h-3 w-3" />
+                                                <Icon className={`h-3 w-3 ${color}`} />
                                                 {character.currentHp}/{totalHp}{' '}
                                                 <span className={bonus > 0 ? 'text-emerald-500' : 'text-foreground/40'}>
                                                     {`(+${bonus})`}
@@ -224,7 +234,7 @@ export default function Room() {
                                     }
                                     return (
                                         <span key={key} className="flex items-center gap-0.5">
-                                            <Icon className="h-3 w-3" />
+                                            <Icon className={`h-3 w-3 ${color}`} />
                                             {baseValue}{' '}
                                             <span className={bonus > 0 ? 'text-emerald-500' : 'text-foreground/40'}>
                                                 {`(+${bonus})`}
@@ -360,10 +370,47 @@ export default function Room() {
                 </motion.div>
             )}
 
+            {/* 필터 */}
+            {inventory.length > 0 && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.25 }}
+                    className="flex gap-3 mb-6"
+                >
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/40" />
+                        <input
+                            type="text"
+                            placeholder="아이템 이름 검색"
+                            value={searchName}
+                            onChange={(e) => setSearchName(e.target.value)}
+                            className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-foreground/5 border border-foreground/10 text-sm placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                        />
+                    </div>
+                    <select
+                        value={slotFilter}
+                        onChange={(e) => setSlotFilter(e.target.value as EquipmentSlot | 'all')}
+                        className="px-3 py-2.5 rounded-xl bg-foreground/5 border border-foreground/10 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                    >
+                        <option value="all">전체 부위</option>
+                        <option value="투구">투구</option>
+                        <option value="갑옷">갑옷</option>
+                        <option value="장갑">장갑</option>
+                        <option value="부츠">부츠</option>
+                        <option value="망토">망토</option>
+                        <option value="무기">무기</option>
+                        <option value="방패">방패</option>
+                        <option value="목걸이">목걸이</option>
+                        <option value="반지">반지</option>
+                    </select>
+                </motion.div>
+            )}
+
             {/* 아이템 그리드 */}
             {inventory.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {inventory.map((entry, idx) => (
+                    {filteredInventory.map((entry, idx) => (
                         <motion.button
                             key={entry.item.id}
                             initial={{ opacity: 0, y: 15 }}

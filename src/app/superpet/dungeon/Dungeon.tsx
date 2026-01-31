@@ -55,9 +55,9 @@ const dungeons: DungeonData[] = [
                 emoji: '🕊️',
                 level: 3,
                 hp: 60,
-                attack: 6,
+                attack: 15,
                 isBoss: false,
-                spawnChance: 50,
+                spawnChance: 55,
                 drops: [
                     { itemId: 'potion', chance: 50 },
                     { itemId: 'iron_helmet', chance: 5 },
@@ -68,9 +68,9 @@ const dungeons: DungeonData[] = [
                 emoji: '🐱',
                 level: 5,
                 hp: 80,
-                attack: 8,
+                attack: 17,
                 isBoss: false,
-                spawnChance: 35,
+                spawnChance: 40,
                 drops: [
                     { itemId: 'potion', chance: 60 },
                     { itemId: 'enhanced_feed', chance: 10 },
@@ -82,9 +82,9 @@ const dungeons: DungeonData[] = [
                 emoji: '🦖',
                 level: 10,
                 hp: 150,
-                attack: 12,
+                attack: 20,
                 isBoss: true,
-                spawnChance: 15,
+                spawnChance: 5,
                 drops: [
                     { itemId: 'enhanced_feed', chance: 40 },
                     { itemId: 'leather_armor', chance: 20 },
@@ -106,9 +106,9 @@ const dungeons: DungeonData[] = [
                 emoji: '🐰',
                 level: 13,
                 hp: 120,
-                attack: 14,
+                attack: 21,
                 isBoss: false,
-                spawnChance: 45,
+                spawnChance: 55,
                 drops: [
                     { itemId: 'potion', chance: 65 },
                     { itemId: 'enhanced_feed', chance: 20 },
@@ -120,9 +120,9 @@ const dungeons: DungeonData[] = [
                 emoji: '🐗',
                 level: 17,
                 hp: 180,
-                attack: 18,
+                attack: 27,
                 isBoss: false,
-                spawnChance: 35,
+                spawnChance: 40,
                 drops: [
                     { itemId: 'enhanced_feed', chance: 30 },
                     { itemId: 'magic_snack', chance: 8 },
@@ -134,9 +134,9 @@ const dungeons: DungeonData[] = [
                 emoji: '👹',
                 level: 20,
                 hp: 280,
-                attack: 24,
+                attack: 36,
                 isBoss: true,
-                spawnChance: 20,
+                spawnChance: 5,
                 drops: [
                     { itemId: 'magic_snack', chance: 25 },
                     { itemId: 'wind_boots', chance: 18 },
@@ -159,9 +159,9 @@ const dungeons: DungeonData[] = [
                 emoji: '🦅',
                 level: 23,
                 hp: 220,
-                attack: 26,
+                attack: 39,
                 isBoss: false,
-                spawnChance: 45,
+                spawnChance: 55,
                 drops: [
                     { itemId: 'enhanced_feed', chance: 40 },
                     { itemId: 'magic_snack', chance: 15 },
@@ -173,9 +173,9 @@ const dungeons: DungeonData[] = [
                 emoji: '🐻',
                 level: 27,
                 hp: 320,
-                attack: 32,
+                attack: 48,
                 isBoss: false,
-                spawnChance: 35,
+                spawnChance: 40,
                 drops: [
                     { itemId: 'magic_snack', chance: 20 },
                     { itemId: 'starlight_armor', chance: 10 },
@@ -187,9 +187,9 @@ const dungeons: DungeonData[] = [
                 emoji: '🦄',
                 level: 30,
                 hp: 450,
-                attack: 38,
+                attack: 57,
                 isBoss: true,
-                spawnChance: 20,
+                spawnChance: 5,
                 drops: [
                     { itemId: 'magic_snack', chance: 35 },
                     { itemId: 'shadow_cloak', chance: 15 },
@@ -212,9 +212,9 @@ const dungeons: DungeonData[] = [
                 emoji: '🦌',
                 level: 33,
                 hp: 380,
-                attack: 42,
+                attack: 63,
                 isBoss: false,
-                spawnChance: 40,
+                spawnChance: 55,
                 drops: [
                     { itemId: 'magic_snack', chance: 30 },
                     { itemId: 'legend_food', chance: 5 },
@@ -226,9 +226,9 @@ const dungeons: DungeonData[] = [
                 emoji: '🔥',
                 level: 37,
                 hp: 480,
-                attack: 48,
+                attack: 72,
                 isBoss: false,
-                spawnChance: 35,
+                spawnChance: 40,
                 drops: [
                     { itemId: 'legend_food', chance: 8 },
                     { itemId: 'dragon_armor', chance: 6 },
@@ -240,9 +240,9 @@ const dungeons: DungeonData[] = [
                 emoji: '🐉',
                 level: 40,
                 hp: 650,
-                attack: 55,
+                attack: 83,
                 isBoss: true,
-                spawnChance: 25,
+                spawnChance: 5,
                 drops: [
                     { itemId: 'legend_food', chance: 15 },
                     { itemId: 'dragon_armor', chance: 12 },
@@ -337,8 +337,8 @@ export default function Dungeon() {
         const totalStats = getTotalStats(character);
 
         // speed 기반 확률: 더블 어택 (최대 50%), 회피 (최대 40%)
-        const doubleAttackChance = Math.min(totalStats.speed / 200, 0.5);
-        const dodgeChance = Math.min(totalStats.speed / 250, 0.4);
+        const doubleAttackChance = Math.min(totalStats.speed / 500, 0.5);
+        const dodgeChance = Math.min(totalStats.speed / 500, 0.4);
 
         const newLog: string[] = [];
 
@@ -378,19 +378,18 @@ export default function Dungeon() {
             setDroppedItems(drops);
             // 몬스터 레벨 기반 경험치 (레벨 * 10 + 보스 보너스)
             const earnedExp = selectedMonster.level * 10 + (selectedMonster.isBoss ? 50 : 0);
+            const baseGold = selectedMonster.level * 5 + (selectedMonster.isBoss ? 50 : 0);
+            const earnedGold = Math.floor(baseGold * (0.8 + Math.random() * 0.4));
             const { character: updated, leveledUp, levelsGained } = addExpToCharacter(earnedExp);
 
-            // 레벨업하지 않았을 때만 남은 HP 저장 (레벨업 시에는 이미 체력이 완전 회복됨)
-            if (!leveledUp) {
-                updated.currentHp = playerHp;
-            }
-
+            updated.currentHp = playerHp;
+            updated.gold += earnedGold;
             saveCharacter(updated);
             setCharacter(updated);
+            newLog.push(`💰 ${earnedGold}G 획득!`);
             newLog.push(`EXP +${earnedExp} 획득!`);
             if (leveledUp) {
                 newLog.push(`레벨 업! Lv.${updated.level - levelsGained} → Lv.${updated.level}`);
-                newLog.push(`체력이 완전히 회복되었다!`);
             }
             setBattleLog((prev) => [...prev, ...newLog]);
             setBattleState('won');
@@ -402,8 +401,8 @@ export default function Dungeon() {
             newLog.push(`💨 ${character.name}이(가) 재빠르게 회피했다!`);
         } else {
             const monsterDmg = Math.max(
-                Math.floor(selectedMonster.attack * (0.8 + Math.random() * 0.4) - totalStats.defense * 0.3),
-                1
+                Math.floor(selectedMonster.attack * (0.8 + Math.random() * 0.4) - totalStats.defense),
+                5
             );
             const newPlayerHp = Math.max(playerHp - monsterDmg, 0);
             setPlayerHp(newPlayerHp);

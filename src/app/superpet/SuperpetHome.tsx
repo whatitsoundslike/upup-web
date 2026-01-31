@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Swords, Users, PawPrint, Shield, Zap, Heart, Gauge, Sparkles, Plus, Trash2 } from 'lucide-react';
+import { Swords, PawPrint, Shield, Heart, Sparkles, Plus, Trash2, Sword, Feather } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import {
@@ -32,6 +32,7 @@ export default function SuperpetHome() {
     const [showForm, setShowForm] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
     const [activeCharacterId, setActiveCharacterId] = useState<string | null>(null);
+    const [createdCharacter, setCreatedCharacter] = useState<Character | null>(null);
 
     // 페이지 로드 시 기존 캐릭터 불러오기
     useEffect(() => {
@@ -57,7 +58,7 @@ export default function SuperpetHome() {
     };
 
     const handleGenerate = () => {
-        if (!petName.trim()) return;
+        if (!petName.trim() || traits.length < 3) return;
         const char = generateCharacter(petName.trim(), petType, traits);
         const success = addCharacter(char);
         if (success) {
@@ -65,6 +66,7 @@ export default function SuperpetHome() {
             setPetName('');
             setTraits([]);
             setShowForm(false);
+            setCreatedCharacter(char);
         }
     };
 
@@ -75,8 +77,13 @@ export default function SuperpetHome() {
 
     const handleDeleteCharacter = (characterId: string) => {
         deleteCharacter(characterId);
-        setCharacters(loadAllCharacters());
+        const remaining = loadAllCharacters();
+        setCharacters(remaining);
         setDeleteConfirm(null);
+        if (remaining.length === 0) {
+            setActiveCharacterId(null);
+            setShowForm(true);
+        }
     };
 
     return (
@@ -102,8 +109,105 @@ export default function SuperpetHome() {
                         </motion.p>
                     </div>
 
+                    {/* 캐릭터 생성 결과 */}
+                    {createdCharacter && !showForm && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="glass p-8 rounded-2xl shadow-lg bg-white/5 mb-8"
+                        >
+                            <div className="text-center mb-6">
+                                <motion.div
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    transition={{ type: 'spring', stiffness: 300, delay: 0.2 }}
+                                    className="text-6xl mb-4"
+                                >
+                                    🐾
+                                </motion.div>
+                                <motion.h2
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.3 }}
+                                    className="text-2xl font-black mb-2"
+                                >
+                                    {createdCharacter.name}
+                                </motion.h2>
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: 0.4 }}
+                                    className="flex items-center justify-center gap-2"
+                                >
+                                    <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-white text-xs font-bold">
+                                        Lv.{createdCharacter.level}
+                                    </span>
+                                    <span className="text-foreground/60 text-sm font-semibold">{createdCharacter.className}</span>
+                                    <span className={`px-2.5 py-0.5 rounded-full text-white text-xs font-bold ${ELEMENT_COLORS[createdCharacter.element]}`}>
+                                        {createdCharacter.element}
+                                    </span>
+                                </motion.div>
+                                <motion.p
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: 0.45 }}
+                                    className="text-foreground/60 text-sm mt-3"
+                                >
+                                    반가워, <span className="font-bold text-foreground">{createdCharacter.name}</span>! 정말 멋진 모험가가 탄생했어!
+                                </motion.p>
+                            </div>
+
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.5 }}
+                                className="grid grid-cols-2 gap-3 mb-6"
+                            >
+                                <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-500/10">
+                                    <Heart className="h-4 w-4 text-red-500 fill-red-500" />
+                                    <span className="text-sm text-foreground/70">HP</span>
+                                    <span className="ml-auto font-bold">{createdCharacter.hp}</span>
+                                </div>
+                                <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-500/10">
+                                    <Sword className="h-4 w-4 text-red-500" />
+                                    <span className="text-sm text-foreground/70">공격</span>
+                                    <span className="ml-auto font-bold">{createdCharacter.attack}</span>
+                                </div>
+                                <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-blue-500/10">
+                                    <Shield className="h-4 w-4 text-blue-500" />
+                                    <span className="text-sm text-foreground/70">방어</span>
+                                    <span className="ml-auto font-bold">{createdCharacter.defense}</span>
+                                </div>
+                                <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-green-500/10">
+                                    <Feather className="h-4 w-4 text-green-500" />
+                                    <span className="text-sm text-foreground/70">속도</span>
+                                    <span className="ml-auto font-bold">{createdCharacter.speed}</span>
+                                </div>
+                            </motion.div>
+
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.6 }}
+                                className="flex flex-col gap-3"
+                            >
+                                <Link
+                                    href="/superpet/dungeon"
+                                    onClick={() => {
+                                        handleSelectCharacter(createdCharacter.id);
+                                        setCreatedCharacter(null);
+                                    }}
+                                    className="w-full py-4 rounded-xl bg-red-500 text-white font-bold text-lg shadow-lg hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <Swords className="h-5 w-5" />
+                                    모험 시작하기
+                                </Link>
+                            </motion.div>
+                        </motion.div>
+                    )}
+
                     {/* 캐릭터 카드 그리드 */}
-                    {characters.length > 0 && !showForm && (
+                    {characters.length > 0 && !showForm && !createdCharacter && (
                         <div className="mb-8">
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                                 {characters.map((char, idx) => (
@@ -235,7 +339,7 @@ export default function SuperpetHome() {
                             {/* 특성 선택 */}
                             <div className="mb-8">
                                 <label className="block text-sm font-semibold mb-2 text-foreground/80">
-                                    특성 선택 <span className="text-foreground/40 font-normal">(최대 3개)</span>
+                                    특성 선택 <span className="text-foreground/40 font-normal">({traits.length}/3)</span>
                                 </label>
                                 <div className="flex flex-wrap gap-2">
                                     {PET_TRAITS.map((trait) => (
@@ -258,7 +362,7 @@ export default function SuperpetHome() {
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={handleGenerate}
-                                disabled={!petName.trim()}
+                                disabled={!petName.trim() || traits.length < 3}
                                 className="w-full py-4 rounded-xl bg-amber-500 text-white font-bold text-lg shadow-lg hover:bg-amber-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 <Sparkles className="h-5 w-5" />

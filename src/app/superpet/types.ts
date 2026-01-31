@@ -1,5 +1,5 @@
 // 장착 부위 타입
-export type EquipmentSlot = '투구' | '갑옷' | '장갑' | '부츠' | '망토' | '무기' | '방패' | '악세사리1' | '악세사리2';
+export type EquipmentSlot = '투구' | '갑옷' | '장갑' | '부츠' | '망토' | '무기' | '방패' | '목걸이' | '반지';
 
 // 장착중인 장비
 export interface EquippedItems {
@@ -10,8 +10,8 @@ export interface EquippedItems {
     방패: GameItem | null;
     장갑: GameItem | null;
     부츠: GameItem | null;
-    악세사리1: GameItem | null;
-    악세사리2: GameItem | null;
+    목걸이: GameItem | null;
+    반지: GameItem | null;
 }
 
 export interface Character {
@@ -66,8 +66,8 @@ function _loadSingleCharacterMigration(): Character | null {
                 방패: null,
                 장갑: null,
                 부츠: null,
-                악세사리1: null,
-                악세사리2: null,
+                목걸이: null,
+                반지: null,
             };
         }
         return char;
@@ -185,11 +185,8 @@ export function addExpToCharacter(exp: number): { character: Character; leveledU
         // 레벨업 시 스탯 증가
         character.hp += 5;
         character.attack += 2;
-        character.defense += 2;
-        character.speed += 2;
-
-        // 레벨업 시 체력 완전 회복
-        character.currentHp = character.hp;
+        character.defense += 1;
+        character.speed += 1;
 
         needed = getExpForNextLevel(character.level);
     }
@@ -200,7 +197,7 @@ export function addExpToCharacter(exp: number): { character: Character; leveledU
 
 export interface PetInfo {
     name: string;
-    type: 'dog' | 'cat' | 'other';
+    type: 'dog' | 'cat' | 'bird' | 'other';
     traits: string[];
 }
 
@@ -327,7 +324,7 @@ export const GAME_ITEMS: Record<string, GameItem> = {
         description: '드래곤의 비늘로 만든 전설적인 목걸이.',
         stats: { hp: 14, attack: 10, defense: 10, speed: 10 },
         type: 'equipment',
-        equipmentSlot: '악세사리1',
+        equipmentSlot: '목걸이',
     },
 
     // === 장비 아이템 ===
@@ -530,6 +527,7 @@ export function addItemToInventory(itemId: string, quantity: number) {
 export const PET_TYPES = [
     { key: 'dog' as const, label: '강아지' },
     { key: 'cat' as const, label: '고양이' },
+    { key: 'bird' as const, label: '새' },
     { key: 'other' as const, label: '기타' },
 ];
 
@@ -542,32 +540,32 @@ export const PET_TRAITS = [
 const ELEMENTS = ['불', '물', '풍', '땅'] as const;
 
 const CLASS_MAP: Record<string, string> = {
-    hp: '수호 기사',
-    attack: '전사',
-    defense: '방패 수호자',
-    speed: '그림자 닌자',
+    attack: '버서커',
+    defense: '팔라딘',
+    speed: '어쌔신',
 };
 
 const BASE_STATS: Record<PetInfo['type'], { hp: number; attack: number; defense: number; speed: number }> = {
-    dog: { hp: 120, attack: 25, defense: 30, speed: 20 },
-    cat: { hp: 90, attack: 35, defense: 15, speed: 40 },
-    other: { hp: 100, attack: 30, defense: 25, speed: 25 },
+    dog: { hp: 120, attack: 10, defense: 5, speed: 0 },
+    cat: { hp: 100, attack: 15, defense: 0, speed: 0 },
+    bird: { hp: 80, attack: 10, defense: 0, speed: 15 },
+    other: { hp: 100, attack: 10, defense: 0, speed: 0 },
 };
 
 const TRAIT_MODIFIERS: Record<string, Partial<Record<'hp' | 'attack' | 'defense' | 'speed', number>>> = {
-    '용감한': { attack: 10, hp: 10 },
-    '호기심 많은': { speed: 10, attack: 5 },
-    '장난꾸러기': { speed: 15, defense: -5 },
-    '충성스러운': { defense: 15, hp: 10 },
-    '독립적인': { attack: 10, speed: 5 },
-    '활발한': { speed: 10, hp: 5 },
-    '느긋한': { defense: 15, hp: 15 },
-    '다정한': { hp: 20, defense: 5 },
-    '영리한': { speed: 8, attack: 8 },
-    '겁쟁이': { speed: 20, attack: -5 },
-    '먹보': { hp: 25, speed: -5 },
-    '고집쟁이': { defense: 10, attack: 5 },
-    '수줍은': { defense: 8, speed: 8 },
+    '용감한': { attack: 3, hp: 10 },
+    '호기심 많은': { speed: 3, attack: 2 },
+    '장난꾸러기': { speed: 3, hp: 10 },
+    '충성스러운': { defense: 3, hp: 10 },
+    '독립적인': { attack: 3, speed: 2 },
+    '활발한': { speed: 3, hp: 10 },
+    '느긋한': { defense: 3, hp: 10 },
+    '다정한': { hp: 10, defense: 2 },
+    '영리한': { speed: 3, attack: 2 },
+    '겁쟁이': { speed: 3, defense: 2 },
+    '먹보': { hp: 10, defense: 2 },
+    '고집쟁이': { defense: 3, attack: 2 },
+    '수줍은': { defense: 3, speed: 2 },
 };
 
 export function generateCharacter(name: string, type: PetInfo['type'], traits: string[]): Character {
@@ -590,15 +588,15 @@ export function generateCharacter(name: string, type: PetInfo['type'], traits: s
     }
 
     // 이름 해시로 약간의 변동 추가
-    hp += (nameHash % 15);
-    attack += (nameHash % 10);
-    defense += (nameHash % 8);
-    speed += (nameHash % 12);
+    hp += (nameHash % 10);
+    attack += (nameHash % 5);
+    defense += (nameHash % 5);
+    speed += (nameHash % 5);
 
     const element = ELEMENTS[nameHash % ELEMENTS.length];
 
     // 가장 높은 스탯으로 직업 결정
-    const statEntries = { hp, attack, defense, speed };
+    const statEntries = { attack, defense, speed };
     const topStat = (Object.entries(statEntries) as [string, number][])
         .sort((a, b) => b[1] - a[1])[0][0];
     const className = CLASS_MAP[topStat];
@@ -625,8 +623,8 @@ export function generateCharacter(name: string, type: PetInfo['type'], traits: s
             방패: null,
             장갑: null,
             부츠: null,
-            악세사리1: null,
-            악세사리2: null,
+            목걸이: null,
+            반지: null,
         },
     };
 }
