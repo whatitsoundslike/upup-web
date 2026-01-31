@@ -17,7 +17,7 @@ interface Product {
 // 1시간 단위 버전 값 생성
 
 interface ShopPageProps {
-    category: 'tesla' | 'toy' | 'baby';
+    category: 'tesla' | 'baby';
 }
 
 export default function Shop({ category }: ShopPageProps) {
@@ -25,10 +25,6 @@ export default function Shop({ category }: ShopPageProps) {
         tesla: {
             title: 'Tesla Accessory Store',
             subtitle: '당신의 테슬라를 더욱 특별하게 만드는 최고의 선택.',
-        },
-        toy: {
-            title: 'Toy Shop',
-            subtitle: '최고의 장난감을 만나보세요.',
         },
         baby: {
             title: 'Baby Shop',

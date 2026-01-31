@@ -33,11 +33,6 @@ export const navConfigs: NavConfig = {
         { name: '슈퍼차저', href: '/tesla/charger', icon: Zap },
         { name: '보조금 현황', href: '/tesla/subsidy', icon: CircleDollarSign },
     ],
-    toy: [
-        { name: '홈', href: '/toy', icon: Home },
-        { name: 'Shop', href: '/toy/shop', icon: ShoppingBag },
-        // { name: 'Room', href: '/toy/room', icon: BookOpen },
-    ],
     baby: [
         { name: '육아정보', href: '/baby/info', icon: Newspaper },
         { name: 'Shop', href: '/baby/shop', icon: ShoppingBag },
@@ -48,18 +43,15 @@ export const navConfigs: NavConfig = {
 // 기본 네비게이션 (루트 경로일 때)
 export const defaultNavItems: NavItem[] = [
     { name: 'Tesla', href: '/tesla', icon: Home },
-    { name: 'Toy', href: '/toy', icon: Gamepad2 },
     { name: 'Baby', href: '/baby', icon: Baby },
 ];
 
 export const navRoomLogo: Record<string, string> = {
     tesla: '/room-icon/tesla.png',
-    toy: '/room-icon/toy.png',
     baby: '/room-icon/baby.png',
 }
 
 export const navRoomDescription: Record<string, string> = {
     tesla: '테슬라 관련 정보 및 커뮤니티',
-    toy: '장난감 관련 정보 및 커뮤니티',
     baby: '육아 정보 및 커뮤니티',
 }

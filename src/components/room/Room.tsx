@@ -5,7 +5,7 @@ import { Users, MessageSquare, Calendar, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 
 interface RoomPageProps {
-    category: 'tesla' | 'toy';
+    category: 'tesla' | 'baby';
 }
 
 export default function Room({ category }: RoomPageProps) {
@@ -37,9 +37,9 @@ export default function Room({ category }: RoomPageProps) {
                 },
             ],
         },
-        toy: {
-            title: 'Toy Community Room',
-            subtitle: '장난감 애호가들과 함께 소통하세요.',
+        baby: {
+            title: 'Baby Community Room',
+            subtitle: '우리 아가를 위한 최고의 육아용품을 만나보세요.',
             rooms: [
                 {
                     id: 1,
