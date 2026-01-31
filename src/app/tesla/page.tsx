@@ -12,6 +12,14 @@ export const metadata: Metadata = {
     siteName: "ZROOM",
     locale: "ko_KR",
     type: "website",
+    images: [
+      {
+        url: "https://zroom.io/tesla_thumbnail.png",
+        width: 1200,
+        height: 630,
+        alt: "ZROOM",
+      },
+    ],
   },
   alternates: {
     canonical: "https://zroom.io/tesla",

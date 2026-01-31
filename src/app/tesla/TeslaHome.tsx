@@ -139,7 +139,7 @@ export default function TeslaHome() {
                                         />
                                     ) : (
                                         <img
-                                            src="/default_thumbnail.png"
+                                            src="/tesla_thumbnail.png"
                                             alt="Default Thumbnail"
                                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                         />

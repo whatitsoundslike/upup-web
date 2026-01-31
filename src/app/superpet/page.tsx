@@ -12,6 +12,14 @@ export const metadata: Metadata = {
         siteName: 'ZROOM',
         locale: 'ko_KR',
         type: 'website',
+        images: [
+            {
+                url: "https://zroom.io/superpet_thumbnail.png",
+                width: 640,
+                height: 320,
+                alt: "ZROOM - Superpet",
+            },
+        ],
     },
     alternates: {
         canonical: 'https://zroom.io/superpet',

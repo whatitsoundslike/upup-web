@@ -7,10 +7,10 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
-import { type Character, GAME_ITEMS, addItemToInventory, addExpToCharacter, DUNGEON_EXP, loadCharacter } from '../types';
+import { type Character, type GameItem, addItemToInventory, addExpToCharacter, DUNGEON_EXP, DUNGEON_DROP_COUNT, ITEM_RARITY_TEXT, rollItemDrop, loadCharacter } from '../types';
 
-interface RewardDrop {
-    itemId: string;
+interface DroppedItem {
+    item: GameItem;
     quantity: number;
 }
 
@@ -19,8 +19,6 @@ interface DungeonData {
     name: string;
     difficulty: '쉬움' | '보통' | '어려움';
     description: string;
-    reward: string;
-    rewards: RewardDrop[];
     monsterName: string;
     monsterEmoji: string;
     monsterHp: number;
@@ -39,11 +37,6 @@ const dungeons: DungeonData[] = [
         name: '고양이 골목',
         difficulty: '쉬움',
         description: '장난꾸러기 고양이들이 숨어있는 골목길',
-        reward: '뼈다귀 x3, 회복 포션 x1',
-        rewards: [
-            { itemId: 'bone', quantity: 3 },
-            { itemId: 'potion', quantity: 1 },
-        ],
         monsterName: '장난꾸러기 냥이',
         monsterEmoji: '🐱',
         monsterHp: 80,
@@ -54,11 +47,6 @@ const dungeons: DungeonData[] = [
         name: '어둠의 숲',
         difficulty: '보통',
         description: '미스터리한 숲속에 강력한 적이 도사리고 있다',
-        reward: '마법 간식 x1, 수호의 부적 x1',
-        rewards: [
-            { itemId: 'magic_snack', quantity: 1 },
-            { itemId: 'shield_charm', quantity: 1 },
-        ],
         monsterName: '그림자 늑대',
         monsterEmoji: '🐺',
         monsterHp: 150,
@@ -69,11 +57,6 @@ const dungeons: DungeonData[] = [
         name: '드래곤 화산',
         difficulty: '어려움',
         description: '전설의 드래곤이 잠들어있는 화산',
-        reward: '전설의 목걸이 x1, 마법 간식 x2',
-        rewards: [
-            { itemId: 'legend_necklace', quantity: 1 },
-            { itemId: 'magic_snack', quantity: 2 },
-        ],
         monsterName: '화염 드래곤',
         monsterEmoji: '🐉',
         monsterHp: 300,
@@ -90,6 +73,7 @@ export default function Dungeon() {
     const [playerHp, setPlayerHp] = useState(0);
     const [monsterHp, setMonsterHp] = useState(0);
     const [battleLog, setBattleLog] = useState<string[]>([]);
+    const [droppedItems, setDroppedItems] = useState<DroppedItem[]>([]);
 
     useEffect(() => {
         setCharacter(loadCharacter());
@@ -102,28 +86,51 @@ export default function Dungeon() {
         setMonsterHp(dungeon.monsterHp);
         setBattleState('fighting');
         setBattleLog([`${dungeon.monsterName}이(가) 나타났다!`]);
+        setDroppedItems([]);
     };
 
     const handleAttack = useCallback(() => {
         if (battleState !== 'fighting' || !character || !selectedDungeon) return;
 
+        // speed 기반 확률: 더블 어택 (최대 50%), 회피 (최대 40%)
+        const doubleAttackChance = Math.min(character.speed / 200, 0.5);
+        const dodgeChance = Math.min(character.speed / 250, 0.4);
+
+        const newLog: string[] = [];
+
+        // 1차 공격
         const playerDmg = Math.floor(character.attack * (0.8 + Math.random() * 0.4));
-        const newMonsterHp = Math.max(monsterHp - playerDmg, 0);
-        setMonsterHp(newMonsterHp);
+        let currentMonsterHp = Math.max(monsterHp - playerDmg, 0);
+        newLog.push(`${character.name}의 공격! ${playerDmg} 데미지!`);
 
-        const newLog = [`${character.name}의 공격! ${playerDmg} 데미지!`];
+        // 더블 어택 판정
+        if (currentMonsterHp > 0 && Math.random() < doubleAttackChance) {
+            const bonusDmg = Math.floor(character.attack * (0.6 + Math.random() * 0.3));
+            currentMonsterHp = Math.max(currentMonsterHp - bonusDmg, 0);
+            newLog.push(`⚡ 빠른 연속 공격! ${bonusDmg} 추가 데미지!`);
+        }
 
-        if (newMonsterHp <= 0) {
+        setMonsterHp(currentMonsterHp);
+
+        if (currentMonsterHp <= 0) {
             newLog.push(`${selectedDungeon.monsterName}을(를) 쓰러뜨렸다!`);
-            // 보상 아이템 인벤토리에 저장
-            for (const drop of selectedDungeon.rewards) {
-                addItemToInventory(drop.itemId, drop.quantity);
-                const item = GAME_ITEMS[drop.itemId];
-                if (item) {
-                    newLog.push(`${item.emoji} ${item.name} x${drop.quantity} 획득!`);
+            // 확률 기반 랜덤 드롭
+            const dropCount = DUNGEON_DROP_COUNT[selectedDungeon.difficulty] ?? 2;
+            const drops: DroppedItem[] = [];
+            for (let i = 0; i < dropCount; i++) {
+                const { itemId, item } = rollItemDrop();
+                addItemToInventory(itemId, 1);
+                const existing = drops.find((d) => d.item.id === itemId);
+                if (existing) {
+                    existing.quantity += 1;
+                } else {
+                    drops.push({ item, quantity: 1 });
                 }
             }
-            // 경험치 획득 및 레벨업
+            for (const drop of drops) {
+                newLog.push(`${drop.item.emoji} ${drop.item.name} x${drop.quantity} 획득!`);
+            }
+            setDroppedItems(drops);
             const earnedExp = DUNGEON_EXP[selectedDungeon.difficulty] ?? 30;
             const { character: updated, leveledUp, levelsGained } = addExpToCharacter(earnedExp);
             setCharacter(updated);
@@ -136,19 +143,24 @@ export default function Dungeon() {
             return;
         }
 
-        const monsterDmg = Math.max(
-            Math.floor(selectedDungeon.monsterAttack * (0.8 + Math.random() * 0.4) - character.defense * 0.3),
-            1
-        );
-        const newPlayerHp = Math.max(playerHp - monsterDmg, 0);
-        setPlayerHp(newPlayerHp);
-        newLog.push(`${selectedDungeon.monsterName}의 반격! ${monsterDmg} 데미지!`);
+        // 회피 판정
+        if (Math.random() < dodgeChance) {
+            newLog.push(`💨 ${character.name}이(가) 재빠르게 회피했다!`);
+        } else {
+            const monsterDmg = Math.max(
+                Math.floor(selectedDungeon.monsterAttack * (0.8 + Math.random() * 0.4) - character.defense * 0.3),
+                1
+            );
+            const newPlayerHp = Math.max(playerHp - monsterDmg, 0);
+            setPlayerHp(newPlayerHp);
+            newLog.push(`${selectedDungeon.monsterName}의 반격! ${monsterDmg} 데미지!`);
 
-        if (newPlayerHp <= 0) {
-            newLog.push(`${character.name}이(가) 쓰러졌다...`);
-            setBattleLog((prev) => [...prev, ...newLog]);
-            setBattleState('lost');
-            return;
+            if (newPlayerHp <= 0) {
+                newLog.push(`${character.name}이(가) 쓰러졌다...`);
+                setBattleLog((prev) => [...prev, ...newLog]);
+                setBattleState('lost');
+                return;
+            }
         }
 
         setBattleLog((prev) => [...prev, ...newLog]);
@@ -158,6 +170,7 @@ export default function Dungeon() {
         setSelectedDungeon(null);
         setBattleState('idle');
         setBattleLog([]);
+        setDroppedItems([]);
     };
 
     // 캐릭터 없을 때
@@ -316,15 +329,11 @@ export default function Dungeon() {
                                     <Gift className="h-4 w-4" /> 획득 아이템
                                 </p>
                                 <div className="flex flex-wrap gap-2 justify-center">
-                                    {selectedDungeon.rewards.map((drop) => {
-                                        const item = GAME_ITEMS[drop.itemId];
-                                        if (!item) return null;
-                                        return (
-                                            <span key={drop.itemId} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-foreground/5 text-sm font-medium">
-                                                {item.emoji} {item.name} x{drop.quantity}
-                                            </span>
-                                        );
-                                    })}
+                                    {droppedItems.map((drop) => (
+                                        <span key={drop.item.id} className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-foreground/5 text-sm font-medium ${ITEM_RARITY_TEXT[drop.item.rarity]}`}>
+                                            {drop.item.emoji} {drop.item.name} x{drop.quantity}
+                                        </span>
+                                    ))}
                                 </div>
                             </div>
                             <div className="flex gap-3 justify-center">
@@ -395,7 +404,7 @@ export default function Dungeon() {
                 </motion.p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                 {dungeons.map((dungeon, idx) => (
                     <motion.div
                         key={dungeon.id}
@@ -416,7 +425,7 @@ export default function Dungeon() {
                             {dungeon.description}
                         </p>
                         <div className="flex items-center gap-1.5 text-xs text-foreground/50 mb-4">
-                            <Gift className="h-3.5 w-3.5" /> {dungeon.reward}
+                            <Gift className="h-3.5 w-3.5" /> 드롭 {DUNGEON_DROP_COUNT[dungeon.difficulty] ?? 2}개 (랜덤)
                         </div>
                         <motion.button
                             whileHover={{ scale: 1.02 }}

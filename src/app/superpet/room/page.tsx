@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Inventory from './Inventory';
+import Room from './Room';
 
 export const metadata: Metadata = {
     title: '슈퍼펫 인벤토리 - ZROOM Superpet',
@@ -19,5 +19,5 @@ export const metadata: Metadata = {
 };
 
 export default function SuperpetRoomPage() {
-    return <Inventory />;
+    return <Room />;
 }

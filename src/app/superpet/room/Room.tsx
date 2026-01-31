@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Swords, Trash2, X, PawPrint, Heart, Shield, Zap, Gauge } from 'lucide-react';
+import { Package, Swords, Coins, Gem, X, Heart, Shield, Zap, Gauge } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import {
@@ -10,10 +10,12 @@ import {
     ITEM_RARITY_COLORS,
     ITEM_RARITY_BORDER,
     ITEM_RARITY_TEXT,
+    ITEM_SELL_PRICE,
     loadInventory,
     saveInventory,
     getExpForNextLevel,
     loadCharacter,
+    addGoldToCharacter,
 } from '../types';
 
 const STAT_ICONS = {
@@ -23,7 +25,7 @@ const STAT_ICONS = {
     speed: Gauge,
 };
 
-export default function Inventory() {
+export default function Room() {
     const [inventory, setInventory] = useState<InventoryItem[]>([]);
     const [character, setCharacter] = useState<Character | null>(null);
     const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
@@ -33,26 +35,36 @@ export default function Inventory() {
         setCharacter(loadCharacter());
     }, []);
 
-    const handleDiscard = (itemId: string) => {
+    const handleSell = (itemId: string) => {
+        const entry = inventory.find((e) => e.item.id === itemId);
+        if (!entry) return;
+        const gold = ITEM_SELL_PRICE[entry.item.rarity];
         const updated = inventory
-            .map((entry) =>
-                entry.item.id === itemId
-                    ? { ...entry, quantity: entry.quantity - 1 }
-                    : entry
+            .map((e) =>
+                e.item.id === itemId
+                    ? { ...e, quantity: e.quantity - 1 }
+                    : e
             )
-            .filter((entry) => entry.quantity > 0);
+            .filter((e) => e.quantity > 0);
         setInventory(updated);
         saveInventory(updated);
+        const updatedChar = addGoldToCharacter(gold);
+        setCharacter(updatedChar);
         if (selectedItem?.item.id === itemId) {
             const remaining = updated.find((e) => e.item.id === itemId);
             setSelectedItem(remaining ?? null);
         }
     };
 
-    const handleDiscardAll = (itemId: string) => {
-        const updated = inventory.filter((entry) => entry.item.id !== itemId);
+    const handleSellAll = (itemId: string) => {
+        const entry = inventory.find((e) => e.item.id === itemId);
+        if (!entry) return;
+        const gold = ITEM_SELL_PRICE[entry.item.rarity] * entry.quantity;
+        const updated = inventory.filter((e) => e.item.id !== itemId);
         setInventory(updated);
         saveInventory(updated);
+        const updatedChar = addGoldToCharacter(gold);
+        setCharacter(updatedChar);
         setSelectedItem(null);
     };
 
@@ -107,6 +119,19 @@ export default function Inventory() {
                                         <Icon className="h-3 w-3" /> {character[key]}
                                     </span>
                                 ))}
+                            </div>
+                        </div>
+                        {/* 재화 표시 */}
+                        <div className="flex gap-3 mb-3">
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 text-sm">
+                                <Coins className="h-4 w-4 text-amber-500" />
+                                <span className="font-bold text-amber-600">{character.gold.toLocaleString()}</span>
+                                <span className="text-foreground/40 text-xs">골드</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/10 text-sm">
+                                <Gem className="h-4 w-4 text-purple-500" />
+                                <span className="font-bold text-purple-600">{character.gem.toLocaleString()}</span>
+                                <span className="text-foreground/40 text-xs">젬</span>
                             </div>
                         </div>
                         {/* 경험치 바 */}
@@ -268,17 +293,17 @@ export default function Inventory() {
 
                             <div className="flex gap-2">
                                 <button
-                                    onClick={() => handleDiscard(selectedItem.item.id)}
-                                    className="flex-1 py-3 rounded-xl bg-foreground/10 text-foreground/60 font-semibold text-sm hover:bg-foreground/20 transition-colors flex items-center justify-center gap-1.5"
+                                    onClick={() => handleSell(selectedItem.item.id)}
+                                    className="flex-1 py-3 rounded-xl bg-amber-500/10 text-amber-600 font-semibold text-sm hover:bg-amber-500/20 transition-colors flex items-center justify-center gap-1.5"
                                 >
-                                    <Trash2 className="h-4 w-4" /> 1개 버리기
+                                    <Coins className="h-4 w-4" /> 1개 판매 ({ITEM_SELL_PRICE[selectedItem.item.rarity]}G)
                                 </button>
                                 {selectedItem.quantity > 1 && (
                                     <button
-                                        onClick={() => handleDiscardAll(selectedItem.item.id)}
-                                        className="py-3 px-4 rounded-xl bg-red-500/10 text-red-500 font-semibold text-sm hover:bg-red-500/20 transition-colors"
+                                        onClick={() => handleSellAll(selectedItem.item.id)}
+                                        className="py-3 px-4 rounded-xl bg-amber-500/10 text-amber-600 font-semibold text-sm hover:bg-amber-500/20 transition-colors"
                                     >
-                                        전부 버리기
+                                        전부 판매 ({ITEM_SELL_PRICE[selectedItem.item.rarity] * selectedItem.quantity}G)
                                     </button>
                                 )}
                             </div>
