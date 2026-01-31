@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { type Character, type GameItem, GAME_ITEMS, addItemToInventory, addExpToCharacter, DUNGEON_EXP, ITEM_RARITY_TEXT, loadCharacter, saveCharacter } from '../types';
+import { type Character, type GameItem, GAME_ITEMS, addItemToInventory, addExpToCharacter, DUNGEON_EXP, ITEM_RARITY_TEXT, loadCharacter, saveCharacter, getTotalStats } from '../types';
 import { useRouter } from 'next/navigation';
 
 interface MonsterDrop {
@@ -309,7 +309,17 @@ export default function Dungeon() {
 
         setSelectedDungeon(dungeon);
         setSelectedMonster(monster);
-        const hp = character.currentHp > 0 && !isNaN(character.currentHp) ? character.currentHp : character.hp;
+
+        // 장비 보너스를 포함한 최대 HP 계산
+        const totalStats = getTotalStats(character);
+        const maxHp = totalStats.hp;
+
+        // 현재 HP가 최대 HP를 초과하지 않도록 제한
+        const hp = Math.min(
+            character.currentHp > 0 && !isNaN(character.currentHp) ? character.currentHp : maxHp,
+            maxHp
+        );
+
         setPlayerHp(hp);
         setMonsterHp(monster.hp);
         setBattleState('fighting');
@@ -323,20 +333,23 @@ export default function Dungeon() {
     const handleAttack = useCallback(() => {
         if (battleState !== 'fighting' || !character || !selectedDungeon || !selectedMonster) return;
 
+        // 장비 보너스를 포함한 총 스탯 계산
+        const totalStats = getTotalStats(character);
+
         // speed 기반 확률: 더블 어택 (최대 50%), 회피 (최대 40%)
-        const doubleAttackChance = Math.min(character.speed / 200, 0.5);
-        const dodgeChance = Math.min(character.speed / 250, 0.4);
+        const doubleAttackChance = Math.min(totalStats.speed / 200, 0.5);
+        const dodgeChance = Math.min(totalStats.speed / 250, 0.4);
 
         const newLog: string[] = [];
 
         // 1차 공격
-        const playerDmg = Math.floor(character.attack * (0.8 + Math.random() * 0.4));
+        const playerDmg = Math.floor(totalStats.attack * (0.8 + Math.random() * 0.4));
         let currentMonsterHp = Math.max(monsterHp - playerDmg, 0);
         newLog.push(`${character.name}의 공격! ${playerDmg} 데미지!`);
 
         // 더블 어택 판정
         if (currentMonsterHp > 0 && Math.random() < doubleAttackChance) {
-            const bonusDmg = Math.floor(character.attack * (0.6 + Math.random() * 0.3));
+            const bonusDmg = Math.floor(totalStats.attack * (0.6 + Math.random() * 0.3));
             currentMonsterHp = Math.max(currentMonsterHp - bonusDmg, 0);
             newLog.push(`⚡ 빠른 연속 공격! ${bonusDmg} 추가 데미지!`);
         }
@@ -389,7 +402,7 @@ export default function Dungeon() {
             newLog.push(`💨 ${character.name}이(가) 재빠르게 회피했다!`);
         } else {
             const monsterDmg = Math.max(
-                Math.floor(selectedMonster.attack * (0.8 + Math.random() * 0.4) - character.defense * 0.3),
+                Math.floor(selectedMonster.attack * (0.8 + Math.random() * 0.4) - totalStats.defense * 0.3),
                 1
             );
             const newPlayerHp = Math.max(playerHp - monsterDmg, 0);
@@ -451,7 +464,9 @@ export default function Dungeon() {
 
     // 배틀 화면
     if (selectedDungeon && selectedMonster) {
-        const playerHpPct = Math.max((playerHp / character.hp) * 100, 0);
+        // 장비 보너스를 포함한 최대 HP 계산
+        const totalStats = getTotalStats(character);
+        const playerHpPct = Math.max((playerHp / totalStats.hp) * 100, 0);
         const monsterHpPct = Math.max((monsterHp / selectedMonster.hp) * 100, 0);
 
         return (
@@ -499,7 +514,7 @@ export default function Dungeon() {
                             <span className="flex items-center gap-1">
                                 <Heart className="h-3.5 w-3.5 text-red-500" /> HP
                             </span>
-                            <span className="font-bold">{playerHp} / {character.hp}</span>
+                            <span className="font-bold">{playerHp} / {totalStats.hp}</span>
                         </div>
                         <div className="h-4 rounded-full bg-foreground/10 overflow-hidden">
                             <motion.div
@@ -669,7 +684,7 @@ export default function Dungeon() {
                 >
                     <Heart className="h-4 w-4 text-red-500" />
                     <span className="font-bold">{character.currentHp}</span>
-                    <span className="text-foreground/40">/ {character.hp}</span>
+                    <span className="text-foreground/40">/ {getTotalStats(character).hp}</span>
                 </motion.div>
             </div>
 
