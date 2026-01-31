@@ -11,6 +11,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         { url: `${BASE_URL}/tesla/charger`, priority: 0.8, changeFrequency: 'weekly' },
         { url: `${BASE_URL}/tesla/news`, priority: 0.8, changeFrequency: 'daily' },
         { url: `${BASE_URL}/tesla/tips`, priority: 0.8, changeFrequency: 'weekly' },
+        { url: `${BASE_URL}/superpet`, priority: 0.9, changeFrequency: 'daily' },
+        { url: `${BASE_URL}/superpet/dungeon`, priority: 0.8, changeFrequency: 'weekly' },
+        { url: `${BASE_URL}/superpet/room`, priority: 0.7, changeFrequency: 'weekly' },
     ];
 
     // 팁 상세페이지 동적 생성

@@ -12,7 +12,9 @@ import {
     type LucideIcon,
     Zap,
     CircleDollarSign,
-    Warehouse
+    Warehouse,
+    Swords,
+    PawPrint,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -38,20 +40,28 @@ export const navConfigs: NavConfig = {
         { name: 'Shop', href: '/baby/shop', icon: ShoppingBag },
         { name: 'Room', href: '/baby/room', icon: Handshake },
     ],
+    superpet: [
+        { name: '홈', href: '/superpet', icon: Home },
+        { name: '던전', href: '/superpet/dungeon', icon: Swords },
+        { name: '룸', href: '/superpet/room', icon: Handshake },
+    ],
 };
 
 // 기본 네비게이션 (루트 경로일 때)
 export const defaultNavItems: NavItem[] = [
     { name: 'Tesla', href: '/tesla', icon: Home },
     { name: 'Baby', href: '/baby', icon: Baby },
+    { name: 'Superpet', href: '/superpet', icon: PawPrint },
 ];
 
 export const navRoomLogo: Record<string, string> = {
     tesla: '/room-icon/tesla.png',
     baby: '/room-icon/baby.png',
+    superpet: '/room-icon/superpet.png',
 }
 
 export const navRoomDescription: Record<string, string> = {
     tesla: '테슬라 관련 정보 및 커뮤니티',
     baby: '육아 정보 및 커뮤니티',
+    superpet: '반려동물 RPG 게임 및 커뮤니티',
 }
