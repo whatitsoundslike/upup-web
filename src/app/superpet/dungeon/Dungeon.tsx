@@ -48,11 +48,11 @@ const dungeons: DungeonData[] = [
         monsterHp: 80,
         monsterAttack: 8,
         drops: [
-            { itemId: 'bone', chance: 80 },
             { itemId: 'potion', chance: 60 },
             { itemId: 'enhanced_feed', chance: 15 },
             { itemId: 'agility_feather', chance: 10 },
             { itemId: 'magic_snack', chance: 3 },
+            { itemId: 'legend_necklace', chance: 100 },
         ],
     },
     {
@@ -65,13 +65,9 @@ const dungeons: DungeonData[] = [
         monsterHp: 150,
         monsterAttack: 18,
         drops: [
-            { itemId: 'bone', chance: 70 },
             { itemId: 'potion', chance: 70 },
             { itemId: 'enhanced_feed', chance: 25 },
-            { itemId: 'agility_feather', chance: 20 },
             { itemId: 'magic_snack', chance: 8 },
-            { itemId: 'shield_charm', chance: 6 },
-            { itemId: 'dragon_claw', chance: 0.45 },
         ],
     },
     {
@@ -86,11 +82,7 @@ const dungeons: DungeonData[] = [
         drops: [
             { itemId: 'potion', chance: 80 },
             { itemId: 'enhanced_feed', chance: 40 },
-            { itemId: 'agility_feather', chance: 35 },
             { itemId: 'magic_snack', chance: 15 },
-            { itemId: 'shield_charm', chance: 12 },
-            { itemId: 'dragon_claw', chance: 2 },
-            { itemId: 'starlight_armor', chance: 2 },
             { itemId: 'legend_necklace', chance: 0.05 },
         ],
     },
@@ -202,9 +194,9 @@ export default function Dungeon() {
             if (newPlayerHp <= 0) {
                 newLog.push(`${character.name}이(가) 쓰러졌다...`);
                 // 패배 시 HP 전체 회복
-                const revived = { ...character, currentHp: character.hp };
-                saveCharacter(revived);
-                setCharacter(revived);
+                const dead = { ...character, currentHp: 0 };
+                saveCharacter(dead);
+                setCharacter(dead);
                 setBattleLog((prev) => [...prev, ...newLog]);
                 setBattleState('lost');
                 return;

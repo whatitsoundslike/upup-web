@@ -7,15 +7,23 @@ import { useState, useEffect } from 'react';
 import {
     type InventoryItem,
     type Character,
+    type GameItem,
+    type EquipmentSlot,
     ITEM_RARITY_COLORS,
     ITEM_RARITY_BORDER,
     ITEM_RARITY_TEXT,
     ITEM_SELL_PRICE,
+    GAME_ITEMS,
     loadInventory,
     saveInventory,
     getExpForNextLevel,
     loadCharacter,
     addGoldToCharacter,
+    useFood,
+    equipItem,
+    unequipItem,
+    saveCharacter,
+    calculateEquipmentStats,
 } from '../types';
 
 const STAT_ICONS = {
@@ -29,46 +37,130 @@ export default function Room() {
     const [inventory, setInventory] = useState<InventoryItem[]>([]);
     const [character, setCharacter] = useState<Character | null>(null);
     const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+    const [toastQueue, setToastQueue] = useState<{ message: string; tone: 'success' | 'error'; count: number }[]>([]);
+    const [activeToast, setActiveToast] = useState<{ message: string; tone: 'success' | 'error'; count: number } | null>(null);
+    const [sellConfirm, setSellConfirm] = useState<{ itemId: string; sellAll: boolean } | null>(null);
 
     useEffect(() => {
         setInventory(loadInventory());
         setCharacter(loadCharacter());
     }, []);
 
-    const handleSell = (itemId: string) => {
-        const entry = inventory.find((e) => e.item.id === itemId);
-        if (!entry) return;
-        const gold = ITEM_SELL_PRICE[entry.item.rarity];
-        const updated = inventory
-            .map((e) =>
-                e.item.id === itemId
-                    ? { ...e, quantity: e.quantity - 1 }
-                    : e
-            )
-            .filter((e) => e.quantity > 0);
-        setInventory(updated);
-        saveInventory(updated);
-        const updatedChar = addGoldToCharacter(gold);
-        setCharacter(updatedChar);
-        if (selectedItem?.item.id === itemId) {
-            const remaining = updated.find((e) => e.item.id === itemId);
+    useEffect(() => {
+        if (activeToast || toastQueue.length === 0) return;
+        setActiveToast(toastQueue[0]);
+        setToastQueue((queue) => queue.slice(1));
+    }, [activeToast, toastQueue]);
+
+    useEffect(() => {
+        if (!activeToast) return;
+        const timer = setTimeout(() => setActiveToast(null), 2400);
+        return () => clearTimeout(timer);
+    }, [activeToast]);
+
+    const showToast = (message: string, tone: 'success' | 'error') => {
+        if (activeToast && activeToast.message === message && activeToast.tone === tone) {
+            setActiveToast({ ...activeToast, count: activeToast.count + 1 });
+            return;
+        }
+        setToastQueue((queue) => {
+            if (queue.length > 0) {
+                const last = queue[queue.length - 1];
+                if (last.message === message && last.tone === tone) {
+                    return [...queue.slice(0, -1), { ...last, count: last.count + 1 }];
+                }
+            }
+            return [...queue, { message, tone, count: 1 }];
+        });
+    };
+
+    const handleSellRequest = (itemId: string, sellAll: boolean) => {
+        setSellConfirm({ itemId, sellAll });
+    };
+
+    const handleSellConfirm = () => {
+        if (!sellConfirm) return;
+        const { itemId, sellAll } = sellConfirm;
+
+        if (sellAll) {
+            const entry = inventory.find((e) => e.item.id === itemId);
+            if (!entry || entry.quantity <= 0) return;
+            const gold = ITEM_SELL_PRICE[entry.item.rarity] * entry.quantity;
+            const updated = inventory.filter((e) => e.item.id !== itemId);
+            setInventory(updated);
+            saveInventory(updated);
+            const updatedChar = addGoldToCharacter(gold);
+            setCharacter(updatedChar);
+            setSelectedItem(null);
+            showToast(`${entry.item.name} ${entry.quantity}개를 ${gold}G에 판매했습니다!`, 'success');
+        } else {
+            const entry = inventory.find((e) => e.item.id === itemId);
+            if (!entry || entry.quantity <= 0) return;
+            const gold = ITEM_SELL_PRICE[entry.item.rarity];
+            const updated = inventory
+                .map((e) =>
+                    e.item.id === itemId
+                        ? { ...e, quantity: e.quantity - 1 }
+                        : e
+                )
+                .filter((e) => e.quantity > 0);
+            setInventory(updated);
+            saveInventory(updated);
+            const updatedChar = addGoldToCharacter(gold);
+            setCharacter(updatedChar);
+            if (selectedItem?.item.id === itemId) {
+                const remaining = updated.find((e) => e.item.id === itemId);
+                setSelectedItem(remaining ?? null);
+            }
+            showToast(`${entry.item.name}을(를) ${gold}G에 판매했습니다!`, 'success');
+        }
+
+        setSellConfirm(null);
+    };
+
+    const handleUseFood = (itemId: string) => {
+        const result = useFood(itemId);
+        if (result.success) {
+            const updatedInventory = loadInventory();
+            const updatedCharacter = loadCharacter();
+            setInventory(updatedInventory);
+            setCharacter(updatedCharacter);
+            const remaining = updatedInventory.find((e) => e.item.id === itemId);
             setSelectedItem(remaining ?? null);
+            showToast(result.message, 'success');
+        } else {
+            showToast(result.message, 'error');
         }
     };
 
-    const handleSellAll = (itemId: string) => {
-        const entry = inventory.find((e) => e.item.id === itemId);
-        if (!entry) return;
-        const gold = ITEM_SELL_PRICE[entry.item.rarity] * entry.quantity;
-        const updated = inventory.filter((e) => e.item.id !== itemId);
-        setInventory(updated);
-        saveInventory(updated);
-        const updatedChar = addGoldToCharacter(gold);
-        setCharacter(updatedChar);
-        setSelectedItem(null);
+    const handleEquip = (itemId: string) => {
+        const result = equipItem(itemId);
+        if (result.success) {
+            setInventory(loadInventory());
+            setCharacter(loadCharacter());
+            const remaining = loadInventory().find((e) => e.item.id === itemId);
+            setSelectedItem(remaining ?? null);
+            showToast(result.message, 'success');
+        } else {
+            showToast(result.message, 'error');
+        }
+    };
+
+    const handleUnequip = (slot: EquipmentSlot) => {
+        const result = unequipItem(slot);
+        if (result.success) {
+            setInventory(loadInventory());
+            setCharacter(loadCharacter());
+            showToast(result.message, 'success');
+        } else {
+            showToast(result.message, 'error');
+        }
     };
 
     const totalItems = inventory.reduce((sum, e) => sum + e.quantity, 0);
+    const equippedEntries = character
+        ? (Object.entries(character.equipment) as [EquipmentSlot, GameItem | null][])
+        : [];
 
     return (
         <div className="max-w-4xl mx-auto px-4 py-12">
@@ -95,6 +187,7 @@ export default function Room() {
             {character && (() => {
                 const nextExp = getExpForNextLevel(character.level);
                 const expPct = Math.min((character.exp / nextExp) * 100, 100);
+                const equipmentStats = calculateEquipmentStats(character);
                 return (
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
@@ -113,13 +206,32 @@ export default function Room() {
                                 </div>
                                 <p className="text-xs text-foreground/50">{character.className} / {character.element}</p>
                             </div>
-                            <div className="flex gap-3 text-xs text-foreground/60">
-                                {(Object.entries(STAT_ICONS) as [keyof typeof STAT_ICONS, typeof Heart][]).map(([key, Icon]) => (
-                                    <span key={key} className="flex items-center gap-0.5">
-                                        <Icon className="h-3 w-3" />
-                                        {key === 'hp' ? `${character.currentHp}/${character.hp}` : character[key]}
-                                    </span>
-                                ))}
+                            <div className="flex flex-col gap-1 text-[11px] sm:flex-row sm:flex-wrap sm:gap-x-3 sm:gap-y-1 sm:text-xs text-foreground/60">
+                                {(Object.entries(STAT_ICONS) as [keyof typeof STAT_ICONS, typeof Heart][]).map(([key, Icon]) => {
+                                    const bonus = equipmentStats[key];
+                                    const baseValue = character[key];
+                                    if (key === 'hp') {
+                                        const totalHp = character.hp + bonus;
+                                        return (
+                                            <span key={key} className="flex items-center gap-0.5">
+                                                <Icon className="h-3 w-3" />
+                                                {character.currentHp}/{totalHp}{' '}
+                                                <span className={bonus > 0 ? 'text-emerald-500' : 'text-foreground/40'}>
+                                                    {`(+${bonus})`}
+                                                </span>
+                                            </span>
+                                        );
+                                    }
+                                    return (
+                                        <span key={key} className="flex items-center gap-0.5">
+                                            <Icon className="h-3 w-3" />
+                                            {baseValue}{' '}
+                                            <span className={bonus > 0 ? 'text-emerald-500' : 'text-foreground/40'}>
+                                                {`(+${bonus})`}
+                                            </span>
+                                        </span>
+                                    );
+                                })}
                             </div>
                         </div>
                         {/* 재화 표시 */}
@@ -172,6 +284,58 @@ export default function Room() {
                     <Swords className="h-4 w-4" /> 던전 가기
                 </Link>
             </motion.div>
+
+            {/* 장착 장비 */}
+            {character && (
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.22 }}
+                    className="glass p-5 rounded-xl bg-white/5 mb-8"
+                >
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-bold">장착 장비</h3>
+                        <span className="text-xs text-foreground/50">
+                            {equippedEntries.filter(([, item]) => item).length}/{equippedEntries.length}
+                        </span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {equippedEntries.map(([slot, item]) => (
+                            <div
+                                key={slot}
+                                className="flex items-center gap-3 rounded-xl border border-foreground/10 bg-white/5 px-3 py-2"
+                            >
+                                <div className="text-2xl">{item?.emoji ?? '—'}</div>
+                                <div className="min-w-0 flex-1">
+                                    <div className="text-xs text-foreground/50">{slot}</div>
+                                    <div className="text-sm font-semibold truncate">{item ? item.name : '비어있음'}</div>
+                                    {item && (
+                                        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] leading-tight text-foreground/60">
+                                            <span
+                                                className={`rounded-full px-2 py-0.5 font-semibold bg-foreground/5 ring-1 ring-foreground/10 ${ITEM_RARITY_TEXT[item.rarity]}`}
+                                            >
+                                                {item.rarity}
+                                            </span>
+                                            {item.stats.hp > 0 && <span>HP +{item.stats.hp}</span>}
+                                            {item.stats.attack > 0 && <span>ATK +{item.stats.attack}</span>}
+                                            {item.stats.defense > 0 && <span>DEF +{item.stats.defense}</span>}
+                                            {item.stats.speed > 0 && <span>SPD +{item.stats.speed}</span>}
+                                        </div>
+                                    )}
+                                </div>
+                                {item && (
+                                    <button
+                                        onClick={() => handleUnequip(slot)}
+                                        className="text-xs font-semibold text-red-500 hover:text-red-600 transition-colors"
+                                    >
+                                        해제
+                                    </button>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </motion.div>
+            )}
 
             {/* 빈 인벤토리 */}
             {inventory.length === 0 && (
@@ -232,85 +396,201 @@ export default function Room() {
                         className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
                         onClick={() => setSelectedItem(null)}
                     >
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            onClick={(e) => e.stopPropagation()}
-                            className={`relative w-full max-w-sm p-6 rounded-2xl border-2 shadow-2xl bg-zinc-50 dark:bg-zinc-900 ${ITEM_RARITY_BORDER[selectedItem.item.rarity]}`}
-                        >
-                            {/* 닫기 */}
-                            <button
-                                onClick={() => setSelectedItem(null)}
-                                className="absolute top-4 right-4 text-foreground/40 hover:text-foreground transition-colors"
-                            >
-                                <X className="h-5 w-5" />
-                            </button>
-
-                            <div className="text-center mb-4">
-                                <div className="text-6xl mb-3">{selectedItem.item.emoji}</div>
-                                <h3 className="text-xl font-black">{selectedItem.item.name}</h3>
-                                <span className={`text-sm font-semibold ${ITEM_RARITY_TEXT[selectedItem.item.rarity]}`}>
-                                    {selectedItem.item.rarity}
-                                </span>
-                                <span className="text-sm text-foreground/50 ml-2">x{selectedItem.quantity}</span>
-                            </div>
-
-                            <p className="text-sm text-foreground/60 leading-relaxed text-center mb-4">
-                                {selectedItem.item.description}
-                            </p>
-
-                            {/* 능력치 */}
-                            <div className="grid grid-cols-2 gap-2 mb-6">
-                                {selectedItem.stats.hp > 0 && (
-                                    <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-500/10 text-sm">
-                                        <Heart className="h-3.5 w-3.5 text-red-500" />
-                                        <span className="text-foreground/70">HP</span>
-                                        <span className="ml-auto font-bold text-red-500">+{selectedItem.stats.hp}</span>
-                                    </div>
-                                )}
-                                {selectedItem.stats.attack > 0 && (
-                                    <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-orange-500/10 text-sm">
-                                        <Zap className="h-3.5 w-3.5 text-orange-500" />
-                                        <span className="text-foreground/70">공격</span>
-                                        <span className="ml-auto font-bold text-orange-500">+{selectedItem.stats.attack}</span>
-                                    </div>
-                                )}
-                                {selectedItem.stats.defense > 0 && (
-                                    <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-500/10 text-sm">
-                                        <Shield className="h-3.5 w-3.5 text-blue-500" />
-                                        <span className="text-foreground/70">방어</span>
-                                        <span className="ml-auto font-bold text-blue-500">+{selectedItem.stats.defense}</span>
-                                    </div>
-                                )}
-                                {selectedItem.stats.speed > 0 && (
-                                    <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-green-500/10 text-sm">
-                                        <Gauge className="h-3.5 w-3.5 text-green-500" />
-                                        <span className="text-foreground/70">속도</span>
-                                        <span className="ml-auto font-bold text-green-500">+{selectedItem.stats.speed}</span>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() => handleSell(selectedItem.item.id)}
-                                    className="flex-1 py-3 rounded-xl bg-amber-500/10 text-amber-600 font-semibold text-sm hover:bg-amber-500/20 transition-colors flex items-center justify-center gap-1.5"
+                        {(() => {
+                            const modalItem = GAME_ITEMS[selectedItem.item.id] ?? selectedItem.item;
+                            return (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className={`relative w-full max-w-sm p-6 rounded-2xl border-2 shadow-2xl bg-zinc-50 dark:bg-zinc-900 ${ITEM_RARITY_BORDER[modalItem.rarity]}`}
                                 >
-                                    <Coins className="h-4 w-4" /> 1개 판매 ({ITEM_SELL_PRICE[selectedItem.item.rarity]}G)
-                                </button>
-                                {selectedItem.quantity > 1 && (
+                                    {/* 닫기 */}
                                     <button
-                                        onClick={() => handleSellAll(selectedItem.item.id)}
-                                        className="py-3 px-4 rounded-xl bg-amber-500/10 text-amber-600 font-semibold text-sm hover:bg-amber-500/20 transition-colors"
+                                        onClick={() => setSelectedItem(null)}
+                                        className="absolute top-4 right-4 text-foreground/40 hover:text-foreground transition-colors"
                                     >
-                                        전부 판매 ({ITEM_SELL_PRICE[selectedItem.item.rarity] * selectedItem.quantity}G)
+                                        <X className="h-5 w-5" />
                                     </button>
-                                )}
-                            </div>
-                        </motion.div>
+
+                                    <div className="text-center mb-4">
+                                        <div className="text-6xl mb-3">{modalItem.emoji}</div>
+                                        <h3 className="text-xl font-black">{modalItem.name}</h3>
+                                        <span className={`text-sm font-semibold ${ITEM_RARITY_TEXT[modalItem.rarity]}`}>
+                                            {modalItem.rarity}
+                                        </span>
+                                        <span className="text-sm text-foreground/50 ml-2">x{selectedItem.quantity}</span>
+                                    </div>
+
+                                    <p className="text-sm text-foreground/60 leading-relaxed text-center mb-4">
+                                        {modalItem.description}
+                                    </p>
+
+                                    {/* 능력치 */}
+                                    <div className="grid grid-cols-2 gap-2 mb-6">
+                                        {selectedItem.stats.hp > 0 && (
+                                            <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-500/10 text-sm">
+                                                <Heart className="h-3.5 w-3.5 text-red-500" />
+                                                <span className="text-foreground/70">HP</span>
+                                                <span className="ml-auto font-bold text-red-500">+{selectedItem.stats.hp}</span>
+                                            </div>
+                                        )}
+                                        {selectedItem.stats.attack > 0 && (
+                                            <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-orange-500/10 text-sm">
+                                                <Zap className="h-3.5 w-3.5 text-orange-500" />
+                                                <span className="text-foreground/70">공격</span>
+                                                <span className="ml-auto font-bold text-orange-500">+{selectedItem.stats.attack}</span>
+                                            </div>
+                                        )}
+                                        {selectedItem.stats.defense > 0 && (
+                                            <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-500/10 text-sm">
+                                                <Shield className="h-3.5 w-3.5 text-blue-500" />
+                                                <span className="text-foreground/70">방어</span>
+                                                <span className="ml-auto font-bold text-blue-500">+{selectedItem.stats.defense}</span>
+                                            </div>
+                                        )}
+                                        {selectedItem.stats.speed > 0 && (
+                                            <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-green-500/10 text-sm">
+                                                <Gauge className="h-3.5 w-3.5 text-green-500" />
+                                                <span className="text-foreground/70">속도</span>
+                                                <span className="ml-auto font-bold text-green-500">+{selectedItem.stats.speed}</span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* 액션 버튼 */}
+                                    <div className="space-y-2 mb-4">
+                                        {modalItem.type === 'food' && (
+                                            <button
+                                                onClick={() => handleUseFood(selectedItem.item.id)}
+                                                disabled={selectedItem.quantity <= 0}
+                                                className="w-full py-3 rounded-xl bg-green-500 text-white font-bold hover:bg-green-600 disabled:bg-green-500/40 disabled:text-white/60 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                                            >
+                                                <Heart className="h-4 w-4" /> 사용하기
+                                            </button>
+                                        )}
+                                        {modalItem.type === 'equipment' && modalItem.equipmentSlot && (() => {
+                                            const slot = modalItem.equipmentSlot;
+                                            const isEquipped = character?.equipment[slot]?.id === selectedItem.item.id;
+
+                                            return isEquipped ? (
+                                                <button
+                                                    onClick={() => handleUnequip(slot)}
+                                                    className="w-full py-3 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
+                                                >
+                                                    <X className="h-4 w-4" /> 장비 해제
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleEquip(selectedItem.item.id)}
+                                                    className="w-full py-3 rounded-xl bg-blue-500 text-white font-bold hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+                                                >
+                                                    <Shield className="h-4 w-4" /> 장착하기
+                                                </button>
+                                            );
+                                        })()}
+                                    </div>
+
+                                    {/* 판매 버튼 */}
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => handleSellRequest(selectedItem.item.id, false)}
+                                            className="flex-1 py-3 rounded-xl bg-amber-500/10 text-amber-600 font-semibold text-sm hover:bg-amber-500/20 transition-colors flex items-center justify-center gap-1.5"
+                                        >
+                                            <Coins className="h-4 w-4" /> 1개 판매 ({ITEM_SELL_PRICE[modalItem.rarity]}G)
+                                        </button>
+                                        {selectedItem.quantity > 1 && (
+                                            <button
+                                                onClick={() => handleSellRequest(selectedItem.item.id, true)}
+                                                className="py-3 px-4 rounded-xl bg-amber-500/10 text-amber-600 font-semibold text-sm hover:bg-amber-500/20 transition-colors"
+                                            >
+                                                전부 판매 ({ITEM_SELL_PRICE[modalItem.rarity] * selectedItem.quantity}G)
+                                            </button>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            );
+                        })()}
                     </motion.div>
                 )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {activeToast && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 16 }}
+                        className="fixed inset-x-0 bottom-6 z-50 flex justify-center px-4"
+                    >
+                        <div
+                            className={`w-full max-w-sm rounded-full px-4 py-3 text-sm font-semibold shadow-lg ${activeToast.tone === 'success'
+                                ? 'bg-emerald-600 text-white'
+                                : 'bg-red-600 text-white'
+                                }`}
+                        >
+                            {activeToast.message}
+                            {activeToast.count > 1 && (
+                                <span className="ml-2 text-white/80">x{activeToast.count}</span>
+                            )}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* 판매 확인 모달 */}
+            <AnimatePresence>
+                {sellConfirm && (() => {
+                    const entry = inventory.find((e) => e.item.id === sellConfirm.itemId);
+                    if (!entry) return null;
+                    const totalGold = sellConfirm.sellAll
+                        ? ITEM_SELL_PRICE[entry.item.rarity] * entry.quantity
+                        : ITEM_SELL_PRICE[entry.item.rarity];
+                    const quantityText = sellConfirm.sellAll ? `${entry.quantity}개` : '1개';
+
+                    return (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+                            onClick={() => setSellConfirm(null)}
+                        >
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                                onClick={(e) => e.stopPropagation()}
+                                className="relative w-full max-w-sm p-6 rounded-2xl shadow-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-amber-500"
+                            >
+                                <div className="text-center mb-6">
+                                    <div className="text-5xl mb-3">{entry.item.emoji}</div>
+                                    <h3 className="text-xl font-black mb-2">정말 판매하시겠습니까?</h3>
+                                    <p className="text-sm text-foreground/60">
+                                        <span className="font-bold text-foreground">{entry.item.name}</span> {quantityText}를<br />
+                                        <span className="font-bold text-amber-600">{totalGold}G</span>에 판매합니다
+                                    </p>
+                                </div>
+
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => setSellConfirm(null)}
+                                        className="flex-1 py-3 rounded-xl bg-foreground/10 text-foreground/60 font-bold hover:bg-foreground/20 transition-colors"
+                                    >
+                                        취소
+                                    </button>
+                                    <button
+                                        onClick={handleSellConfirm}
+                                        className="flex-1 py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <Coins className="h-4 w-4" /> 판매
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </motion.div>
+                    );
+                })()}
             </AnimatePresence>
         </div>
     );
