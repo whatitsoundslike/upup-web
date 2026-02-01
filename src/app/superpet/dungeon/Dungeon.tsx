@@ -522,7 +522,7 @@ export default function Dungeon() {
                     <motion.div
                         initial={{ opacity: 0, x: -30 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="glass p-6 rounded-2xl bg-white/5"
+                        className="glass p-2 rounded-2xl bg-white/5"
                     >
                         <div className="text-center mb-4">
                             {character.image ? (
@@ -551,7 +551,7 @@ export default function Dungeon() {
                     <motion.div
                         initial={{ opacity: 0, x: 30 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="glass p-6 rounded-2xl bg-white/5"
+                        className="glass p-2 rounded-2xl bg-white/5"
                     >
                         <div className="text-center mb-4 flex flex-col items-center">
                             <div className="text-4xl mb-2 w-25 h-40 flex items-center justify-center ">{selectedMonster?.emoji}</div>
