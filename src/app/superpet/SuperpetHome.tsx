@@ -248,7 +248,7 @@ export default function SuperpetHome() {
                                         className="mb-4"
                                     >
                                         {createdCharacter.image ? (
-                                            <img src={createdCharacter.image} alt={createdCharacter.name} className="w-50 h-80 object-cover rounded-2xl mx-auto shadow-lg border-2 border-amber-500" />
+                                            <img src={createdCharacter.image} alt={createdCharacter.name} className="w-54 h-80 object-cover rounded-2xl mx-auto shadow-lg border-2 border-amber-500" />
                                         ) : (
                                             <span className="text-6xl">🐾</span>
                                         )}
