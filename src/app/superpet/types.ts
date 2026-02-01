@@ -696,7 +696,7 @@ export const GAME_ITEMS: Record<string, GameItem> = {
     silver_ring: {
         id: 'silver_ring',
         name: '은 반지',
-        emoji: '🪙',
+        emoji: '💍',
         rarity: '고급',
         stats: { hp: 4, attack: 2, defense: 2, speed: 2 },
         type: 'equipment',
@@ -714,7 +714,7 @@ export const GAME_ITEMS: Record<string, GameItem> = {
     emerald_ring: {
         id: 'emerald_ring',
         name: '에메랄드 반지',
-        emoji: '💚',
+        emoji: '💍',
         rarity: '에픽',
         stats: { hp: 8, attack: 6, defense: 6, speed: 6 },
         type: 'equipment',
@@ -723,7 +723,7 @@ export const GAME_ITEMS: Record<string, GameItem> = {
     infinity_ring: {
         id: 'infinity_ring',
         name: '무한의 반지',
-        emoji: '♾️',
+        emoji: '💍',
         rarity: '전설',
         stats: { hp: 12, attack: 9, defense: 9, speed: 9 },
         type: 'equipment',

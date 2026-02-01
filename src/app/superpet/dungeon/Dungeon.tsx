@@ -6,7 +6,7 @@ import {
     Heart, Skull, Zap, PawPrint, Gift,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { type Character, type GameItem, GAME_ITEMS, addItemToInventory, addExpToCharacter, DUNGEON_EXP, ITEM_RARITY_TEXT, loadCharacter, saveCharacter, getTotalStats } from '../types';
 import { getItem, setItem } from '../storage';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -158,7 +158,7 @@ const dungeons: DungeonData[] = [
                 emoji: '🧚',
                 level: 12,
                 hp: 80,
-                attack: 15,
+                attack: 40,
                 isBoss: false,
                 spawnChance: 25,
                 drops: [
@@ -173,7 +173,7 @@ const dungeons: DungeonData[] = [
                 emoji: '🌿',
                 level: 14,
                 hp: 90,
-                attack: 18,
+                attack: 42,
                 isBoss: false,
                 spawnChance: 22,
                 drops: [
@@ -188,7 +188,7 @@ const dungeons: DungeonData[] = [
                 emoji: '🪵',
                 level: 16,
                 hp: 100,
-                attack: 20,
+                attack: 44,
                 isBoss: false,
                 spawnChance: 20,
                 drops: [
@@ -203,7 +203,7 @@ const dungeons: DungeonData[] = [
                 emoji: '🐍',
                 level: 18,
                 hp: 110,
-                attack: 23,
+                attack: 47,
                 isBoss: false,
                 spawnChance: 17,
                 drops: [
@@ -218,7 +218,7 @@ const dungeons: DungeonData[] = [
                 emoji: '👻',
                 level: 19,
                 hp: 120,
-                attack: 25,
+                attack: 48,
                 isBoss: false,
                 spawnChance: 13,
                 drops: [
@@ -233,7 +233,7 @@ const dungeons: DungeonData[] = [
                 emoji: '🐉',
                 level: 20,
                 hp: 300,
-                attack: 30,
+                attack: 50,
                 isBoss: true,
                 spawnChance: 3,
                 drops: [
@@ -263,8 +263,8 @@ const dungeons: DungeonData[] = [
                 name: '용암 전갈',
                 emoji: '🦂',
                 level: 22,
-                hp: 150,
-                attack: 25,
+                hp: 250,
+                attack: 50,
                 isBoss: false,
                 spawnChance: 25,
                 drops: [
@@ -278,8 +278,8 @@ const dungeons: DungeonData[] = [
                 name: '바위 골렘',
                 emoji: '🗿',
                 level: 24,
-                hp: 165,
-                attack: 30,
+                hp: 265,
+                attack: 52,
                 isBoss: false,
                 spawnChance: 22,
                 drops: [
@@ -293,8 +293,8 @@ const dungeons: DungeonData[] = [
                 name: '지하 거미',
                 emoji: '🕷️',
                 level: 26,
-                hp: 180,
-                attack: 33,
+                hp: 280,
+                attack: 54,
                 isBoss: false,
                 spawnChance: 20,
                 drops: [
@@ -308,8 +308,8 @@ const dungeons: DungeonData[] = [
                 name: '균열 도마뱀',
                 emoji: '🦎',
                 level: 28,
-                hp: 190,
-                attack: 37,
+                hp: 290,
+                attack: 57,
                 isBoss: false,
                 spawnChance: 17,
                 drops: [
@@ -323,8 +323,8 @@ const dungeons: DungeonData[] = [
                 name: '마그마 뱀',
                 emoji: '🐉',
                 level: 29,
-                hp: 200,
-                attack: 40,
+                hp: 300,
+                attack: 60,
                 isBoss: false,
                 spawnChance: 13,
                 drops: [
@@ -338,8 +338,8 @@ const dungeons: DungeonData[] = [
                 name: '대지의 군주',
                 emoji: '🌋',
                 level: 30,
-                hp: 300,
-                attack: 50,
+                hp: 500,
+                attack: 80,
                 isBoss: true,
                 spawnChance: 3,
                 drops: [
@@ -369,8 +369,8 @@ const dungeons: DungeonData[] = [
                 name: '화염 박쥐',
                 emoji: '🦇',
                 level: 32,
-                hp: 250,
-                attack: 40,
+                hp: 450,
+                attack: 80,
                 isBoss: false,
                 spawnChance: 25,
                 drops: [
@@ -384,8 +384,8 @@ const dungeons: DungeonData[] = [
                 name: '용암 거북',
                 emoji: '🐢',
                 level: 34,
-                hp: 300,
-                attack: 45,
+                hp: 500,
+                attack: 85,
                 isBoss: false,
                 spawnChance: 22,
                 drops: [
@@ -399,8 +399,8 @@ const dungeons: DungeonData[] = [
                 name: '불꽃 하피',
                 emoji: '🦅',
                 level: 36,
-                hp: 330,
-                attack: 50,
+                hp: 530,
+                attack: 90,
                 isBoss: false,
                 spawnChance: 20,
                 drops: [
@@ -414,8 +414,8 @@ const dungeons: DungeonData[] = [
                 name: '화산 기사',
                 emoji: '⚔️',
                 level: 38,
-                hp: 370,
-                attack: 55,
+                hp: 570,
+                attack: 95,
                 isBoss: false,
                 spawnChance: 17,
                 drops: [
@@ -429,8 +429,8 @@ const dungeons: DungeonData[] = [
                 name: '불의 정령',
                 emoji: '🔥',
                 level: 39,
-                hp: 400,
-                attack: 60,
+                hp: 600,
+                attack: 100,
                 isBoss: false,
                 spawnChance: 13,
                 drops: [
@@ -444,8 +444,8 @@ const dungeons: DungeonData[] = [
                 name: '피닉스',
                 emoji: '🐦‍🔥',
                 level: 40,
-                hp: 600,
-                attack: 80,
+                hp: 900,
+                attack: 120,
                 isBoss: true,
                 spawnChance: 3,
                 drops: [
@@ -476,7 +476,7 @@ const dungeons: DungeonData[] = [
                 emoji: '🦎',
                 level: 42,
                 hp: 500,
-                attack: 70,
+                attack: 110,
                 isBoss: false,
                 spawnChance: 26,
                 drops: [
@@ -491,7 +491,7 @@ const dungeons: DungeonData[] = [
                 emoji: '🐍',
                 level: 44,
                 hp: 550,
-                attack: 75,
+                attack: 115,
                 isBoss: false,
                 spawnChance: 23,
                 drops: [
@@ -506,7 +506,7 @@ const dungeons: DungeonData[] = [
                 emoji: '🔥',
                 level: 46,
                 hp: 600,
-                attack: 80,
+                attack: 120,
                 isBoss: false,
                 spawnChance: 21,
                 drops: [
@@ -521,7 +521,7 @@ const dungeons: DungeonData[] = [
                 emoji: '❄️',
                 level: 48,
                 hp: 650,
-                attack: 85,
+                attack: 125,
                 isBoss: false,
                 spawnChance: 17,
                 drops: [
@@ -536,7 +536,7 @@ const dungeons: DungeonData[] = [
                 emoji: '🖤',
                 level: 49,
                 hp: 700,
-                attack: 90,
+                attack: 120,
                 isBoss: false,
                 spawnChance: 12,
                 drops: [
@@ -550,8 +550,8 @@ const dungeons: DungeonData[] = [
                 name: '마룡',
                 emoji: '🐲',
                 level: 50,
-                hp: 1000,
-                attack: 120,
+                hp: 1500,
+                attack: 150,
                 isBoss: true,
                 spawnChance: 1,
                 drops: [
@@ -583,7 +583,7 @@ export default function Dungeon() {
     const [battleState, setBattleState] = useState<BattleState>('idle');
     const [playerHp, setPlayerHp] = useState(0);
     const [monsterHp, setMonsterHp] = useState(0);
-    const [battleLog, setBattleLog] = useState<string[]>([]);
+    const [battleLog, setBattleLog] = useState<ReactNode[]>([]);
     const [droppedItems, setDroppedItems] = useState<DroppedItem[]>([]);
     const [lowHpWarning, setLowHpWarning] = useState(false);
     const [autoBattle, setAutoBattle] = useState(false);
@@ -707,7 +707,7 @@ export default function Dungeon() {
         const doubleAttackChance = Math.min(totalStats.speed / 500, 0.5);
         const dodgeChance = Math.min(totalStats.speed / 500, 0.4);
 
-        const newLog: string[] = [];
+        const newLog: ReactNode[] = [];
 
         // 1차 공격
         const playerDmg = Math.floor(totalStats.attack * (0.8 + Math.random() * 0.4));
@@ -737,7 +737,11 @@ export default function Dungeon() {
             }
             if (drops.length > 0) {
                 for (const drop of drops) {
-                    newLog.push(`${drop.item.emoji} ${t(drop.item.name)} ${t('획득!')}`);
+                    newLog.push(
+                        <span key={`drop-${drop.item.id}-${Date.now()}`}>
+                            {drop.item.emoji} <span className={ITEM_RARITY_TEXT[drop.item.rarity]}>{t(drop.item.name)}</span> {t('획득!')}
+                        </span>
+                    );
                 }
             } else {
                 newLog.push(t('드롭된 아이템이 없다...'));
@@ -768,7 +772,7 @@ export default function Dungeon() {
             newLog.push(`💨 ${character.name}${t('이(가) 재빠르게 회피했다!')}`);
         } else {
             const monsterDmg = Math.max(
-                Math.floor(selectedMonster.attack * (0.8 + Math.random() * 0.4) - totalStats.defense),
+                Math.floor((selectedMonster.attack - totalStats.defense) * (0.8 + Math.random() * 0.4)),
                 5
             );
             const newPlayerHp = Math.max(playerHp - monsterDmg, 0);
