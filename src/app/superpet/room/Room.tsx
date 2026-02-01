@@ -473,10 +473,6 @@ export default function Room() {
                                         </span>
                                     </div>
 
-                                    <p className="text-sm text-foreground/60 leading-relaxed text-center mb-4">
-                                        {t(modalItem.description)}
-                                    </p>
-
                                     <div className="grid grid-cols-2 gap-2 mb-6">
                                         {selectedItem.stats.hp > 0 && (
                                             <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-500/10 text-sm">

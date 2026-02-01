@@ -179,8 +179,6 @@ export default function Shop() {
                             >
                                 <div className="text-4xl mb-3">{item.emoji}</div>
                                 <h3 className="font-bold text-sm mb-1">{t(item.name)}</h3>
-                                <p className="text-xs text-foreground/50 mb-3 line-clamp-2">{t(item.description)}</p>
-
                                 {/* 스탯 미리보기 */}
                                 <div className="flex flex-wrap justify-center gap-1 text-[11px] text-foreground/50 mb-3">
                                     {item.stats.hp > 0 && <span>HP+{item.stats.hp}</span>}
