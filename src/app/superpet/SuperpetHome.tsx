@@ -242,7 +242,10 @@ export default function SuperpetHome() {
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: idx * 0.1 }}
-                                        className="p-6 rounded-2xl shadow-lg bg-white/5 backdrop-blur-md relative group border-1 border-foreground/20"
+                                        className={`p-6 rounded-2xl shadow-lg backdrop-blur-md relative group ${activeCharacterId === char.id
+                                            ? 'bg-amber-500/10 border-2 border-amber-500 ring-2 ring-amber-500/20'
+                                            : 'bg-white/5 border border-foreground/20'
+                                            }`}
                                     >
                                         {/* 삭제 버튼 */}
                                         <button
