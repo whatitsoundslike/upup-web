@@ -35,6 +35,7 @@ export const koToEn: Record<string, string> = {
     '정말로 이 캐릭터를 삭제하시겠습니까?': 'Are you sure you want to delete this character?',
     '이 작업은 되돌릴 수 없습니다.': 'This action cannot be undone.',
     '모험 시작하기': 'Start Adventure',
+    '던전 가기': 'Go to Dungeon',
 
     // === 캐릭터 생성 결과 ===
     '정말 멋진 모험가가 탄생했어!': 'A great adventurer has been born!',

@@ -396,9 +396,18 @@ export default function SuperpetHome() {
 
                                         {/* 선택 버튼 */}
                                         {activeCharacterId === char.id ? (
-                                            <div className="w-full py-2.5 rounded-lg bg-foreground/10 text-foreground/50 text-sm font-bold text-center flex items-center justify-center gap-2 cursor-not-allowed">
-                                                <PawPrint className="h-4 w-4" />
-                                                {t('선택됨')}
+                                            <div className="flex flex-col gap-2">
+                                                <div className="w-full py-2.5 rounded-lg bg-foreground/10 text-foreground/50 text-sm font-bold text-center flex items-center justify-center gap-2 cursor-not-allowed">
+                                                    <PawPrint className="h-4 w-4" />
+                                                    {t('선택됨')}
+                                                </div>
+                                                <Link
+                                                    href="/superpet/dungeon"
+                                                    className="w-full py-2.5 rounded-lg bg-red-500 text-white text-sm font-bold text-center hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
+                                                >
+                                                    <Swords className="h-4 w-4" />
+                                                    {t('던전 가기')}
+                                                </Link>
                                             </div>
                                         ) : (
                                             <Link

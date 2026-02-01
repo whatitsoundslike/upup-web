@@ -1,7 +1,7 @@
 import { LanguageProvider } from './i18n/LanguageContext';
-import CoupangBanner from './components/CoupangBanner';
 import CoupangLeftBanner from './components/CoupangLeftBanner';
 import CoupangRightBanner from './components/CoupangRightBanner';
+import BottomBanner from './components/BottomBanner';
 
 export default function SuperpetLayout({ children }: { children: React.ReactNode }) {
     return (
@@ -22,15 +22,8 @@ export default function SuperpetLayout({ children }: { children: React.ReactNode
                     {children}
                 </main>
 
-                {/* Global Bottom Banner */}
-                <footer className="py-8 bg-foreground/5">
-                    <div className="max-w-3xl mx-auto px-4">
-                        <div className="text-center mb-4 text-xs text-foreground/40 uppercase tracking-widest font-bold">
-                            Sponsored
-                        </div>
-                        <CoupangBanner />
-                    </div>
-                </footer>
+                {/* Global Bottom Banner (던전 제외) */}
+                <BottomBanner />
             </div>
         </LanguageProvider>
     );
