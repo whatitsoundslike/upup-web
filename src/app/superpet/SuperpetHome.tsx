@@ -39,8 +39,10 @@ export default function SuperpetHome() {
     const [showAnnouncement, setShowAnnouncement] = useState(false);
     const [petPhoto, setPetPhoto] = useState<string | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
+    const [generateProgress, setGenerateProgress] = useState(0);
     const [generateError, setGenerateError] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isSharing, setIsSharing] = useState(false);
 
     // 페이지 로드 시 기존 캐릭터 불러오기
     useEffect(() => {
@@ -75,6 +77,22 @@ export default function SuperpetHome() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }, [createdCharacter]);
+
+    // 생성 중 프로그레스바 시뮬레이션
+    useEffect(() => {
+        if (!isGenerating) {
+            setGenerateProgress(0);
+            return;
+        }
+        setGenerateProgress(0);
+        const interval = setInterval(() => {
+            setGenerateProgress((prev) => {
+                if (prev >= 90) return 90;
+                return prev + Math.random() * 8 + 2;
+            });
+        }, 500);
+        return () => clearInterval(interval);
+    }, [isGenerating]);
 
     const toggleTrait = (trait: string) => {
         setTraits((prev) =>
@@ -146,6 +164,151 @@ export default function SuperpetHome() {
         setItem('announcement-shown', today);
     };
 
+    const handleShare = async () => {
+        if (!createdCharacter || isSharing) return;
+        setIsSharing(true);
+
+        // 트위터 창을 먼저 열어서 팝업 차단 방지 (사용자 클릭 컨텍스트 내에서)
+        const tweetText = lang === 'ko'
+            ? `🐾 내 슈퍼펫 「${createdCharacter.name}」을(를) 소개합니다!\n#SuperPet #슈퍼펫`
+            : `🐾 Meet my Super Pet "${createdCharacter.name}"!\n#SuperPet`;
+        const tweetUrl = 'https://zroom.io/superpet';
+        window.open(
+            `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(tweetUrl)}`,
+            '_blank',
+            'noopener,noreferrer'
+        );
+
+        // 카드 이미지 다운로드
+        try {
+            const canvas = document.createElement('canvas');
+            const W = 600;
+            const padding = 40;
+            const ctx = canvas.getContext('2d')!;
+
+            // 캐릭터 이미지 로드
+            let charImg: HTMLImageElement | null = null;
+            const imgH = 400;
+            if (createdCharacter.image) {
+                charImg = await new Promise<HTMLImageElement>((resolve, reject) => {
+                    const img = new Image();
+                    img.onload = () => resolve(img);
+                    img.onerror = reject;
+                    img.src = createdCharacter.image!;
+                });
+            }
+
+            // 캔버스 크기 계산
+            const nameY = padding + (charImg ? imgH + 20 : 0);
+            const statsY = nameY + 70;
+            const H = statsY + 130 + padding;
+            canvas.width = W;
+            canvas.height = H;
+
+            // 배경
+            ctx.fillStyle = '#18181b';
+            ctx.fillRect(0, 0, W, H);
+
+            // 캐릭터 이미지 그리기
+            if (charImg) {
+                const imgW = 250;
+                const dx = (W - imgW) / 2;
+                ctx.save();
+                ctx.beginPath();
+                const r = 16;
+                ctx.moveTo(dx + r, padding);
+                ctx.arcTo(dx + imgW, padding, dx + imgW, padding + imgH, r);
+                ctx.arcTo(dx + imgW, padding + imgH, dx, padding + imgH, r);
+                ctx.arcTo(dx, padding + imgH, dx, padding, r);
+                ctx.arcTo(dx, padding, dx + imgW, padding, r);
+                ctx.closePath();
+                ctx.clip();
+                ctx.drawImage(charImg, dx, padding, imgW, imgH);
+                ctx.restore();
+
+                // 테두리
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(dx + r, padding);
+                ctx.arcTo(dx + imgW, padding, dx + imgW, padding + imgH, r);
+                ctx.arcTo(dx + imgW, padding + imgH, dx, padding + imgH, r);
+                ctx.arcTo(dx, padding + imgH, dx, padding, r);
+                ctx.arcTo(dx, padding, dx + imgW, padding, r);
+                ctx.closePath();
+                ctx.stroke();
+            }
+
+            // 이름
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 28px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(createdCharacter.name, W / 2, nameY + 30);
+
+            // 레벨, 직업, 속성
+            const infoText = `Lv.${createdCharacter.level}  ${createdCharacter.className}  ${createdCharacter.element}`;
+            ctx.fillStyle = '#a1a1aa';
+            ctx.font = '16px sans-serif';
+            ctx.fillText(infoText, W / 2, nameY + 58);
+
+            // 스탯
+            const stats = [
+                { label: 'HP', value: createdCharacter.hp, color: '#ef4444' },
+                { label: lang === 'ko' ? '공격' : 'ATK', value: createdCharacter.attack, color: '#ef4444' },
+                { label: lang === 'ko' ? '방어' : 'DEF', value: createdCharacter.defense, color: '#3b82f6' },
+                { label: lang === 'ko' ? '속도' : 'SPD', value: createdCharacter.speed, color: '#22c55e' },
+            ];
+            const boxW = (W - padding * 2 - 16) / 2;
+            const boxH = 48;
+            stats.forEach((stat, i) => {
+                const col = i % 2;
+                const row = Math.floor(i / 2);
+                const x = padding + col * (boxW + 16);
+                const y = statsY + row * (boxH + 12);
+
+                // 배경 박스
+                ctx.fillStyle = stat.color + '1a';
+                ctx.beginPath();
+                ctx.roundRect(x, y, boxW, boxH, 12);
+                ctx.fill();
+
+                // 라벨
+                ctx.fillStyle = '#a1a1aa';
+                ctx.font = '14px sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText(stat.label, x + 16, y + 30);
+
+                // 값
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 16px sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillText(String(stat.value), x + boxW - 16, y + 30);
+            });
+
+            // 워터마크
+            ctx.fillStyle = '#52525b';
+            ctx.font = '12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('SUPER PET  |  zroom.io/superpet', W / 2, H - 12);
+
+            canvas.toBlob((blob) => {
+                if (!blob) return;
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `superpet-${createdCharacter.name}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            }, 'image/png');
+        } catch {
+            // 이미지 다운로드 실패 시 무시
+        } finally {
+            setIsSharing(false);
+        }
+    };
+
     const handleDeleteCharacter = (characterId: string) => {
         deleteCharacter(characterId);
         const remaining = loadAllCharacters();
@@ -195,81 +358,83 @@ export default function SuperpetHome() {
                             animate={{ opacity: 1, scale: 1 }}
                             className="glass p-8 rounded-2xl shadow-lg bg-white/5 mb-8"
                         >
-                            <div className="text-center mb-6">
+                            <div className="p-4">
+                                <div className="text-center mb-6">
+                                    <motion.div
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        transition={{ type: 'spring', stiffness: 300, delay: 0.2 }}
+                                        className="mb-4"
+                                    >
+                                        {createdCharacter.image ? (
+                                            <img src={createdCharacter.image} alt={createdCharacter.name} className="w-50 h-80 object-cover rounded-2xl mx-auto shadow-lg border-2 border-amber-500" />
+                                        ) : (
+                                            <span className="text-6xl">🐾</span>
+                                        )}
+                                    </motion.div>
+                                    <motion.h2
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.3 }}
+                                        className="text-2xl font-black mb-2"
+                                    >
+                                        {createdCharacter.name}
+                                    </motion.h2>
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ delay: 0.4 }}
+                                        className="flex items-center justify-center gap-2"
+                                    >
+                                        <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-white text-xs font-bold">
+                                            Lv.{createdCharacter.level}
+                                        </span>
+                                        <span className="text-foreground/60 text-sm font-semibold">{t(createdCharacter.className)}</span>
+                                        <span className={`px-2.5 py-0.5 rounded-full text-white text-xs font-bold ${ELEMENT_COLORS[createdCharacter.element]}`}>
+                                            {t(createdCharacter.element)}
+                                        </span>
+                                    </motion.div>
+                                    <motion.p
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ delay: 0.45 }}
+                                        className="text-foreground/60 text-sm mt-3"
+                                    >
+                                        {lang === 'ko'
+                                            ? <>반가워, <span className="font-bold text-foreground">{createdCharacter.name}</span>! 정말 멋진 모험가가 탄생했어!</>
+                                            : <>Welcome, <span className="font-bold text-foreground">{createdCharacter.name}</span>! {t('정말 멋진 모험가가 탄생했어!')}</>
+                                        }
+                                    </motion.p>
+                                </div>
+
                                 <motion.div
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    transition={{ type: 'spring', stiffness: 300, delay: 0.2 }}
-                                    className="mb-4"
-                                >
-                                    {createdCharacter.image ? (
-                                        <img src={createdCharacter.image} alt={createdCharacter.name} className="w-50 h-80 object-cover rounded-2xl mx-auto shadow-lg border-2 border-amber-500" />
-                                    ) : (
-                                        <span className="text-6xl">🐾</span>
-                                    )}
-                                </motion.div>
-                                <motion.h2
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.3 }}
-                                    className="text-2xl font-black mb-2"
+                                    transition={{ delay: 0.5 }}
+                                    className="grid grid-cols-2 gap-3 mb-6"
                                 >
-                                    {createdCharacter.name}
-                                </motion.h2>
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 0.4 }}
-                                    className="flex items-center justify-center gap-2"
-                                >
-                                    <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-white text-xs font-bold">
-                                        Lv.{createdCharacter.level}
-                                    </span>
-                                    <span className="text-foreground/60 text-sm font-semibold">{t(createdCharacter.className)}</span>
-                                    <span className={`px-2.5 py-0.5 rounded-full text-white text-xs font-bold ${ELEMENT_COLORS[createdCharacter.element]}`}>
-                                        {t(createdCharacter.element)}
-                                    </span>
+                                    <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-500/10">
+                                        <Heart className="h-4 w-4 text-red-500 fill-red-500" />
+                                        <span className="text-sm text-foreground/70">HP</span>
+                                        <span className="ml-auto font-bold">{createdCharacter.hp}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-500/10">
+                                        <Sword className="h-4 w-4 text-red-500" />
+                                        <span className="text-sm text-foreground/70">{t('공격')}</span>
+                                        <span className="ml-auto font-bold">{createdCharacter.attack}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-blue-500/10">
+                                        <Shield className="h-4 w-4 text-blue-500" />
+                                        <span className="text-sm text-foreground/70">{t('방어')}</span>
+                                        <span className="ml-auto font-bold">{createdCharacter.defense}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-green-500/10">
+                                        <Feather className="h-4 w-4 text-green-500" />
+                                        <span className="text-sm text-foreground/70">{t('속도')}</span>
+                                        <span className="ml-auto font-bold">{createdCharacter.speed}</span>
+                                    </div>
                                 </motion.div>
-                                <motion.p
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 0.45 }}
-                                    className="text-foreground/60 text-sm mt-3"
-                                >
-                                    {lang === 'ko'
-                                        ? <>반가워, <span className="font-bold text-foreground">{createdCharacter.name}</span>! 정말 멋진 모험가가 탄생했어!</>
-                                        : <>Welcome, <span className="font-bold text-foreground">{createdCharacter.name}</span>! {t('정말 멋진 모험가가 탄생했어!')}</>
-                                    }
-                                </motion.p>
                             </div>
-
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.5 }}
-                                className="grid grid-cols-2 gap-3 mb-6"
-                            >
-                                <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-500/10">
-                                    <Heart className="h-4 w-4 text-red-500 fill-red-500" />
-                                    <span className="text-sm text-foreground/70">HP</span>
-                                    <span className="ml-auto font-bold">{createdCharacter.hp}</span>
-                                </div>
-                                <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-500/10">
-                                    <Sword className="h-4 w-4 text-red-500" />
-                                    <span className="text-sm text-foreground/70">{t('공격')}</span>
-                                    <span className="ml-auto font-bold">{createdCharacter.attack}</span>
-                                </div>
-                                <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-blue-500/10">
-                                    <Shield className="h-4 w-4 text-blue-500" />
-                                    <span className="text-sm text-foreground/70">{t('방어')}</span>
-                                    <span className="ml-auto font-bold">{createdCharacter.defense}</span>
-                                </div>
-                                <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-green-500/10">
-                                    <Feather className="h-4 w-4 text-green-500" />
-                                    <span className="text-sm text-foreground/70">{t('속도')}</span>
-                                    <span className="ml-auto font-bold">{createdCharacter.speed}</span>
-                                </div>
-                            </motion.div>
 
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}
@@ -288,6 +453,18 @@ export default function SuperpetHome() {
                                     <Swords className="h-5 w-5" />
                                     {t('모험 시작하기')}
                                 </Link>
+                                <button
+                                    onClick={handleShare}
+                                    disabled={isSharing}
+                                    className="w-full py-3 rounded-xl bg-black text-white font-bold text-sm hover:bg-zinc-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-40"
+                                >
+                                    {isSharing ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+                                    )}
+                                    {t('X(트위터)에 공유')}
+                                </button>
                             </motion.div>
                         </motion.div>
                     )}
@@ -451,10 +628,10 @@ export default function SuperpetHome() {
                                 </div>
                             </div>
 
-                            {/* 사진 업로드 (선택) */}
+                            {/* 사진 업로드 (필수) */}
                             <div className="mb-8">
                                 <label className="block text-sm font-semibold mb-2 text-foreground/80">
-                                    {t('반려동물 사진 (선택)')}
+                                    {t('반려동물 사진')} <span className="text-red-500">*</span>
                                 </label>
                                 <p className="text-xs text-foreground/40 mb-3">{t('사진을 첨부하면 AI가 카드로 변환합니다')}</p>
                                 {petPhoto ? (
@@ -492,26 +669,37 @@ export default function SuperpetHome() {
                                 </div>
                             )}
 
-                            {/* 생성 버튼 */}
-                            <motion.button
-                                whileHover={{ scale: isGenerating ? 1 : 1.02 }}
-                                whileTap={{ scale: isGenerating ? 1 : 0.98 }}
-                                onClick={handleGenerate}
-                                disabled={!petName.trim() || traits.length < 3 || isGenerating}
-                                className="w-full py-4 rounded-xl bg-amber-500 text-white font-bold text-lg shadow-lg hover:bg-amber-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                            >
-                                {isGenerating ? (
-                                    <>
-                                        <Loader2 className="h-5 w-5 animate-spin" />
-                                        {t('AI가 카드를 생성 중입니다...')}
-                                    </>
-                                ) : (
-                                    <>
-                                        <Sparkles className="h-5 w-5" />
-                                        {t('캐릭터 생성')}
-                                    </>
-                                )}
-                            </motion.button>
+                            {/* 생성 버튼 / 프로그레스바 */}
+                            {isGenerating ? (
+                                <div className="w-full rounded-xl bg-foreground/5 border border-foreground/10 p-4">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-sm font-semibold text-foreground/70 flex items-center gap-2">
+                                            <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
+                                            {t('멋진 카드를 생성 중입니다...')}
+                                        </span>
+                                        <span className="text-xs font-bold text-amber-500">{Math.round(generateProgress)}%</span>
+                                    </div>
+                                    <div className="h-3 rounded-full bg-foreground/10 overflow-hidden">
+                                        <motion.div
+                                            className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500"
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${generateProgress}%` }}
+                                            transition={{ duration: 0.3, ease: 'easeOut' }}
+                                        />
+                                    </div>
+                                </div>
+                            ) : (
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={handleGenerate}
+                                    disabled={!petName.trim() || traits.length < 3 || !petPhoto}
+                                    className="w-full py-4 rounded-xl bg-amber-500 text-white font-bold text-lg shadow-lg hover:bg-amber-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                >
+                                    <Sparkles className="h-5 w-5" />
+                                    {t('캐릭터 생성')}
+                                </motion.button>
+                            )}
 
                             {/* 취소 버튼 */}
                             {characters.length > 0 && (

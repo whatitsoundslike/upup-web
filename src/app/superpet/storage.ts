@@ -1,5 +1,5 @@
 // 이 값을 변경하면 기존 로컬스토리지 데이터가 모두 초기화됩니다.
-const STORAGE_VERSION = 'v1';
+const STORAGE_VERSION = 'v2';
 
 const STORAGE_PREFIX = `superpet_${STORAGE_VERSION}_`;
 const VERSION_KEY = 'superpet_storage_version';

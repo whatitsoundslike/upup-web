@@ -61,7 +61,7 @@ export const koToEn: Record<string, string> = {
     '수줍은': 'Shy',
 
     // === 직업 ===
-    '버서커': 'Berserker',
+    '워리어': 'Warrior',
     '팔라딘': 'Paladin',
     '어쌔신': 'Assassin',
 
@@ -237,11 +237,17 @@ export const koToEn: Record<string, string> = {
     '방': 'DEF',
     '속': 'SPD',
 
+    // === 공유 ===
+    '카드 공유하기': 'Share Card',
+    'X(트위터)에 공유': 'Share on X (Twitter)',
+    '내 슈퍼펫을 확인해보세요!': 'Check out my Super Pet!',
+
     // === AI 카드 생성 ===
     '반려동물 사진 (선택)': 'Pet Photo (Optional)',
+    '반려동물 사진': 'Pet Photo',
     '사진을 첨부하면 AI가 카드로 변환합니다': 'Upload a photo and AI will create a card',
     '사진 첨부하기': 'Attach Photo',
-    'AI가 카드를 생성 중입니다...': 'AI is generating your card...',
+    '멋진 카드를 생성 중입니다...': 'Generating an awesome card...',
     '동물 사진이 아닙니다': 'This is not an animal photo',
     '카드 생성에 실패했습니다': 'Failed to generate card',
 

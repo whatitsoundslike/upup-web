@@ -546,7 +546,7 @@ export const PET_TRAITS = [
 const ELEMENTS = ['불', '물', '풍', '땅'] as const;
 
 const CLASS_MAP: Record<string, string> = {
-    attack: '버서커',
+    attack: '워리어',
     defense: '팔라딘',
     speed: '어쌔신',
 };

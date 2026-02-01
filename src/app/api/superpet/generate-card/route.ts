@@ -67,17 +67,22 @@ export async function POST(request: Request) {
             {
                 inlineData: { mimeType, data: base64Data },
             },
-            `Transform this animal into an epic fantasy RPG card game character portrait.
+            `
+Transform this animal into an epic fantasy RPG card game character portrait.
 Style requirements:
 - The animal should be depicted as a powerful, heroic warrior character
+- Choose one class among these three: Berserker, Paladin, or Assassin.
+- Choose either an Eastern or Western style.
 - Fantasy RPG art style with dramatic lighting and magical effects
 - Include ornate card frame/border design
+- It must maintain a human-like bipedal form (standing on two legs)
 - Rich colors, detailed armor or magical accessories on the animal
 - Epic and powerful atmosphere
 - Portrait orientation, centered composition
 - Fix the aspect ratio to 6:9
 - The animal's features should still be recognizable
-Do NOT include any text or numbers on the card.
+- Add the text 'SSR' to the top-right corner of the card, and add five stars in the bottom-middle of the card.
+Do not include any text or numbers other than 'SSR'.
 Important: If the input is not an animal photo, return a failure response.`,
         ]);
 
