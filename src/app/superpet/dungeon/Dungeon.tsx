@@ -8,6 +8,7 @@ import {
 import Link from 'next/link';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { type Character, type GameItem, GAME_ITEMS, addItemToInventory, addExpToCharacter, DUNGEON_EXP, ITEM_RARITY_TEXT, loadCharacter, saveCharacter, getTotalStats } from '../types';
+import { getItem, setItem } from '../storage';
 import { useRouter } from 'next/navigation';
 
 interface MonsterDrop {
@@ -273,7 +274,7 @@ export default function Dungeon() {
 
     useEffect(() => {
         setCharacter(loadCharacter());
-        const saved = localStorage.getItem('superpet_autoBattle');
+        const saved = getItem('autoBattle');
         if (saved !== null) setAutoBattle(saved === 'true');
     }, []);
 
@@ -291,7 +292,7 @@ export default function Dungeon() {
 
     const toggleAutoBattle = (checked: boolean) => {
         setAutoBattle(checked);
-        localStorage.setItem('superpet_autoBattle', String(checked));
+        setItem('autoBattle', String(checked));
     };
 
     // 몬스터 랜덤 선택 함수

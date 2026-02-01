@@ -16,6 +16,7 @@ import {
     type Character,
     type PetInfo
 } from './types';
+import { getItem } from './storage';
 
 const ELEMENT_COLORS: Record<string, string> = {
     '불': 'bg-red-500',
@@ -41,7 +42,7 @@ export default function SuperpetHome() {
         setCharacters(allChars);
 
         // 활성 캐릭터 ID 로드
-        const activeId = localStorage.getItem('superpet-active-character');
+        const activeId = getItem('active-character');
         setActiveCharacterId(activeId);
 
         if (allChars.length === 0) {

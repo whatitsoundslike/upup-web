@@ -1,3 +1,5 @@
+import { getItem, setItem, removeItem } from './storage';
+
 // 장착 부위 타입
 export type EquipmentSlot = '투구' | '갑옷' | '장갑' | '부츠' | '망토' | '무기' | '방패' | '목걸이' | '반지';
 
@@ -45,7 +47,7 @@ export const DUNGEON_EXP: Record<string, number> = {
 
 // 기존 단일 캐릭터 데이터 로드 (마이그레이션용)
 function _loadSingleCharacterMigration(): Character | null {
-    const saved = localStorage.getItem('superpet-character');
+    const saved = getItem('character');
     if (!saved) return null;
     try {
         const char = JSON.parse(saved) as Character;
@@ -85,14 +87,14 @@ export function migrateCharacterData() {
             allChars.push(singleChar);
             saveAllCharacters(allChars);
             setActiveCharacter(singleChar.id);
-            localStorage.removeItem('superpet-character'); // Remove old single character data
+            removeItem('character'); // Remove old single character data
         }
     }
 }
 
 export function loadCharacter(): Character | null {
     try {
-        const activeId = localStorage.getItem('superpet-active-character');
+        const activeId = getItem('active-character');
         if (!activeId) return null;
 
         const allChars = loadAllCharacters();
@@ -114,7 +116,7 @@ export function saveCharacter(character: Character) {
 // 모든 캐릭터 로드
 export function loadAllCharacters(): Character[] {
     try {
-        const data = localStorage.getItem('superpet-characters');
+        const data = getItem('characters');
         return data ? JSON.parse(data) : [];
     } catch {
         return [];
@@ -123,7 +125,7 @@ export function loadAllCharacters(): Character[] {
 
 // 모든 캐릭터 저장
 export function saveAllCharacters(characters: Character[]) {
-    localStorage.setItem('superpet-characters', JSON.stringify(characters));
+    setItem('characters', JSON.stringify(characters));
 }
 
 // 새 캐릭터 추가 (최대 3개)
@@ -144,19 +146,19 @@ export function deleteCharacter(characterId: string) {
     saveAllCharacters(filtered);
 
     // 활성 캐릭터가 삭제된 경우 다른 캐릭터를 활성화
-    const activeId = localStorage.getItem('superpet-active-character');
+    const activeId = getItem('active-character');
     if (activeId === characterId) {
         if (filtered.length > 0) {
             setActiveCharacter(filtered[0].id);
         } else {
-            localStorage.removeItem('superpet-active-character');
+            removeItem('active-character');
         }
     }
 }
 
 // 활성 캐릭터 설정
 export function setActiveCharacter(characterId: string) {
-    localStorage.setItem('superpet-active-character', characterId);
+    setItem('active-character', characterId);
 }
 
 export function addGoldToCharacter(amount: number): Character {
@@ -489,7 +491,7 @@ export const GAME_ITEMS: Record<string, GameItem> = {
 export function loadInventory(): InventoryItem[] {
     if (typeof window === 'undefined') return [];
     try {
-        const saved = localStorage.getItem('superpet-inventory');
+        const saved = getItem('inventory');
         if (!saved) return [];
         const items = JSON.parse(saved) as InventoryItem[];
         // 기존 데이터 마이그레이션: stats 없으면 기본값
@@ -508,7 +510,7 @@ export function loadInventory(): InventoryItem[] {
 }
 
 export function saveInventory(inventory: InventoryItem[]) {
-    localStorage.setItem('superpet-inventory', JSON.stringify(inventory));
+    setItem('inventory', JSON.stringify(inventory));
 }
 
 export function addItemToInventory(itemId: string, quantity: number) {
