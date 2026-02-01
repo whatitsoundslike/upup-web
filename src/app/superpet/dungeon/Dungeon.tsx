@@ -588,7 +588,6 @@ export default function Dungeon() {
     const [droppedItems, setDroppedItems] = useState<DroppedItem[]>([]);
     const [lowHpWarning, setLowHpWarning] = useState(false);
     const [activeToast, setActiveToast] = useState<{ message: string; tone: 'success' | 'error'; key: number } | null>(null);
-    const [autoBattle, setAutoBattle] = useState(false);
     const logRef = useRef<HTMLDivElement>(null);
     const battleFieldRef = useRef<HTMLDivElement>(null);
     const [isAttacking, setIsAttacking] = useState(false);
@@ -600,8 +599,6 @@ export default function Dungeon() {
     useEffect(() => {
         setCharacter(loadCharacter());
         setInventory(loadInventory());
-        const saved = getItem('autoBattle');
-        if (saved !== null) setAutoBattle(saved === 'true');
     }, []);
 
     useEffect(() => {
@@ -638,11 +635,6 @@ export default function Dungeon() {
         window.addEventListener('resize', update);
         return () => window.removeEventListener('resize', update);
     }, [selectedDungeon]);
-
-    const toggleAutoBattle = (checked: boolean) => {
-        setAutoBattle(checked);
-        setItem('autoBattle', String(checked));
-    };
 
     const showToast = (message: string, tone: 'success' | 'error') => {
         setActiveToast({ message, tone, key: Date.now() });
@@ -830,12 +822,12 @@ export default function Dungeon() {
 
     // 자동 전투 인터벌
     useEffect(() => {
-        if (!autoBattle || battleState !== 'fighting') return;
+        if (battleState !== 'fighting') return;
         const interval = setInterval(() => {
             handleAttack();
         }, 1000);
         return () => clearInterval(interval);
-    }, [autoBattle, battleState, handleAttack]);
+    }, [battleState, handleAttack]);
 
     const exitBattle = () => {
         // 전투 중 도망 시 현재 HP 저장
@@ -1050,34 +1042,17 @@ export default function Dungeon() {
                     {/* 액션 버튼 */}
                     {battleState === 'fighting' && (
                         <div className="space-y-3">
-                            <div className="flex gap-4">
-                                <motion.button
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={handleAttack}
-                                    disabled={autoBattle}
-                                    className={`flex-1 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-colors ${autoBattle ? 'bg-red-500/50 text-white/50 cursor-not-allowed' : 'bg-red-500 text-white hover:bg-red-600'}`}
-                                >
-                                    <Swords className="h-5 w-5" /> {autoBattle ? t('자동 전투 중...') : t('공격!')}
-                                </motion.button>
-                                <motion.button
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={exitBattle}
-                                    className="px-6 py-4 rounded-xl bg-foreground/10 text-foreground/60 font-bold hover:bg-foreground/20 transition-colors"
-                                >
-                                    {t('도망치기')}
-                                </motion.button>
+                            <div className="w-full py-4 rounded-xl bg-foreground/10 text-foreground/60 font-bold text-lg flex items-center justify-center gap-2">
+                                <Swords className="h-5 w-5 animate-pulse text-red-500" /> {t('자동 전투 진행 중...')}
                             </div>
-                            <label className="flex items-center justify-center gap-2 cursor-pointer select-none">
-                                <input
-                                    type="checkbox"
-                                    checked={autoBattle}
-                                    onChange={(e) => toggleAutoBattle(e.target.checked)}
-                                    className="w-4 h-4 rounded accent-red-500"
-                                />
-                                <span className="text-sm text-foreground/60 font-semibold">{t('자동 전투')}</span>
-                            </label>
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={exitBattle}
+                                className="w-full py-3 rounded-xl bg-foreground/5 text-foreground/40 text-sm font-bold hover:bg-foreground/10 transition-colors"
+                            >
+                                {t('전투 포기 (도망치기)')}
+                            </motion.button>
                         </div>
                     )}
 
