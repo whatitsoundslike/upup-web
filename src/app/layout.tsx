@@ -40,7 +40,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko" suppressHydrationWarning>
-      <body className="antialiased min-h-screen flex flex-col">
+      <body className="antialiased min-h-screen flex flex-col overflow-x-hidden">
         {/* Google tag (gtag.js) */}
         <Script
           async

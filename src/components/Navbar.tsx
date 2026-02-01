@@ -56,8 +56,8 @@ export function Navbar() {
     const logoSrc: string = navRoomLogo[firstSegment] || '/room-icon/logo.png';
 
     return (
-        <nav className="sticky top-0 z-50 w-full border-b dark:border-white/10" style={{ backgroundColor: 'var(--background-hex)' }}>
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <nav className="sticky top-0 z-50 w-full border-b dark:border-white/10 mdmax-w-[500px] mx-auto" style={{ backgroundColor: 'var(--background-hex)' }}>
+            <div className="md:mx-auto sm:px-6 lg:px-8">
                 <div className="flex h-16 items-center justify-between">
                     <div className="flex items-center">
                         <Link href={firstSegment ? `/${firstSegment}` : '/'} className="flex items-center gap-2 group">
@@ -123,16 +123,6 @@ export function Navbar() {
                                 {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
                             </button>
                         )}
-
-                        {/* Mobile menu button */}
-                        <div className="md:hidden">
-                            <button
-                                onClick={() => setIsOpen(!isOpen)}
-                                className="inline-flex items-center justify-center p-2 rounded-md text-foreground/70 hover:text-foreground hover:bg-foreground/5"
-                            >
-                                {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>

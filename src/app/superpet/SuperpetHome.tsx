@@ -127,7 +127,7 @@ export default function SuperpetHome() {
                             transition={{ delay: 0.1 }}
                             className="text-foreground/60 text-xl"
                         >
-                            <img className='mx-auto' src="/superpet_thumbnail.webp" alt="logo" />
+                            <img className='w-full' src="/superpet_thumbnail.webp" alt="logo" />
                         </motion.p>
                     </div>
                     <div className="text-center mb-4 text-blue-500">{t('본 게임은 베타서비스 중입니다.')}</div>
