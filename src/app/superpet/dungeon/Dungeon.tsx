@@ -466,7 +466,7 @@ const dungeons: DungeonData[] = [
     {
         id: 9,
         name: '용의 계곡',
-        description: '고대의 용들이 서식하는 위험한 계곡. 강력한 드래곤들이 도사리고 있다.',
+        description: '고대의 용들이 서식하는 위험한 계곡. 강력한 드래곤들이 도사리고 있다',
         levelRange: 'LV 41~50',
         minLevel: 41,
         maxLevel: 50,
