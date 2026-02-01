@@ -20,7 +20,7 @@ export function Footer() {
 
     return (
         <footer className="dark:border-white/10 bg-background pt-12 pb-24 md:pb-12">
-
+            
         </footer>
     );
 }

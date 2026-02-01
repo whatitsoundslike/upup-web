@@ -69,14 +69,16 @@ export async function POST(request: Request) {
             },
             `Transform this animal into an epic fantasy RPG card game character portrait.
 Style requirements:
-- The animal should be depicted as a powerful, heroic warrior or mage character
+- The animal should be depicted as a powerful, heroic warrior character
 - Fantasy RPG art style with dramatic lighting and magical effects
 - Include ornate card frame/border design
 - Rich colors, detailed armor or magical accessories on the animal
 - Epic and powerful atmosphere
 - Portrait orientation, centered composition
+- Fix the aspect ratio to 6:9
 - The animal's features should still be recognizable
-Do NOT include any text or numbers on the card.`,
+Do NOT include any text or numbers on the card.
+Important: If the input is not an animal photo, return a failure response.`,
         ]);
 
         // 응답에서 이미지 파트 추출
