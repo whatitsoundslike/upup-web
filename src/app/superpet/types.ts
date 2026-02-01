@@ -187,7 +187,7 @@ export function addExpToCharacter(exp: number): { character: Character; leveledU
 
         // 레벨업 시 스탯 증가
         character.hp += 5;
-        character.attack += 2;
+        character.attack += 1;
         character.defense += 1;
         character.speed += 1;
 
