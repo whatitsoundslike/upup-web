@@ -179,134 +179,7 @@ export default function SuperpetHome() {
             'noopener,noreferrer'
         );
 
-        // 카드 이미지 다운로드
-        try {
-            const canvas = document.createElement('canvas');
-            const W = 600;
-            const padding = 40;
-            const ctx = canvas.getContext('2d')!;
-
-            // 캐릭터 이미지 로드
-            let charImg: HTMLImageElement | null = null;
-            const imgH = 400;
-            if (createdCharacter.image) {
-                charImg = await new Promise<HTMLImageElement>((resolve, reject) => {
-                    const img = new Image();
-                    img.onload = () => resolve(img);
-                    img.onerror = reject;
-                    img.src = createdCharacter.image!;
-                });
-            }
-
-            // 캔버스 크기 계산
-            const nameY = padding + (charImg ? imgH + 20 : 0);
-            const statsY = nameY + 70;
-            const H = statsY + 130 + padding;
-            canvas.width = W;
-            canvas.height = H;
-
-            // 배경
-            ctx.fillStyle = '#18181b';
-            ctx.fillRect(0, 0, W, H);
-
-            // 캐릭터 이미지 그리기
-            if (charImg) {
-                const imgW = 250;
-                const dx = (W - imgW) / 2;
-                ctx.save();
-                ctx.beginPath();
-                const r = 16;
-                ctx.moveTo(dx + r, padding);
-                ctx.arcTo(dx + imgW, padding, dx + imgW, padding + imgH, r);
-                ctx.arcTo(dx + imgW, padding + imgH, dx, padding + imgH, r);
-                ctx.arcTo(dx, padding + imgH, dx, padding, r);
-                ctx.arcTo(dx, padding, dx + imgW, padding, r);
-                ctx.closePath();
-                ctx.clip();
-                ctx.drawImage(charImg, dx, padding, imgW, imgH);
-                ctx.restore();
-
-                // 테두리
-                ctx.strokeStyle = '#f59e0b';
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                ctx.moveTo(dx + r, padding);
-                ctx.arcTo(dx + imgW, padding, dx + imgW, padding + imgH, r);
-                ctx.arcTo(dx + imgW, padding + imgH, dx, padding + imgH, r);
-                ctx.arcTo(dx, padding + imgH, dx, padding, r);
-                ctx.arcTo(dx, padding, dx + imgW, padding, r);
-                ctx.closePath();
-                ctx.stroke();
-            }
-
-            // 이름
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 28px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText(createdCharacter.name, W / 2, nameY + 30);
-
-            // 레벨, 직업, 속성
-            const infoText = `Lv.${createdCharacter.level}  ${createdCharacter.className}  ${createdCharacter.element}`;
-            ctx.fillStyle = '#a1a1aa';
-            ctx.font = '16px sans-serif';
-            ctx.fillText(infoText, W / 2, nameY + 58);
-
-            // 스탯
-            const stats = [
-                { label: 'HP', value: createdCharacter.hp, color: '#ef4444' },
-                { label: lang === 'ko' ? '공격' : 'ATK', value: createdCharacter.attack, color: '#ef4444' },
-                { label: lang === 'ko' ? '방어' : 'DEF', value: createdCharacter.defense, color: '#3b82f6' },
-                { label: lang === 'ko' ? '속도' : 'SPD', value: createdCharacter.speed, color: '#22c55e' },
-            ];
-            const boxW = (W - padding * 2 - 16) / 2;
-            const boxH = 48;
-            stats.forEach((stat, i) => {
-                const col = i % 2;
-                const row = Math.floor(i / 2);
-                const x = padding + col * (boxW + 16);
-                const y = statsY + row * (boxH + 12);
-
-                // 배경 박스
-                ctx.fillStyle = stat.color + '1a';
-                ctx.beginPath();
-                ctx.roundRect(x, y, boxW, boxH, 12);
-                ctx.fill();
-
-                // 라벨
-                ctx.fillStyle = '#a1a1aa';
-                ctx.font = '14px sans-serif';
-                ctx.textAlign = 'left';
-                ctx.fillText(stat.label, x + 16, y + 30);
-
-                // 값
-                ctx.fillStyle = '#ffffff';
-                ctx.font = 'bold 16px sans-serif';
-                ctx.textAlign = 'right';
-                ctx.fillText(String(stat.value), x + boxW - 16, y + 30);
-            });
-
-            // 워터마크
-            ctx.fillStyle = '#52525b';
-            ctx.font = '12px sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText('SUPER PET  |  zroom.io/superpet', W / 2, H - 12);
-
-            canvas.toBlob((blob) => {
-                if (!blob) return;
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `superpet-${createdCharacter.name}.png`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                setTimeout(() => URL.revokeObjectURL(url), 1000);
-            }, 'image/png');
-        } catch {
-            // 이미지 다운로드 실패 시 무시
-        } finally {
-            setIsSharing(false);
-        }
+        setIsSharing(false);
     };
 
     const handleDeleteCharacter = (characterId: string) => {
@@ -675,7 +548,7 @@ export default function SuperpetHome() {
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="text-sm font-semibold text-foreground/70 flex items-center gap-2">
                                             <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
-                                            {t('멋진 카드를 생성 중입니다...')}
+                                            {t('멋진 캐릭터 카드를 생성 중입니다...')}
                                         </span>
                                         <span className="text-xs font-bold text-amber-500">{Math.round(generateProgress)}%</span>
                                     </div>

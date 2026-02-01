@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Swords, Coins, Gem, X, Heart, Shield, Zap, Gauge, Search, Sword, Feather } from 'lucide-react';
+import { Package, Swords, Coins, Gem, X, Heart, Shield, Zap, Gauge, Search, Sword, Feather, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import {
@@ -46,6 +46,7 @@ export default function Room() {
     const [sellConfirm, setSellConfirm] = useState<{ itemId: string; sellAll: boolean } | null>(null);
     const [searchName, setSearchName] = useState('');
     const [slotFilter, setSlotFilter] = useState<EquipmentSlot | 'all'>('all');
+    const [isSharing, setIsSharing] = useState(false);
 
     useEffect(() => {
         setInventory(loadInventory());
@@ -173,6 +174,23 @@ export default function Room() {
         }
     };
 
+    const handleShare = () => {
+        if (!character || isSharing) return;
+        setIsSharing(true);
+
+        const tweetText = lang === 'ko'
+            ? `🐾 내 슈퍼펫 「${character.name}」을(를) 소개합니다!\nLv.${character.level} ${character.className} | ${character.element}\n#SuperPet #슈퍼펫`
+            : `🐾 Meet my Super Pet "${character.name}"!\nLv.${character.level} ${character.className} | ${character.element}\n#SuperPet`;
+        const tweetUrl = 'https://zroom.io/superpet';
+        window.open(
+            `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(tweetUrl)}`,
+            '_blank',
+            'noopener,noreferrer'
+        );
+
+        setIsSharing(false);
+    };
+
     const totalItems = inventory.reduce((sum, e) => sum + e.quantity, 0);
     const equippedEntries = character
         ? (Object.entries(character.equipment) as [EquipmentSlot, GameItem | null][])
@@ -221,7 +239,7 @@ export default function Room() {
                     >
                         <div className="flex items-center gap-4 mb-3">
                             {character.image ? (
-                                <img src={character.image} alt={character.name} className="w-25 h-40 object-cover rounded-xl border border-amber-500" />
+                                <img src={character.image} alt={character.name} className="w-27 h-40 object-cover rounded-xl border border-amber-500" />
                             ) : (
                                 <div className="text-3xl">🐾</div>
                             )}
@@ -290,6 +308,19 @@ export default function Room() {
                                 />
                             </div>
                         </div>
+                        {/* 트위터 공유 버튼 */}
+                        <button
+                            onClick={handleShare}
+                            disabled={isSharing}
+                            className="mt-3 w-full py-3 rounded-xl bg-black text-white font-bold text-sm hover:bg-zinc-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-40"
+                        >
+                            {isSharing ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+                            )}
+                            {t('트위터에 슈퍼펫 알려주기')}
+                        </button>
                     </motion.div>
                 );
             })()}

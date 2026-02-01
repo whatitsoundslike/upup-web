@@ -526,7 +526,7 @@ export default function Dungeon() {
                     >
                         <div className="text-center mb-4">
                             {character.image ? (
-                                <img src={character.image} alt={character.name} className="w-25 h-40 object-cover rounded-xl mx-auto mb-2 border border-amber-500" />
+                                <img src={character.image} alt={character.name} className="w-27 h-40 object-cover rounded-xl mx-auto mb-2 border border-amber-500" />
                             ) : (
                                 <div className="text-4xl mb-2">🐾</div>
                             )}
