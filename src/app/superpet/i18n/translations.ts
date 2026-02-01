@@ -236,4 +236,10 @@ export const koToEn: Record<string, string> = {
     '공': 'ATK',
     '방': 'DEF',
     '속': 'SPD',
+
+    // === 안내 모달 ===
+    '시즌 안내': 'Season Info',
+    '이 게임은 시즌제로 운영되며 시즌 종료시의 게임 데이터는 명예의 전당에 기록됩니다.': 'This game runs on a seasonal basis. Game data at the end of each season will be recorded in the Hall of Fame.',
+    '매주 새로운 시즌이 시작됩니다.': 'A new season starts every week.',
+    '확인': 'OK',
 };

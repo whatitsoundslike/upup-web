@@ -14,7 +14,7 @@ import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { navConfigs, defaultNavItems, type NavItem, navRoomLogo } from '@/config/navConfig';
-import { Globe } from 'lucide-react';
+import { Globe, Megaphone } from 'lucide-react';
 
 export function Navbar() {
     const pathname = usePathname();
@@ -42,6 +42,10 @@ export function Navbar() {
         setLang(next);
         localStorage.setItem('superpet-lang', next);
         window.dispatchEvent(new Event('superpet-lang-change'));
+    };
+
+    const showAnnouncement = () => {
+        window.dispatchEvent(new Event('superpet-show-announcement'));
     };
 
     const getNavName = (item: NavItem) => {
@@ -92,14 +96,23 @@ export function Navbar() {
 
                     <div className="flex items-center gap-4">
                         {mounted && isSuperpet && (
-                            <button
-                                onClick={toggleLang}
-                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-full hover:bg-foreground/5 transition-colors text-sm font-semibold"
-                                aria-label="Toggle language"
-                            >
-                                <Globe className="h-4 w-4" />
-                                <span>{lang === 'ko' ? 'EN' : 'KO'}</span>
-                            </button>
+                            <>
+                                <button
+                                    onClick={showAnnouncement}
+                                    className="p-2 rounded-full hover:bg-foreground/5 transition-colors"
+                                    aria-label="Show announcement"
+                                >
+                                    <Megaphone className="h-4 w-4" />
+                                </button>
+                                <button
+                                    onClick={toggleLang}
+                                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-full hover:bg-foreground/5 transition-colors text-sm font-semibold"
+                                    aria-label="Toggle language"
+                                >
+                                    <Globe className="h-4 w-4" />
+                                    <span>{lang === 'ko' ? 'EN' : 'KO'}</span>
+                                </button>
+                            </>
                         )}
                         {mounted && (
                             <button

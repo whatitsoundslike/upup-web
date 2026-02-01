@@ -16,7 +16,7 @@ import {
     type Character,
     type PetInfo
 } from './types';
-import { getItem } from './storage';
+import { getItem, setItem } from './storage';
 import { useLanguage } from './i18n/LanguageContext';
 
 const ELEMENT_COLORS: Record<string, string> = {
@@ -36,6 +36,7 @@ export default function SuperpetHome() {
     const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
     const [activeCharacterId, setActiveCharacterId] = useState<string | null>(null);
     const [createdCharacter, setCreatedCharacter] = useState<Character | null>(null);
+    const [showAnnouncement, setShowAnnouncement] = useState(false);
 
     // 페이지 로드 시 기존 캐릭터 불러오기
     useEffect(() => {
@@ -50,6 +51,18 @@ export default function SuperpetHome() {
         if (allChars.length === 0) {
             setShowForm(true); // 캐릭터가 없으면 폼 표시
         }
+
+        // 하루 1회 안내 모달
+        const today = new Date().toISOString().slice(0, 10);
+        const lastShown = getItem('announcement-shown');
+        if (lastShown !== today) {
+            setShowAnnouncement(true);
+        }
+
+        // Navbar에서 공지 다시보기 이벤트 수신
+        const handleShowAnnouncement = () => setShowAnnouncement(true);
+        window.addEventListener('superpet-show-announcement', handleShowAnnouncement);
+        return () => window.removeEventListener('superpet-show-announcement', handleShowAnnouncement);
     }, []);
 
     const toggleTrait = (trait: string) => {
@@ -78,6 +91,12 @@ export default function SuperpetHome() {
         setActiveCharacterId(characterId);
     };
 
+    const handleCloseAnnouncement = () => {
+        setShowAnnouncement(false);
+        const today = new Date().toISOString().slice(0, 10);
+        setItem('announcement-shown', today);
+    };
+
     const handleDeleteCharacter = (characterId: string) => {
         deleteCharacter(characterId);
         const remaining = loadAllCharacters();
@@ -100,7 +119,7 @@ export default function SuperpetHome() {
                             animate={{ opacity: 1, y: 0 }}
                             className="text-5xl font-black tracking-tighter mb-4 uppercase"
                         >
-                            SUPER <span className="text-amber-500">PET</span> <span className="text-blue-500">[Beta]</span>
+                            SUPER <span className="text-amber-500">PET</span> <span className="text-blue-500 text-[20px]">[Beta]</span>
                         </motion.h1>
                         <motion.p
                             initial={{ opacity: 0, y: -20 }}
@@ -390,6 +409,42 @@ export default function SuperpetHome() {
 
                 </div>
             </section>
+
+            {/* 안내 모달 */}
+            <AnimatePresence>
+                {showAnnouncement && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+                        onClick={handleCloseAnnouncement}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="relative w-full max-w-sm p-6 rounded-2xl shadow-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-amber-500"
+                        >
+                            <div className="text-center mb-6">
+                                <div className="text-5xl mb-4">🏆</div>
+                                <h3 className="text-xl font-black mb-3">{t('시즌 안내')}</h3>
+                                <p className="text-sm text-foreground/70 leading-relaxed">
+                                    {t('이 게임은 시즌제로 운영되며 시즌 종료시의 게임 데이터는 명예의 전당에 기록됩니다.')}<br /><br />
+                                    {t('매주 새로운 시즌이 시작됩니다.')}
+                                </p>
+                            </div>
+                            <button
+                                onClick={handleCloseAnnouncement}
+                                className="w-full py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 transition-colors"
+                            >
+                                {t('확인')}
+                            </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* 삭제 확인 모달 */}
             <AnimatePresence>
