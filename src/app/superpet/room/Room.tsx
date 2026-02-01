@@ -220,7 +220,11 @@ export default function Room() {
                         className="p-5 rounded-xl bg-white/5 shadow-lg border border-foreground/10"
                     >
                         <div className="flex items-center gap-4 mb-3">
-                            <div className="text-3xl">🐾</div>
+                            {character.image ? (
+                                <img src={character.image} alt={character.name} className="w-25 h-40 object-cover rounded-xl border border-amber-500" />
+                            ) : (
+                                <div className="text-3xl">🐾</div>
+                            )}
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
                                     <h3 className="font-bold truncate">{character.name}</h3>

@@ -31,6 +31,7 @@ export interface Character {
     gold: number;
     gem: number;
     equipment: EquippedItems;
+    image?: string;
 }
 
 // 레벨별 필요 경험치 (레벨 1→2: 100, 2→3: 150, ...)
@@ -573,7 +574,7 @@ const TRAIT_MODIFIERS: Record<string, Partial<Record<'hp' | 'attack' | 'defense'
     '수줍은': { defense: 3, speed: 2 },
 };
 
-export function generateCharacter(name: string, type: PetInfo['type'], traits: string[]): Character {
+export function generateCharacter(name: string, type: PetInfo['type'], traits: string[], image?: string): Character {
     const nameHash = name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
     const base = BASE_STATS[type];
 
@@ -631,6 +632,7 @@ export function generateCharacter(name: string, type: PetInfo['type'], traits: s
             목걸이: null,
             반지: null,
         },
+        ...(image ? { image } : {}),
     };
 }
 

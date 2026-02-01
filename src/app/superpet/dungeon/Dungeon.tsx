@@ -525,7 +525,11 @@ export default function Dungeon() {
                         className="glass p-6 rounded-2xl bg-white/5"
                     >
                         <div className="text-center mb-4">
-                            <div className="text-4xl mb-2">🐾</div>
+                            {character.image ? (
+                                <img src={character.image} alt={character.name} className="w-25 h-40 object-cover rounded-xl mx-auto mb-2 border border-amber-500" />
+                            ) : (
+                                <div className="text-4xl mb-2">🐾</div>
+                            )}
                             <h3 className="font-bold text-lg">{character.name}</h3>
                             <p className="text-xs text-foreground/50">{t(character.className)}</p>
                         </div>
@@ -549,8 +553,8 @@ export default function Dungeon() {
                         animate={{ opacity: 1, x: 0 }}
                         className="glass p-6 rounded-2xl bg-white/5"
                     >
-                        <div className="text-center mb-4">
-                            <div className="text-4xl mb-2">{selectedMonster?.emoji}</div>
+                        <div className="text-center mb-4 flex flex-col items-center">
+                            <div className="text-4xl mb-2 w-25 h-40 flex items-center justify-center ">{selectedMonster?.emoji}</div>
                             <h3 className="font-bold text-lg">{t(selectedMonster?.name)}</h3>
                             <span className={`inline-block px-2 py-0.5 rounded-full text-white text-xs font-bold ${selectedMonster?.isBoss ? 'bg-purple-500' : 'bg-blue-500'}`}>
                                 LV.{selectedMonster?.level} {selectedMonster?.isBoss ? t('보스') : ''}

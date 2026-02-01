@@ -1,9 +1,9 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Swords, PawPrint, Shield, Heart, Sparkles, Plus, Trash2, Sword, Feather } from 'lucide-react';
+import { Swords, PawPrint, Shield, Heart, Sparkles, Plus, Trash2, Sword, Feather, Camera, X, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
     generateCharacter,
     PET_TYPES,
@@ -37,6 +37,10 @@ export default function SuperpetHome() {
     const [activeCharacterId, setActiveCharacterId] = useState<string | null>(null);
     const [createdCharacter, setCreatedCharacter] = useState<Character | null>(null);
     const [showAnnouncement, setShowAnnouncement] = useState(false);
+    const [petPhoto, setPetPhoto] = useState<string | null>(null);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [generateError, setGenerateError] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // 페이지 로드 시 기존 캐릭터 불러오기
     useEffect(() => {
@@ -73,16 +77,54 @@ export default function SuperpetHome() {
         );
     };
 
-    const handleGenerate = () => {
+    const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setGenerateError(null);
+        const reader = new FileReader();
+        reader.onload = () => setPetPhoto(reader.result as string);
+        reader.readAsDataURL(file);
+    };
+
+    const handleGenerate = async () => {
         if (!petName.trim() || traits.length < 3) return;
-        const char = generateCharacter(petName.trim(), petType, traits);
+        setGenerateError(null);
+
+        let cardImage: string | undefined;
+
+        if (petPhoto) {
+            setIsGenerating(true);
+            try {
+                const res = await fetch('/api/superpet/generate-card', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: petPhoto }),
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    setGenerateError(data.error || t('카드 생성에 실패했습니다'));
+                    setIsGenerating(false);
+                    return;
+                }
+                cardImage = data.cardImage;
+            } catch {
+                setGenerateError(t('카드 생성에 실패했습니다'));
+                setIsGenerating(false);
+                return;
+            }
+            setIsGenerating(false);
+        }
+
+        const char = generateCharacter(petName.trim(), petType, traits, cardImage);
         const success = addCharacter(char);
         if (success) {
             setCharacters(loadAllCharacters());
             setPetName('');
             setTraits([]);
+            setPetPhoto(null);
             setShowForm(false);
             setCreatedCharacter(char);
+            if (fileInputRef.current) fileInputRef.current.value = '';
         }
     };
 
@@ -144,9 +186,13 @@ export default function SuperpetHome() {
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
                                     transition={{ type: 'spring', stiffness: 300, delay: 0.2 }}
-                                    className="text-6xl mb-4"
+                                    className="mb-4"
                                 >
-                                    🐾
+                                    {createdCharacter.image ? (
+                                        <img src={createdCharacter.image} alt={createdCharacter.name} className="w-50 h-80 object-cover rounded-2xl mx-auto shadow-lg border-2 border-amber-500" />
+                                    ) : (
+                                        <span className="text-6xl">🐾</span>
+                                    )}
                                 </motion.div>
                                 <motion.h2
                                     initial={{ opacity: 0, y: 10 }}
@@ -255,6 +301,11 @@ export default function SuperpetHome() {
                                             <Trash2 className="h-4 w-4" />
                                         </button>
 
+                                        {char.image && (
+                                            <div className="mb-3">
+                                                <img src={char.image} alt={char.name} className="w-full h-full object-cover rounded-xl" />
+                                            </div>
+                                        )}
                                         <div className="text-center mb-4">
                                             <h3 className="text-xl font-black mb-1">{char.name}</h3>
                                             <p className="text-foreground/60 text-sm mb-2">
@@ -386,16 +437,66 @@ export default function SuperpetHome() {
                                 </div>
                             </div>
 
+                            {/* 사진 업로드 (선택) */}
+                            <div className="mb-8">
+                                <label className="block text-sm font-semibold mb-2 text-foreground/80">
+                                    {t('반려동물 사진 (선택)')}
+                                </label>
+                                <p className="text-xs text-foreground/40 mb-3">{t('사진을 첨부하면 AI가 카드로 변환합니다')}</p>
+                                {petPhoto ? (
+                                    <div className="relative inline-block">
+                                        <img src={petPhoto} alt="pet" className="w-32 h-32 object-cover rounded-xl border border-foreground/10" />
+                                        <button
+                                            onClick={() => { setPetPhoto(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+                                            className="absolute -top-2 -right-2 p-1 rounded-full bg-red-500 text-white shadow-md hover:bg-red-600 transition-colors"
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="flex items-center gap-2 px-4 py-3 rounded-xl bg-foreground/5 border border-dashed border-foreground/20 hover:bg-foreground/10 transition-colors text-foreground/50 text-sm"
+                                    >
+                                        <Camera className="h-5 w-5" />
+                                        {t('사진 첨부하기')}
+                                    </button>
+                                )}
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handlePhotoChange}
+                                    className="hidden"
+                                />
+                            </div>
+
+                            {/* 에러 메시지 */}
+                            {generateError && (
+                                <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm text-center">
+                                    {generateError}
+                                </div>
+                            )}
+
                             {/* 생성 버튼 */}
                             <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
+                                whileHover={{ scale: isGenerating ? 1 : 1.02 }}
+                                whileTap={{ scale: isGenerating ? 1 : 0.98 }}
                                 onClick={handleGenerate}
-                                disabled={!petName.trim() || traits.length < 3}
+                                disabled={!petName.trim() || traits.length < 3 || isGenerating}
                                 className="w-full py-4 rounded-xl bg-amber-500 text-white font-bold text-lg shadow-lg hover:bg-amber-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
-                                <Sparkles className="h-5 w-5" />
-                                {t('캐릭터 생성')}
+                                {isGenerating ? (
+                                    <>
+                                        <Loader2 className="h-5 w-5 animate-spin" />
+                                        {t('AI가 카드를 생성 중입니다...')}
+                                    </>
+                                ) : (
+                                    <>
+                                        <Sparkles className="h-5 w-5" />
+                                        {t('캐릭터 생성')}
+                                    </>
+                                )}
                             </motion.button>
 
                             {/* 취소 버튼 */}
