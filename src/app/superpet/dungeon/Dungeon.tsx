@@ -303,7 +303,7 @@ export default function Dungeon() {
             if (battleFieldRef.current) {
                 const w = battleFieldRef.current.offsetWidth;
                 // 각 칸의 약 55%만큼 이동 (gap-6=24px 고려)
-                setAttackDistance(Math.floor((w - 48) / 2 * 0.55));
+                setAttackDistance(Math.floor((w - 48) / 2 * 0.4));
             }
         };
         update();
@@ -543,7 +543,7 @@ export default function Dungeon() {
                     className="relative grid grid-cols-2 gap-6"
                 >
                     {/* VS 표시 + 충돌 이펙트 */}
-                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-5">
                         <motion.div
                             initial={{ opacity: 0, scale: 0 }}
                             animate={{ opacity: 1, scale: 1 }}
@@ -615,7 +615,7 @@ export default function Dungeon() {
                     <motion.div
                         initial={{ opacity: 0, x: -30 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="glass p-2 rounded-2xl bg-white/5"
+                        className="glass p-2 rounded-2xl bg-white/5 z-10"
                     >
                         <div className="text-center mb-4">
                             <motion.div
@@ -652,7 +652,7 @@ export default function Dungeon() {
                     <motion.div
                         initial={{ opacity: 0, x: 30 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="glass p-2 rounded-2xl bg-white/5"
+                        className="glass p-2 rounded-2xl bg-white/5 z-10"
                     >
                         <div className="text-center mb-4 flex flex-col items-center">
                             <motion.div
