@@ -62,8 +62,8 @@ const dungeons: DungeonData[] = [
                 spawnChance: 25,
                 drops: [
                     { itemId: 'feed', chance: 40 },
-                    { itemId: 'wooden_pendant', chance: 5 },
-                    { itemId: 'copper_ring', chance: 5 },
+                    { itemId: 'iron_helmet', chance: 10 },
+                    { itemId: 'simple_cloak', chance: 10 },
                 ],
             },
             {
@@ -76,8 +76,8 @@ const dungeons: DungeonData[] = [
                 spawnChance: 22,
                 drops: [
                     { itemId: 'feed', chance: 40 },
-                    { itemId: 'iron_helmet', chance: 5 },
-                    { itemId: 'leather_armor', chance: 5 },
+                    { itemId: 'iron_helmet', chance: 10 },
+                    { itemId: 'leather_armor', chance: 10 },
                 ],
             },
             {
@@ -90,8 +90,8 @@ const dungeons: DungeonData[] = [
                 spawnChance: 20,
                 drops: [
                     { itemId: 'feed', chance: 40 },
-                    { itemId: 'cloth_gloves', chance: 5 },
-                    { itemId: 'simple_cloak', chance: 5 },
+                    { itemId: 'cloth_gloves', chance: 10 },
+                    { itemId: 'simple_cloak', chance: 10 },
                 ],
             },
             {
@@ -104,8 +104,8 @@ const dungeons: DungeonData[] = [
                 spawnChance: 17,
                 drops: [
                     { itemId: 'feed', chance: 40 },
-                    { itemId: 'running_shoes', chance: 5 },
-                    { itemId: 'wooden_shield', chance: 5 },
+                    { itemId: 'running_shoes', chance: 10 },
+                    { itemId: 'wooden_shield', chance: 10 },
                 ],
             },
             {
@@ -118,8 +118,8 @@ const dungeons: DungeonData[] = [
                 spawnChance: 13,
                 drops: [
                     { itemId: 'feed', chance: 40 },
-                    { itemId: 'wooden_sword', chance: 5 },
-                    { itemId: 'iron_helmet', chance: 5 },
+                    { itemId: 'wooden_sword', chance: 10 },
+                    { itemId: 'iron_helmet', chance: 10 },
                 ],
             },
             {
@@ -132,15 +132,15 @@ const dungeons: DungeonData[] = [
                 spawnChance: 3,
                 drops: [
                     { itemId: 'dubai_cookie', chance: 100 },
-                    { itemId: 'iron_helmet', chance: 10 },
-                    { itemId: 'leather_armor', chance: 10 },
-                    { itemId: 'cloth_gloves', chance: 10 },
-                    { itemId: 'running_shoes', chance: 10 },
-                    { itemId: 'simple_cloak', chance: 10 },
-                    { itemId: 'wooden_sword', chance: 10 },
-                    { itemId: 'wooden_shield', chance: 10 },
-                    { itemId: 'wooden_pendant', chance: 10 },
-                    { itemId: 'copper_ring', chance: 10 },
+                    { itemId: 'iron_helmet', chance: 20 },
+                    { itemId: 'leather_armor', chance: 20 },
+                    { itemId: 'cloth_gloves', chance: 20 },
+                    { itemId: 'running_shoes', chance: 20 },
+                    { itemId: 'simple_cloak', chance: 20 },
+                    { itemId: 'wooden_sword', chance: 20 },
+                    { itemId: 'wooden_shield', chance: 20 },
+                    { itemId: 'wooden_pendant', chance: 20 },
+                    { itemId: 'copper_ring', chance: 20 },
                 ],
             },
         ],
@@ -609,7 +609,10 @@ export default function Dungeon() {
 
     useEffect(() => {
         if (battleState === 'won' || battleState === 'lost') {
-            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            const isMobile = window.innerWidth < 768;
+            // if (isMobile) {
+            //     window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            // }
         }
     }, [battleState]);
 
@@ -1002,7 +1005,7 @@ export default function Dungeon() {
                 </motion.div>
 
                 {/* 배틀 로그 */}
-                <div ref={logRef} className="glass p-4 rounded-xl bg-white/5 mb-6 h-40 overflow-y-auto">
+                <div ref={logRef} className="glass p-4 rounded-xl bg-white/5 mb-6 h-30 overflow-y-auto">
                     {battleLog.map((log, i) => (
                         <motion.p
                             key={i}
@@ -1058,24 +1061,6 @@ export default function Dungeon() {
                             exit={{ opacity: 0 }}
                             className="glass px-8 rounded-2xl bg-white/5 text-center"
                         >
-                            <Trophy className="h-16 w-16 text-amber-500 mx-auto mb-4" />
-                            <h3 className="text-2xl font-black mb-2">{t('승리!')}</h3>
-                            <div className="mb-4">
-                                <p className="text-foreground/60 text-sm mb-2 flex items-center justify-center gap-1">
-                                    <Gift className="h-4 w-4" /> {t('획득 아이템')}
-                                </p>
-                                {droppedItems.length > 0 ? (
-                                    <div className="flex flex-wrap gap-2 justify-center">
-                                        {droppedItems.map((drop) => (
-                                            <span key={drop.item.id} className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-foreground/5 text-sm font-medium ${ITEM_RARITY_TEXT[drop.item.rarity]}`}>
-                                                {drop.item.emoji} {t(drop.item.name)}
-                                            </span>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <p className="text-foreground/40 text-sm">{t('드롭된 아이템이 없습니다')}</p>
-                                )}
-                            </div>
                             <div className="flex gap-3 justify-center">
                                 <button
                                     onClick={() => startBattle(selectedDungeon)}
