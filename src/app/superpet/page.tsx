@@ -14,7 +14,7 @@ export const metadata: Metadata = {
         type: 'website',
         images: [
             {
-                url: "https://zroom.io/superpet_thumbnail.png",
+                url: "https://zroom.io/superpet_thumbnail.webp",
                 width: 640,
                 height: 320,
                 alt: "ZROOM - Superpet",

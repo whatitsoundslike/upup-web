@@ -98,7 +98,7 @@ export default function SuperpetHome() {
                             animate={{ opacity: 1, y: 0 }}
                             className="text-5xl font-black tracking-tighter mb-4 uppercase"
                         >
-                            SUPER <span className="text-amber-500">PET</span>
+                            SUPER <span className="text-amber-500">PET</span> <span className="text-blue-500">[Beta]</span>
                         </motion.h1>
                         <motion.p
                             initial={{ opacity: 0, y: -20 }}
@@ -109,6 +109,7 @@ export default function SuperpetHome() {
                             <img className='mx-auto' src="/superpet_thumbnail.webp" alt="logo" />
                         </motion.p>
                     </div>
+                    <div className="text-center mb-4 text-blue-500">본 게임은 베타서비스 중입니다.</div>
 
                     {/* 캐릭터 생성 결과 */}
                     {createdCharacter && !showForm && (
