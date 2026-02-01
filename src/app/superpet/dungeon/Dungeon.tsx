@@ -376,8 +376,8 @@ const dungeons: DungeonData[] = [
                 drops: [
                     { itemId: 'feed', chance: 40 },
                     { itemId: 'dubai_cookie', chance: 20 },
-                    { itemId: 'diamond_necklace', chance: 5 },
-                    { itemId: 'emerald_ring', chance: 5 },
+                    { itemId: 'diamond_necklace', chance: 3 },
+                    { itemId: 'emerald_ring', chance: 3 },
                 ],
             },
             {
@@ -391,8 +391,8 @@ const dungeons: DungeonData[] = [
                 drops: [
                     { itemId: 'feed', chance: 40 },
                     { itemId: 'dubai_cookie', chance: 20 },
-                    { itemId: 'phoenix_helmet', chance: 5 },
-                    { itemId: 'starlight_armor', chance: 5 },
+                    { itemId: 'phoenix_helmet', chance: 3 },
+                    { itemId: 'starlight_armor', chance: 3 },
                 ],
             },
             {
@@ -406,8 +406,8 @@ const dungeons: DungeonData[] = [
                 drops: [
                     { itemId: 'feed', chance: 40 },
                     { itemId: 'dubai_cookie', chance: 20 },
-                    { itemId: 'ogre_power_gauntlet', chance: 5 },
-                    { itemId: 'shadow_cloak', chance: 5 },
+                    { itemId: 'ogre_power_gauntlet', chance: 3 },
+                    { itemId: 'shadow_cloak', chance: 3 },
                 ],
             },
             {
@@ -421,8 +421,8 @@ const dungeons: DungeonData[] = [
                 drops: [
                     { itemId: 'feed', chance: 40 },
                     { itemId: 'dubai_cookie', chance: 20 },
-                    { itemId: 'thunder_boots', chance: 5 },
-                    { itemId: 'holy_shield', chance: 5 },
+                    { itemId: 'thunder_boots', chance: 3 },
+                    { itemId: 'holy_shield', chance: 3 },
                 ],
             },
             {
@@ -436,8 +436,8 @@ const dungeons: DungeonData[] = [
                 drops: [
                     { itemId: 'feed', chance: 40 },
                     { itemId: 'dubai_cookie', chance: 20 },
-                    { itemId: 'shadow_blade', chance: 5 },
-                    { itemId: 'phoenix_helmet', chance: 5 },
+                    { itemId: 'shadow_blade', chance: 3 },
+                    { itemId: 'phoenix_helmet', chance: 3 },
                 ],
             },
             {
@@ -457,7 +457,7 @@ const dungeons: DungeonData[] = [
                     { itemId: 'shadow_cloak', chance: 10 },
                     { itemId: 'shadow_blade', chance: 10 },
                     { itemId: 'holy_shield', chance: 10 },
-                    { itemId: 'diamond_necklace', chance: 10 },
+                    { itemId: 'phoenix_heart', chance: 10 },
                     { itemId: 'emerald_ring', chance: 10 },
                 ],
             },
@@ -480,7 +480,7 @@ const dungeons: DungeonData[] = [
                 isBoss: false,
                 spawnChance: 26,
                 drops: [
-                    { itemId: 'feed', chance: 40 },
+                    { itemId: 'meat', chance: 40 },
                     { itemId: 'dubai_cookie', chance: 20 },
                     { itemId: 'phoenix_helmet', chance: 5 },
                     { itemId: 'starlight_armor', chance: 5 },
@@ -495,7 +495,7 @@ const dungeons: DungeonData[] = [
                 isBoss: false,
                 spawnChance: 23,
                 drops: [
-                    { itemId: 'feed', chance: 40 },
+                    { itemId: 'meat', chance: 40 },
                     { itemId: 'dubai_cookie', chance: 20 },
                     { itemId: 'ogre_power_gauntlet', chance: 5 },
                     { itemId: 'thunder_boots', chance: 5 },
@@ -510,7 +510,7 @@ const dungeons: DungeonData[] = [
                 isBoss: false,
                 spawnChance: 21,
                 drops: [
-                    { itemId: 'feed', chance: 40 },
+                    { itemId: 'meat', chance: 40 },
                     { itemId: 'dubai_cookie', chance: 20 },
                     { itemId: 'shadow_cloak', chance: 5 },
                     { itemId: 'shadow_blade', chance: 5 },
@@ -525,7 +525,7 @@ const dungeons: DungeonData[] = [
                 isBoss: false,
                 spawnChance: 17,
                 drops: [
-                    { itemId: 'feed', chance: 40 },
+                    { itemId: 'meat', chance: 40 },
                     { itemId: 'dubai_cookie', chance: 20 },
                     { itemId: 'holy_shield', chance: 5 },
                     { itemId: 'diamond_necklace', chance: 5 },
@@ -540,7 +540,7 @@ const dungeons: DungeonData[] = [
                 isBoss: false,
                 spawnChance: 12,
                 drops: [
-                    { itemId: 'feed', chance: 40 },
+                    { itemId: 'meat', chance: 40 },
                     { itemId: 'dubai_cookie', chance: 20 },
                     { itemId: 'emerald_ring', chance: 5 },
                     { itemId: 'phoenix_helmet', chance: 5 },
@@ -555,16 +555,16 @@ const dungeons: DungeonData[] = [
                 isBoss: true,
                 spawnChance: 1,
                 drops: [
-                    { itemId: 'dubai_cookie', chance: 100 },
-                    { itemId: 'phoenix_helmet', chance: 10 },
-                    { itemId: 'starlight_armor', chance: 10 },
-                    { itemId: 'ogre_power_gauntlet', chance: 10 },
-                    { itemId: 'thunder_boots', chance: 10 },
-                    { itemId: 'shadow_cloak', chance: 10 },
-                    { itemId: 'shadow_blade', chance: 10 },
-                    { itemId: 'holy_shield', chance: 10 },
+                    { itemId: 'legend_meat', chance: 100 },
+                    { itemId: 'dragon_helmet', chance: 10 },
+                    { itemId: 'dragon_armor', chance: 10 },
+                    { itemId: 'titan_fists', chance: 10 },
+                    { itemId: 'pegasus_boots', chance: 10 },
+                    { itemId: 'celestial_cloak', chance: 10 },
+                    { itemId: 'excalibur', chance: 10 },
+                    { itemId: 'aegis_shield', chance: 10 },
                     { itemId: 'diamond_necklace', chance: 10 },
-                    { itemId: 'emerald_ring', chance: 10 },
+                    { itemId: 'infinity_ring', chance: 10 },
                 ],
             },
         ],

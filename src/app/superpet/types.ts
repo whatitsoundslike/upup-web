@@ -841,7 +841,7 @@ export function generateCharacter(name: string, type: PetInfo['type'], traits: s
     defense += (nameHash % 5);
     speed += (nameHash % 5);
 
-    const element = ELEMENTS[nameHash % ELEMENTS.length];
+    const element = ELEMENTS[Math.floor(Math.random() * ELEMENTS.length)];
 
     // 가장 높은 스탯으로 직업 결정
     const statEntries = { attack, defense, speed };

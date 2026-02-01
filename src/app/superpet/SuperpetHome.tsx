@@ -91,7 +91,7 @@ export default function SuperpetHome() {
                 if (prev >= 90) return prev;
                 return prev + Math.random() * 8 + 2;
             });
-        }, 1000);
+        }, 1500);
         return () => clearInterval(interval);
     }, [isGenerating]);
 
