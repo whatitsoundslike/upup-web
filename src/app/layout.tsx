@@ -13,6 +13,7 @@ export const metadata: Metadata = {
   verification: {
     other: {
       "naver-site-verification": ["196a85f45ff62dd9232a26913f0f94810a666565"],
+      "google-adsense-account": ["ca-pub-9022610770581393"],
     },
   },
   openGraph: {
