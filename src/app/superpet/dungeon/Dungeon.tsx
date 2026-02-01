@@ -272,8 +272,11 @@ export default function Dungeon() {
     const [lowHpWarning, setLowHpWarning] = useState(false);
     const [autoBattle, setAutoBattle] = useState(false);
     const logRef = useRef<HTMLDivElement>(null);
+    const battleFieldRef = useRef<HTMLDivElement>(null);
     const [isAttacking, setIsAttacking] = useState(false);
     const [showImpact, setShowImpact] = useState(false);
+    const [impactKey, setImpactKey] = useState(0);
+    const [attackDistance, setAttackDistance] = useState(100);
     const router = useRouter();
 
     useEffect(() => {
@@ -293,6 +296,20 @@ export default function Dungeon() {
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }
     }, [battleState]);
+
+    // 배틀 필드 너비에 비례하여 돌진 거리 계산
+    useEffect(() => {
+        const update = () => {
+            if (battleFieldRef.current) {
+                const w = battleFieldRef.current.offsetWidth;
+                // 각 칸의 약 55%만큼 이동 (gap-6=24px 고려)
+                setAttackDistance(Math.floor((w - 48) / 2 * 0.55));
+            }
+        };
+        update();
+        window.addEventListener('resize', update);
+        return () => window.removeEventListener('resize', update);
+    }, [selectedDungeon]);
 
     const toggleAutoBattle = (checked: boolean) => {
         setAutoBattle(checked);
@@ -358,6 +375,7 @@ export default function Dungeon() {
         // 공격 애니메이션 트리거: 양쪽이 중앙으로 돌진 → 충돌 → 복귀
         setIsAttacking(true);
         setTimeout(() => {
+            setImpactKey(k => k + 1);
             setShowImpact(true);
             setTimeout(() => setShowImpact(false), 500);
         }, 250);
@@ -519,6 +537,7 @@ export default function Dungeon() {
 
                 {/* 배틀 필드 */}
                 <motion.div
+                    ref={battleFieldRef}
                     animate={showImpact ? { x: [0, -4, 4, -3, 3, 0], y: [0, 2, -2, 1, 0] } : {}}
                     transition={{ duration: 0.3 }}
                     className="relative grid grid-cols-2 gap-6"
@@ -533,72 +552,64 @@ export default function Dungeon() {
                         >
                             <span className="text-white font-black text-sm">VS</span>
                         </motion.div>
-                        <AnimatePresence>
-                            {showImpact && (
-                                <>
-                                    {/* 화면 플래시 */}
+                        {impactKey > 0 && (
+                            <div key={impactKey}>
+                                {/* 화면 플래시 */}
+                                <motion.div
+                                    className="fixed inset-0 bg-white/30 pointer-events-none z-50"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: [0, 1, 0] }}
+                                    transition={{ duration: 0.2 }}
+                                />
+                                {/* 중앙 폭발 */}
+                                <motion.div
+                                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400"
+                                    initial={{ width: 0, height: 0, opacity: 1 }}
+                                    animate={{ width: 100, height: 100, opacity: 0 }}
+                                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                                />
+                                {/* 충격파 링 1 */}
+                                <motion.div
+                                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-amber-300/80"
+                                    initial={{ width: 0, height: 0, opacity: 1 }}
+                                    animate={{ width: 120, height: 120, opacity: 0 }}
+                                    transition={{ duration: 0.5, ease: 'easeOut' }}
+                                />
+                                {/* 충격파 링 2 */}
+                                <motion.div
+                                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/50"
+                                    initial={{ width: 0, height: 0, opacity: 1 }}
+                                    animate={{ width: 150, height: 150, opacity: 0 }}
+                                    transition={{ duration: 0.6, ease: 'easeOut', delay: 0.05 }}
+                                />
+                                {/* 방사형 충격파 라인 */}
+                                {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((deg) => (
                                     <motion.div
-                                        className="fixed inset-0 bg-white/30 pointer-events-none z-50"
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: [0, 1, 0] }}
-                                        exit={{ opacity: 0 }}
-                                        transition={{ duration: 0.2 }}
+                                        key={`line-${deg}`}
+                                        className="absolute left-1/2 top-1/2 h-[2px] bg-gradient-to-r from-amber-400 to-transparent origin-left"
+                                        style={{ rotate: `${deg}deg` }}
+                                        initial={{ width: 0, opacity: 1 }}
+                                        animate={{ width: 60, opacity: 0 }}
+                                        transition={{ duration: 0.3, ease: 'easeOut' }}
                                     />
-                                    {/* 중앙 폭발 */}
+                                ))}
+                                {/* 스파크 파티클 */}
+                                {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
                                     <motion.div
-                                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400"
-                                        initial={{ width: 0, height: 0, opacity: 1 }}
-                                        animate={{ width: 100, height: 100, opacity: 0 }}
-                                        exit={{ opacity: 0 }}
+                                        key={`spark-${deg}`}
+                                        className="absolute left-1/2 top-1/2 w-2 h-2 rounded-full bg-amber-300"
+                                        initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+                                        animate={{
+                                            x: Math.cos((deg * Math.PI) / 180) * 55,
+                                            y: Math.sin((deg * Math.PI) / 180) * 55,
+                                            opacity: 0,
+                                            scale: 0,
+                                        }}
                                         transition={{ duration: 0.4, ease: 'easeOut' }}
                                     />
-                                    {/* 충격파 링 1 */}
-                                    <motion.div
-                                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-amber-300/80"
-                                        initial={{ width: 0, height: 0, opacity: 1 }}
-                                        animate={{ width: 120, height: 120, opacity: 0 }}
-                                        exit={{ opacity: 0 }}
-                                        transition={{ duration: 0.5, ease: 'easeOut' }}
-                                    />
-                                    {/* 충격파 링 2 */}
-                                    <motion.div
-                                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/50"
-                                        initial={{ width: 0, height: 0, opacity: 1 }}
-                                        animate={{ width: 150, height: 150, opacity: 0 }}
-                                        exit={{ opacity: 0 }}
-                                        transition={{ duration: 0.6, ease: 'easeOut', delay: 0.05 }}
-                                    />
-                                    {/* 방사형 충격파 라인 */}
-                                    {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((deg) => (
-                                        <motion.div
-                                            key={`line-${deg}`}
-                                            className="absolute left-1/2 top-1/2 h-[2px] bg-gradient-to-r from-amber-400 to-transparent origin-left"
-                                            style={{ rotate: `${deg}deg` }}
-                                            initial={{ width: 0, opacity: 1 }}
-                                            animate={{ width: 60, opacity: 0 }}
-                                            exit={{ opacity: 0 }}
-                                            transition={{ duration: 0.3, ease: 'easeOut' }}
-                                        />
-                                    ))}
-                                    {/* 스파크 파티클 */}
-                                    {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
-                                        <motion.div
-                                            key={`spark-${deg}`}
-                                            className="absolute left-1/2 top-1/2 w-2 h-2 rounded-full bg-amber-300"
-                                            initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
-                                            animate={{
-                                                x: Math.cos((deg * Math.PI) / 180) * 55,
-                                                y: Math.sin((deg * Math.PI) / 180) * 55,
-                                                opacity: 0,
-                                                scale: 0,
-                                            }}
-                                            exit={{ opacity: 0 }}
-                                            transition={{ duration: 0.4, ease: 'easeOut' }}
-                                        />
-                                    ))}
-                                </>
-                            )}
-                        </AnimatePresence>
+                                ))}
+                            </div>
+                        )}
                     </div>
                     {/* 플레이어 */}
                     <motion.div
@@ -609,7 +620,7 @@ export default function Dungeon() {
                         <div className="text-center mb-4">
                             <motion.div
                                 animate={isAttacking
-                                    ? { x: 100, scale: 0.9, rotate: 12 }
+                                    ? { x: attackDistance, scale: 0.9, rotate: 12 }
                                     : { x: 0, scale: 1, rotate: 0 }
                                 }
                                 transition={{ type: 'spring', stiffness: 400, damping: 15 }}
@@ -646,7 +657,7 @@ export default function Dungeon() {
                         <div className="text-center mb-4 flex flex-col items-center">
                             <motion.div
                                 animate={isAttacking
-                                    ? { x: -100, scale: 0.9, rotate: -12 }
+                                    ? { x: -attackDistance, scale: 0.9, rotate: -12 }
                                     : { x: 0, scale: 1, rotate: 0 }
                                 }
                                 transition={{ type: 'spring', stiffness: 400, damping: 15 }}
