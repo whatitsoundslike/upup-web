@@ -778,7 +778,7 @@ export function getTotalStats(character: Character): {
 /**
  * 음식 아이템을 사용하여 HP를 회복합니다
  */
-export function useFood(itemId: string): { success: boolean; message: string; hpRecovered?: number } {
+export function useFood(itemId: string): { success: boolean; message: string; itemName?: string; hpRecovered?: number } {
     const item = GAME_ITEMS[itemId];
     if (!item) return { success: false, message: '아이템을 찾을 수 없습니다.' };
     if (item.type !== 'food') return { success: false, message: '음식 아이템이 아닙니다.' };
@@ -816,7 +816,8 @@ export function useFood(itemId: string): { success: boolean; message: string; hp
 
     return {
         success: true,
-        message: `${item.name}을(를) 사용하여 HP ${actualRecovered} 회복했습니다!`,
+        message: '아이템 사용 성공',
+        itemName: item.name,
         hpRecovered: actualRecovered
     };
 }

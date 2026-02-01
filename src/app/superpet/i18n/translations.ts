@@ -223,6 +223,11 @@ export const koToEn: Record<string, string> = {
     '전부 판매': 'Sell All',
     '정말 판매하시겠습니까?': 'Are you sure you want to sell?',
     '에 판매합니다': ' for sale',
+    '아이템을 찾을 수 없습니다.': 'Item not found.',
+    '음식 아이템이 아닙니다.': 'This is not a food item.',
+    '캐릭터를 찾을 수 없습니다.': 'Character not found.',
+    '인벤토리에 해당 아이템이 없습니다.': 'Item not found in inventory.',
+    'HP가 이미 최대치입니다.': 'HP is already at maximum.',
 
     // === Shop ===
     '골드 상점': 'Gold Shop',

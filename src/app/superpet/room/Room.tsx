@@ -125,9 +125,12 @@ export default function Room() {
             setCharacter(updatedCharacter);
             const remaining = updatedInventory.find((e) => e.item.id === itemId);
             setSelectedItem(remaining ?? null);
-            showToast(result.message, 'success');
+            const msg = lang === 'ko'
+                ? `${result.itemName}을(를) 사용하여 HP ${result.hpRecovered} 회복했습니다!`
+                : `Used ${t(result.itemName!)} to recover ${result.hpRecovered} HP!`;
+            showToast(msg, 'success');
         } else {
-            showToast(result.message, 'error');
+            showToast(t(result.message), 'error');
         }
     };
 

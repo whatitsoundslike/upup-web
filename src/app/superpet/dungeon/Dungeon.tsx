@@ -61,7 +61,7 @@ const dungeons: DungeonData[] = [
                 isBoss: false,
                 spawnChance: 55,
                 drops: [
-                    { itemId: 'potion', chance: 50 },
+                    { itemId: 'potion', chance: 30 },
                     { itemId: 'iron_helmet', chance: 5 },
                 ],
             },
@@ -74,7 +74,7 @@ const dungeons: DungeonData[] = [
                 isBoss: false,
                 spawnChance: 40,
                 drops: [
-                    { itemId: 'potion', chance: 60 },
+                    { itemId: 'potion', chance: 30 },
                     { itemId: 'enhanced_feed', chance: 10 },
                     { itemId: 'cloth_gloves', chance: 8 },
                 ],
@@ -272,6 +272,8 @@ export default function Dungeon() {
     const [lowHpWarning, setLowHpWarning] = useState(false);
     const [autoBattle, setAutoBattle] = useState(false);
     const logRef = useRef<HTMLDivElement>(null);
+    const [isAttacking, setIsAttacking] = useState(false);
+    const [showImpact, setShowImpact] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -352,6 +354,14 @@ export default function Dungeon() {
 
     const handleAttack = useCallback(() => {
         if (battleState !== 'fighting' || !character || !selectedDungeon || !selectedMonster) return;
+
+        // 공격 애니메이션 트리거: 양쪽이 중앙으로 돌진 → 충돌 → 복귀
+        setIsAttacking(true);
+        setTimeout(() => {
+            setShowImpact(true);
+            setTimeout(() => setShowImpact(false), 500);
+        }, 250);
+        setTimeout(() => setIsAttacking(false), 550);
 
         // 장비 보너스를 포함한 총 스탯 계산
         const totalStats = getTotalStats(character);
@@ -448,7 +458,7 @@ export default function Dungeon() {
         if (!autoBattle || battleState !== 'fighting') return;
         const interval = setInterval(() => {
             handleAttack();
-        }, 500);
+        }, 1000);
         return () => clearInterval(interval);
     }, [autoBattle, battleState, handleAttack]);
 
@@ -508,16 +518,88 @@ export default function Dungeon() {
                 </motion.h2>
 
                 {/* 배틀 필드 */}
-                <div className="relative grid grid-cols-2 gap-6">
-                    {/* VS 표시 */}
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.3, type: 'spring', stiffness: 300 }}
-                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-6 h-6 rounded-full bg-red-500 flex items-center justify-center shadow-lg"
-                    >
-                        <span className="text-white font-black text-sm">VS</span>
-                    </motion.div>
+                <motion.div
+                    animate={showImpact ? { x: [0, -4, 4, -3, 3, 0], y: [0, 2, -2, 1, 0] } : {}}
+                    transition={{ duration: 0.3 }}
+                    className="relative grid grid-cols-2 gap-6"
+                >
+                    {/* VS 표시 + 충돌 이펙트 */}
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.3, type: 'spring', stiffness: 300 }}
+                            className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center shadow-lg"
+                        >
+                            <span className="text-white font-black text-sm">VS</span>
+                        </motion.div>
+                        <AnimatePresence>
+                            {showImpact && (
+                                <>
+                                    {/* 화면 플래시 */}
+                                    <motion.div
+                                        className="fixed inset-0 bg-white/30 pointer-events-none z-50"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: [0, 1, 0] }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.2 }}
+                                    />
+                                    {/* 중앙 폭발 */}
+                                    <motion.div
+                                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400"
+                                        initial={{ width: 0, height: 0, opacity: 1 }}
+                                        animate={{ width: 100, height: 100, opacity: 0 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.4, ease: 'easeOut' }}
+                                    />
+                                    {/* 충격파 링 1 */}
+                                    <motion.div
+                                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-amber-300/80"
+                                        initial={{ width: 0, height: 0, opacity: 1 }}
+                                        animate={{ width: 120, height: 120, opacity: 0 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.5, ease: 'easeOut' }}
+                                    />
+                                    {/* 충격파 링 2 */}
+                                    <motion.div
+                                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/50"
+                                        initial={{ width: 0, height: 0, opacity: 1 }}
+                                        animate={{ width: 150, height: 150, opacity: 0 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.6, ease: 'easeOut', delay: 0.05 }}
+                                    />
+                                    {/* 방사형 충격파 라인 */}
+                                    {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((deg) => (
+                                        <motion.div
+                                            key={`line-${deg}`}
+                                            className="absolute left-1/2 top-1/2 h-[2px] bg-gradient-to-r from-amber-400 to-transparent origin-left"
+                                            style={{ rotate: `${deg}deg` }}
+                                            initial={{ width: 0, opacity: 1 }}
+                                            animate={{ width: 60, opacity: 0 }}
+                                            exit={{ opacity: 0 }}
+                                            transition={{ duration: 0.3, ease: 'easeOut' }}
+                                        />
+                                    ))}
+                                    {/* 스파크 파티클 */}
+                                    {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
+                                        <motion.div
+                                            key={`spark-${deg}`}
+                                            className="absolute left-1/2 top-1/2 w-2 h-2 rounded-full bg-amber-300"
+                                            initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+                                            animate={{
+                                                x: Math.cos((deg * Math.PI) / 180) * 55,
+                                                y: Math.sin((deg * Math.PI) / 180) * 55,
+                                                opacity: 0,
+                                                scale: 0,
+                                            }}
+                                            exit={{ opacity: 0 }}
+                                            transition={{ duration: 0.4, ease: 'easeOut' }}
+                                        />
+                                    ))}
+                                </>
+                            )}
+                        </AnimatePresence>
+                    </div>
                     {/* 플레이어 */}
                     <motion.div
                         initial={{ opacity: 0, x: -30 }}
@@ -525,11 +607,19 @@ export default function Dungeon() {
                         className="glass p-2 rounded-2xl bg-white/5"
                     >
                         <div className="text-center mb-4">
-                            {character.image ? (
-                                <img src={character.image} alt={character.name} className="w-27 h-40 object-cover rounded-xl mx-auto mb-2 border border-amber-500" />
-                            ) : (
-                                <div className="text-4xl mb-2">🐾</div>
-                            )}
+                            <motion.div
+                                animate={isAttacking
+                                    ? { x: 100, scale: 0.9, rotate: 12 }
+                                    : { x: 0, scale: 1, rotate: 0 }
+                                }
+                                transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                            >
+                                {character.image ? (
+                                    <img src={character.image} alt={character.name} className="w-27 h-40 object-cover rounded-xl mx-auto mb-2 border border-amber-500" />
+                                ) : (
+                                    <div className="text-4xl mb-2">🐾</div>
+                                )}
+                            </motion.div>
                             <h3 className="font-bold text-lg">{character.name}</h3>
                             <p className="text-xs text-foreground/50">{t(character.className)}</p>
                         </div>
@@ -554,7 +644,16 @@ export default function Dungeon() {
                         className="glass p-2 rounded-2xl bg-white/5"
                     >
                         <div className="text-center mb-4 flex flex-col items-center">
-                            <div className="text-4xl mb-2 w-25 h-40 flex items-center justify-center ">{selectedMonster?.emoji}</div>
+                            <motion.div
+                                animate={isAttacking
+                                    ? { x: -100, scale: 0.9, rotate: -12 }
+                                    : { x: 0, scale: 1, rotate: 0 }
+                                }
+                                transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                                className="text-4xl mb-2 w-25 h-40 flex items-center justify-center"
+                            >
+                                {selectedMonster?.emoji}
+                            </motion.div>
                             <h3 className="font-bold text-lg">{t(selectedMonster?.name)}</h3>
                             <span className={`inline-block px-2 py-0.5 rounded-full text-white text-xs font-bold ${selectedMonster?.isBoss ? 'bg-purple-500' : 'bg-blue-500'}`}>
                                 LV.{selectedMonster?.level} {selectedMonster?.isBoss ? t('보스') : ''}
@@ -573,7 +672,7 @@ export default function Dungeon() {
                             />
                         </div>
                     </motion.div>
-                </div>
+                </motion.div>
 
                 {/* 배틀 로그 */}
                 <div ref={logRef} className="glass p-4 rounded-xl bg-white/5 mb-6 h-40 overflow-y-auto">
