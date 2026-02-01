@@ -41,8 +41,7 @@ export default function Room() {
     const [inventory, setInventory] = useState<InventoryItem[]>([]);
     const [character, setCharacter] = useState<Character | null>(null);
     const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
-    const [toastQueue, setToastQueue] = useState<{ message: string; tone: 'success' | 'error'; count: number }[]>([]);
-    const [activeToast, setActiveToast] = useState<{ message: string; tone: 'success' | 'error'; count: number } | null>(null);
+    const [activeToast, setActiveToast] = useState<{ message: string; tone: 'success' | 'error'; key: number } | null>(null);
     const [sellConfirm, setSellConfirm] = useState<{ itemId: string; sellAll: boolean } | null>(null);
     const [searchName, setSearchName] = useState('');
     const [slotFilter, setSlotFilter] = useState<EquipmentSlot | 'all'>('all');
@@ -54,31 +53,13 @@ export default function Room() {
     }, []);
 
     useEffect(() => {
-        if (activeToast || toastQueue.length === 0) return;
-        setActiveToast(toastQueue[0]);
-        setToastQueue((queue) => queue.slice(1));
-    }, [activeToast, toastQueue]);
-
-    useEffect(() => {
         if (!activeToast) return;
         const timer = setTimeout(() => setActiveToast(null), 2400);
         return () => clearTimeout(timer);
     }, [activeToast]);
 
     const showToast = (message: string, tone: 'success' | 'error') => {
-        if (activeToast && activeToast.message === message && activeToast.tone === tone) {
-            setActiveToast({ ...activeToast, count: activeToast.count + 1 });
-            return;
-        }
-        setToastQueue((queue) => {
-            if (queue.length > 0) {
-                const last = queue[queue.length - 1];
-                if (last.message === message && last.tone === tone) {
-                    return [...queue.slice(0, -1), { ...last, count: last.count + 1 }];
-                }
-            }
-            return [...queue, { message, tone, count: 1 }];
-        });
+        setActiveToast({ message, tone, key: Date.now() });
     };
 
     const handleSellRequest = (itemId: string, sellAll: boolean) => {
@@ -581,9 +562,10 @@ export default function Room() {
                 )}
             </AnimatePresence>
 
-            <AnimatePresence>
+            <AnimatePresence mode="wait">
                 {activeToast && (
                     <motion.div
+                        key={activeToast.key}
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 16 }}
@@ -596,9 +578,6 @@ export default function Room() {
                                 }`}
                         >
                             {activeToast.message}
-                            {activeToast.count > 1 && (
-                                <span className="ml-2 text-white/80">x{activeToast.count}</span>
-                            )}
                         </div>
                     </motion.div>
                 )}
