@@ -10,7 +10,6 @@ export const metadata: Metadata = {
         description: '던전에서 획득한 아이템을 확인하고 관리하세요.',
         url: 'https://zroom.io/superpet/room',
         siteName: 'ZROOM',
-        locale: 'ko_KR',
         type: 'website',
     },
     alternates: {

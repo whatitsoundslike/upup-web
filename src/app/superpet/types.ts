@@ -552,10 +552,10 @@ const CLASS_MAP: Record<string, string> = {
 };
 
 const BASE_STATS: Record<PetInfo['type'], { hp: number; attack: number; defense: number; speed: number }> = {
-    dog: { hp: 120, attack: 10, defense: 5, speed: 0 },
-    cat: { hp: 100, attack: 15, defense: 0, speed: 0 },
-    bird: { hp: 80, attack: 10, defense: 0, speed: 15 },
-    other: { hp: 100, attack: 10, defense: 0, speed: 0 },
+    dog: { hp: 120, attack: 10, defense: 5, speed: 5 },
+    cat: { hp: 100, attack: 10, defense: 0, speed: 10 },
+    bird: { hp: 80, attack: 10, defense: 0, speed: 10 },
+    other: { hp: 100, attack: 10, defense: 0, speed: 5 },
 };
 
 const TRAIT_MODIFIERS: Record<string, Partial<Record<'hp' | 'attack' | 'defense' | 'speed', number>>> = {

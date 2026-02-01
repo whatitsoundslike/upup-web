@@ -12,6 +12,7 @@ import {
     addCharacter,
     deleteCharacter,
     setActiveCharacter,
+    saveCharacter,
     migrateCharacterData,
     type Character,
     type PetInfo
@@ -115,42 +116,49 @@ export default function SuperpetHome() {
         if (!petName.trim() || traits.length < 3) return;
         setGenerateError(null);
 
-        let cardImage: string | undefined;
+        // 1단계: 캐릭터 먼저 생성 (이미지 없이)
+        const char = generateCharacter(petName.trim(), petType, traits);
+        const success = addCharacter(char);
+        if (!success) return;
 
+        if (fileInputRef.current) fileInputRef.current.value = '';
+
+        // 2단계: 사진이 있으면 캐릭터 정보와 함께 카드 생성
         if (petPhoto) {
             setIsGenerating(true);
             try {
                 const res = await fetch('/api/superpet/generate-card', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ image: petPhoto }),
+                    body: JSON.stringify({
+                        image: petPhoto,
+                        name: char.name,
+                        className: char.className,
+                        element: char.element,
+                    }),
                 });
                 const data = await res.json();
-                if (!data.success) {
+                if (data.success && data.cardImage) {
+                    // 캐릭터에 생성된 카드 이미지 반영
+                    char.image = data.cardImage;
+                    saveCharacter(char);
+                    setCharacters(loadAllCharacters());
+                    setCreatedCharacter({ ...char });
+                } else {
                     setGenerateError(data.error || t('카드 생성에 실패했습니다'));
-                    setIsGenerating(false);
-                    return;
                 }
-                cardImage = data.cardImage;
             } catch {
                 setGenerateError(t('카드 생성에 실패했습니다'));
-                setIsGenerating(false);
-                return;
             }
+            setPetPhoto(null);
             setIsGenerating(false);
         }
 
-        const char = generateCharacter(petName.trim(), petType, traits, cardImage);
-        const success = addCharacter(char);
-        if (success) {
-            setCharacters(loadAllCharacters());
-            setPetName('');
-            setTraits([]);
-            setPetPhoto(null);
-            setShowForm(false);
-            setCreatedCharacter(char);
-            if (fileInputRef.current) fileInputRef.current.value = '';
-        }
+        setCharacters(loadAllCharacters());
+        setPetName('');
+        setTraits([]);
+        setShowForm(false);
+        setCreatedCharacter(char);
     };
 
     const handleSelectCharacter = (characterId: string) => {
@@ -208,7 +216,7 @@ export default function SuperpetHome() {
                                     animate={{ opacity: 1, y: 0 }}
                                     className="text-5xl font-black tracking-tighter mb-4 uppercase"
                                 >
-                                    SUPER <span className="text-amber-500">PET</span> <span className="text-blue-500 text-[20px]">[Beta]</span>
+                                    SUPER <span className="text-amber-500">PET</span> <span className="text-blue-500 text-[20px] font-thin">[Beta]</span>
                                 </motion.h1>
                                 <motion.p
                                     initial={{ opacity: 0, y: -20 }}

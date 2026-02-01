@@ -259,6 +259,8 @@ const dungeons: DungeonData[] = [
 
 type BattleState = 'idle' | 'fighting' | 'won' | 'lost';
 
+const ELEMENT_EMOJI: Record<string, string> = { '불': '🔥', '물': '💧', '풍': '🍃', '땅': '🪨' };
+
 export default function Dungeon() {
     const { t, lang } = useLanguage();
     const [character, setCharacter] = useState<Character | null>(null);
@@ -632,7 +634,7 @@ export default function Dungeon() {
                                 )}
                             </motion.div>
                             <h3 className="font-bold text-lg">{character.name}</h3>
-                            <p className="text-xs text-foreground/50">{t(character.className)}</p>
+                            <p className="text-xs text-foreground/50">{ELEMENT_EMOJI[character.element]} {t(character.className)}</p>
                         </div>
                         <div className="mb-2 flex justify-between text-sm">
                             <span className="flex items-center gap-1">
@@ -822,7 +824,7 @@ export default function Dungeon() {
                     transition={{ delay: 0.1 }}
                     className="text-foreground/60"
                 >
-                    <span className="font-bold text-foreground">{character.name}</span> (Lv.{character.level} {t(character.className)}) {t('으로 도전!')}
+                    <span className="font-bold text-foreground">{character.name}</span> (Lv.{character.level} {ELEMENT_EMOJI[character.element]} {t(character.className)}) {t('으로 도전!')}
                 </motion.p>
                 <motion.div
                     initial={{ opacity: 0 }}

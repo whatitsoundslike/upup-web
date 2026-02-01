@@ -5,7 +5,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export async function POST(request: Request) {
     try {
-        const { image } = await request.json();
+        const { image, name, className, element } = await request.json();
 
         if (!image) {
             return NextResponse.json(
@@ -63,16 +63,28 @@ export async function POST(request: Request) {
             },
         });
 
+        // 직업 한→영 매핑
+        const classMap: Record<string, string> = { '워리어': 'Berserker', '팔라딘': 'Paladin', '어쌔신': 'Assassin' };
+        const classEn = classMap[className] || 'Warrior';
+
+        // 원소 한→영 매핑
+        const elementMap: Record<string, string> = { '불': 'Fire', '물': 'Water', '풍': 'Wind', '땅': 'Earth' };
+        const elementEn = elementMap[element] || 'Fire';
+
         const cardResult = await cardModel.generateContent([
             {
                 inlineData: { mimeType, data: base64Data },
             },
             `
 Transform this animal into an epic fantasy RPG card game character portrait.
+Character info:
+- Name: "${name || 'Hero'}"
+- Class: ${classEn}
+- Element: ${elementEn}
 Style requirements:
-- The animal should be depicted as a powerful, heroic warrior character
-- Choose one class among these three: Berserker, Paladin, or Assassin.
-- Choose either an Eastern or Western style.
+- The animal should be depicted as a powerful, heroic ${classEn} character
+- The card must reflect the ${elementEn} element theme (${elementEn === 'Fire' ? 'flames, warm red/orange tones' : elementEn === 'Water' ? 'water, cool blue tones, ice crystals' : elementEn === 'Wind' ? 'wind swirls, green/cyan aura' : 'earth, rocks, brown/amber tones'})
+- ${classEn === 'Berserker' ? 'Heavy armor, massive weapon, aggressive battle stance' : classEn === 'Paladin' ? 'Holy knight armor, shield, divine golden light aura' : 'Dark leather outfit, daggers/claws, stealthy shadow effects'}
 - Fantasy RPG art style with dramatic lighting and magical effects
 - Include ornate card frame/border design
 - It must maintain a human-like bipedal form (standing on two legs)
@@ -82,7 +94,8 @@ Style requirements:
 - Fix the aspect ratio to 6:9
 - The animal's features should still be recognizable
 - Add the text 'SSR' to the top-right corner of the card, and add five stars in the bottom-middle of the card.
-Do not include any text or numbers other than 'SSR'.
+- Write the name "${name || 'Hero'}" at the bottom of the card.
+Do not include any other text or numbers.
 Important: If the input is not an animal photo, return a failure response.`,
         ]);
 
