@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
-import { type Character, type GameItem, GAME_ITEMS, addItemToInventory, addExpToCharacter, DUNGEON_EXP, ITEM_RARITY_TEXT, loadCharacter, saveCharacter, getTotalStats } from '../types';
+import { type Character, type GameItem, GAME_ITEMS, addItemToInventory, addExpToCharacter, DUNGEON_EXP, ITEM_RARITY_TEXT, loadCharacter, saveCharacter, getTotalStats, useFood, loadInventory, type InventoryItem } from '../types';
 import { getItem, setItem } from '../storage';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useRouter } from 'next/navigation';
@@ -162,8 +162,8 @@ const dungeons: DungeonData[] = [
                 isBoss: false,
                 spawnChance: 25,
                 drops: [
-                    { itemId: 'feed', chance: 40 },
-                    { itemId: 'dubai_cookie', chance: 20 },
+                    { itemId: 'feed', chance: 60 },
+                    { itemId: 'dubai_cookie', chance: 30 },
                     { itemId: 'silver_necklace', chance: 5 },
                     { itemId: 'silver_ring', chance: 5 },
                 ],
@@ -177,8 +177,8 @@ const dungeons: DungeonData[] = [
                 isBoss: false,
                 spawnChance: 22,
                 drops: [
-                    { itemId: 'feed', chance: 40 },
-                    { itemId: 'dubai_cookie', chance: 20 },
+                    { itemId: 'feed', chance: 60 },
+                    { itemId: 'dubai_cookie', chance: 30 },
                     { itemId: 'bronze_helmet', chance: 5 },
                     { itemId: 'chain_armor', chance: 5 },
                 ],
@@ -192,8 +192,8 @@ const dungeons: DungeonData[] = [
                 isBoss: false,
                 spawnChance: 20,
                 drops: [
-                    { itemId: 'feed', chance: 40 },
-                    { itemId: 'dubai_cookie', chance: 20 },
+                    { itemId: 'feed', chance: 60 },
+                    { itemId: 'dubai_cookie', chance: 30 },
                     { itemId: 'leather_gloves', chance: 5 },
                     { itemId: 'traveler_cloak', chance: 5 },
                 ],
@@ -207,8 +207,8 @@ const dungeons: DungeonData[] = [
                 isBoss: false,
                 spawnChance: 17,
                 drops: [
-                    { itemId: 'feed', chance: 40 },
-                    { itemId: 'dubai_cookie', chance: 20 },
+                    { itemId: 'feed', chance: 60 },
+                    { itemId: 'dubai_cookie', chance: 30 },
                     { itemId: 'leather_boots', chance: 5 },
                     { itemId: 'iron_shield', chance: 5 },
                 ],
@@ -222,8 +222,8 @@ const dungeons: DungeonData[] = [
                 isBoss: false,
                 spawnChance: 13,
                 drops: [
-                    { itemId: 'feed', chance: 40 },
-                    { itemId: 'dubai_cookie', chance: 20 },
+                    { itemId: 'feed', chance: 60 },
+                    { itemId: 'dubai_cookie', chance: 30 },
                     { itemId: 'iron_sword', chance: 5 },
                     { itemId: 'bronze_helmet', chance: 5 },
                 ],
@@ -238,15 +238,15 @@ const dungeons: DungeonData[] = [
                 spawnChance: 3,
                 drops: [
                     { itemId: 'dubai_cookie', chance: 100 },
-                    { itemId: 'bronze_helmet', chance: 10 },
-                    { itemId: 'chain_armor', chance: 10 },
-                    { itemId: 'leather_gloves', chance: 10 },
-                    { itemId: 'leather_boots', chance: 10 },
-                    { itemId: 'traveler_cloak', chance: 10 },
-                    { itemId: 'iron_sword', chance: 10 },
-                    { itemId: 'iron_shield', chance: 10 },
-                    { itemId: 'silver_necklace', chance: 10 },
-                    { itemId: 'silver_ring', chance: 10 },
+                    { itemId: 'bronze_helmet', chance: 20 },
+                    { itemId: 'chain_armor', chance: 20 },
+                    { itemId: 'leather_gloves', chance: 20 },
+                    { itemId: 'leather_boots', chance: 20 },
+                    { itemId: 'traveler_cloak', chance: 20 },
+                    { itemId: 'iron_sword', chance: 20 },
+                    { itemId: 'iron_shield', chance: 20 },
+                    { itemId: 'silver_necklace', chance: 20 },
+                    { itemId: 'silver_ring', chance: 20 },
                 ],
             },
         ],
@@ -584,8 +584,10 @@ export default function Dungeon() {
     const [playerHp, setPlayerHp] = useState(0);
     const [monsterHp, setMonsterHp] = useState(0);
     const [battleLog, setBattleLog] = useState<ReactNode[]>([]);
+    const [inventory, setInventory] = useState<InventoryItem[]>([]);
     const [droppedItems, setDroppedItems] = useState<DroppedItem[]>([]);
     const [lowHpWarning, setLowHpWarning] = useState(false);
+    const [activeToast, setActiveToast] = useState<{ message: string; tone: 'success' | 'error'; key: number } | null>(null);
     const [autoBattle, setAutoBattle] = useState(false);
     const logRef = useRef<HTMLDivElement>(null);
     const battleFieldRef = useRef<HTMLDivElement>(null);
@@ -597,6 +599,7 @@ export default function Dungeon() {
 
     useEffect(() => {
         setCharacter(loadCharacter());
+        setInventory(loadInventory());
         const saved = getItem('autoBattle');
         if (saved !== null) setAutoBattle(saved === 'true');
     }, []);
@@ -606,6 +609,12 @@ export default function Dungeon() {
             logRef.current.scrollTop = logRef.current.scrollHeight;
         }
     }, [battleLog]);
+
+    useEffect(() => {
+        if (!activeToast) return;
+        const timer = setTimeout(() => setActiveToast(null), 2400);
+        return () => clearTimeout(timer);
+    }, [activeToast]);
 
     useEffect(() => {
         if (battleState === 'won' || battleState === 'lost') {
@@ -633,6 +642,30 @@ export default function Dungeon() {
     const toggleAutoBattle = (checked: boolean) => {
         setAutoBattle(checked);
         setItem('autoBattle', String(checked));
+    };
+
+    const showToast = (message: string, tone: 'success' | 'error') => {
+        setActiveToast({ message, tone, key: Date.now() });
+    };
+
+    const handleUseFood = (itemId: string) => {
+        const result = useFood(itemId);
+        if (result.success) {
+            const updated = loadCharacter();
+            if (updated) {
+                setCharacter(updated);
+                setPlayerHp(updated.currentHp);
+            }
+            // 인벤토리 상태 갱신
+            setInventory(loadInventory());
+
+            const msg = lang === 'ko'
+                ? `${result.itemName}을(를) 사용하여 HP ${result.hpRecovered} 회복했습니다!`
+                : `Used ${t(result.itemName!)} to recover ${result.hpRecovered} HP!`;
+            showToast(msg, 'success');
+        } else {
+            showToast(t(result.message), 'error');
+        }
     };
 
     // 몬스터 랜덤 선택 함수
@@ -757,6 +790,7 @@ export default function Dungeon() {
             updated.gold += earnedGold;
             saveCharacter(updated);
             setCharacter(updated);
+            setInventory(loadInventory());
             newLog.push(`💰 ${earnedGold}G ${lang === 'ko' ? '획득!' : 'earned!'}`);
             newLog.push(`EXP +${earnedExp} ${lang === 'ko' ? '획득!' : 'earned!'}`);
             if (leveledUp) {
@@ -816,368 +850,393 @@ export default function Dungeon() {
         setDroppedItems([]);
     };
 
-    // 캐릭터 없을 때
-    if (!character) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                >
-                    <PawPrint className="h-16 w-16 text-amber-500 mx-auto mb-6" />
-                    <h2 className="text-2xl font-black mb-3">{t('캐릭터가 없습니다')}</h2>
-                    <p className="text-foreground/60 mb-6">
-                        {t('던전에 도전하려면 먼저 캐릭터를 생성하세요!')}
-                    </p>
-                    <Link
-                        href="/superpet"
-                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 transition-colors"
+    // 최종 렌더링
+    return (
+        <div className="w-full">
+            {!character ? (
+                <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
                     >
-                        <PawPrint className="h-5 w-5" />
-                        {t('캐릭터 만들러 가기')}
-                    </Link>
-                </motion.div>
-            </div>
-        );
-    }
-
-    // 배틀 화면
-    if (selectedDungeon && selectedMonster) {
-        // 장비 보너스를 포함한 최대 HP 계산
-        const totalStats = getTotalStats(character);
-        const playerHpPct = Math.max((playerHp / totalStats.hp) * 100, 0);
-        const monsterHpPct = Math.max((monsterHp / selectedMonster.hp) * 100, 0);
-
-        return (
-            <div className="max-w-3xl mx-auto px-4 py-2">
-                <motion.h2
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-2xl font-black mb-2 text-center"
-                >
-                    {t(selectedDungeon.name)}
-                </motion.h2>
-
-                {/* 배틀 필드 */}
-                <motion.div
-                    ref={battleFieldRef}
-                    animate={showImpact ? { x: [0, -4, 4, -3, 3, 0], y: [0, 2, -2, 1, 0] } : {}}
-                    transition={{ duration: 0.3 }}
-                    className="relative grid grid-cols-2 gap-6"
-                >
-                    {/* VS 표시 + 충돌 이펙트 */}
-                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-5">
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 0.3, type: 'spring', stiffness: 300 }}
-                            className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center shadow-lg"
+                        <PawPrint className="h-16 w-16 text-amber-500 mx-auto mb-6" />
+                        <h2 className="text-2xl font-black mb-3">{t('캐릭터가 없습니다')}</h2>
+                        <p className="text-foreground/60 mb-6">
+                            {t('던전에 도전하려면 먼저 캐릭터를 생성하세요!')}
+                        </p>
+                        <Link
+                            href="/superpet"
+                            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 transition-colors"
                         >
-                            <span className="text-white font-black text-sm">VS</span>
-                        </motion.div>
-                        {impactKey > 0 && (
-                            <div key={impactKey}>
-                                {/* 화면 플래시 */}
-                                <motion.div
-                                    className="fixed inset-0 bg-white/30 pointer-events-none z-50"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: [0, 1, 0] }}
-                                    transition={{ duration: 0.2 }}
-                                />
-                                {/* 중앙 폭발 */}
-                                <motion.div
-                                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400"
-                                    initial={{ width: 0, height: 0, opacity: 1 }}
-                                    animate={{ width: 100, height: 100, opacity: 0 }}
-                                    transition={{ duration: 0.4, ease: 'easeOut' }}
-                                />
-                                {/* 충격파 링 1 */}
-                                <motion.div
-                                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-amber-300/80"
-                                    initial={{ width: 0, height: 0, opacity: 1 }}
-                                    animate={{ width: 120, height: 120, opacity: 0 }}
-                                    transition={{ duration: 0.5, ease: 'easeOut' }}
-                                />
-                                {/* 충격파 링 2 */}
-                                <motion.div
-                                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/50"
-                                    initial={{ width: 0, height: 0, opacity: 1 }}
-                                    animate={{ width: 150, height: 150, opacity: 0 }}
-                                    transition={{ duration: 0.6, ease: 'easeOut', delay: 0.05 }}
-                                />
-                                {/* 방사형 충격파 라인 */}
-                                {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((deg) => (
+                            <PawPrint className="h-5 w-5" />
+                            {t('캐릭터 만들러 가기')}
+                        </Link>
+                    </motion.div>
+                </div>
+            ) : selectedDungeon && selectedMonster ? (
+                <div className="max-w-3xl mx-auto px-4 py-2">
+                    <motion.h2
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-2xl font-black mb-2 text-center"
+                    >
+                        {t(selectedDungeon.name)}
+                    </motion.h2>
+
+                    {/* 배틀 필드 */}
+                    <motion.div
+                        ref={battleFieldRef}
+                        animate={showImpact ? { x: [0, -4, 4, -3, 3, 0], y: [0, 2, -2, 1, 0] } : {}}
+                        transition={{ duration: 0.3 }}
+                        className="relative grid grid-cols-2 gap-6"
+                    >
+                        {/* VS 표시 + 충돌 이펙트 */}
+                        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-5">
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: 0.3, type: 'spring', stiffness: 300 }}
+                                className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center shadow-lg"
+                            >
+                                <span className="text-white font-black text-sm">VS</span>
+                            </motion.div>
+                            {impactKey > 0 && (
+                                <div key={impactKey}>
+                                    {/* 화면 플래시 */}
                                     <motion.div
-                                        key={`line-${deg}`}
-                                        className="absolute left-1/2 top-1/2 h-[2px] bg-gradient-to-r from-amber-400 to-transparent origin-left"
-                                        style={{ rotate: `${deg}deg` }}
-                                        initial={{ width: 0, opacity: 1 }}
-                                        animate={{ width: 60, opacity: 0 }}
-                                        transition={{ duration: 0.3, ease: 'easeOut' }}
+                                        className="fixed inset-0 bg-white/30 pointer-events-none z-50"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: [0, 1, 0] }}
+                                        transition={{ duration: 0.2 }}
                                     />
-                                ))}
-                                {/* 스파크 파티클 */}
-                                {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
+                                    {/* 중앙 폭발 */}
                                     <motion.div
-                                        key={`spark-${deg}`}
-                                        className="absolute left-1/2 top-1/2 w-2 h-2 rounded-full bg-amber-300"
-                                        initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
-                                        animate={{
-                                            x: Math.cos((deg * Math.PI) / 180) * 55,
-                                            y: Math.sin((deg * Math.PI) / 180) * 55,
-                                            opacity: 0,
-                                            scale: 0,
-                                        }}
+                                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400"
+                                        initial={{ width: 0, height: 0, opacity: 1 }}
+                                        animate={{ width: 100, height: 100, opacity: 0 }}
                                         transition={{ duration: 0.4, ease: 'easeOut' }}
                                     />
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                    {/* 플레이어 */}
-                    <motion.div
-                        initial={{ opacity: 0, x: -30 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="glass p-2 rounded-2xl bg-white/5 z-10"
-                    >
-                        <div className="text-center mb-4">
-                            <motion.div
-                                animate={isAttacking
-                                    ? { x: attackDistance, scale: 0.9, rotate: 12 }
-                                    : { x: 0, scale: 1, rotate: 0 }
-                                }
-                                transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-                            >
-                                {character.image ? (
-                                    <img src={character.image} alt={character.name} className="w-27 h-40 object-cover rounded-xl mx-auto mb-2 border border-amber-500" />
-                                ) : (
-                                    <div className="text-4xl mb-2">🐾</div>
-                                )}
-                            </motion.div>
-                            <h3 className="font-bold text-lg">{character.name}</h3>
-                            <p className="text-xs text-foreground/50">{ELEMENT_EMOJI[character.element]} {t(character.className)}</p>
+                                    {/* 충격파 링 1 */}
+                                    <motion.div
+                                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-amber-300/80"
+                                        initial={{ width: 0, height: 0, opacity: 1 }}
+                                        animate={{ width: 120, height: 120, opacity: 0 }}
+                                        transition={{ duration: 0.5, ease: 'easeOut' }}
+                                    />
+                                    {/* 충격파 링 2 */}
+                                    <motion.div
+                                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/50"
+                                        initial={{ width: 0, height: 0, opacity: 1 }}
+                                        animate={{ width: 150, height: 150, opacity: 0 }}
+                                        transition={{ duration: 0.6, ease: 'easeOut', delay: 0.05 }}
+                                    />
+                                    {/* 방사형 충격파 라인 */}
+                                    {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((deg) => (
+                                        <motion.div
+                                            key={`line-${deg}`}
+                                            className="absolute left-1/2 top-1/2 h-[2px] bg-gradient-to-r from-amber-400 to-transparent origin-left"
+                                            style={{ rotate: `${deg}deg` }}
+                                            initial={{ width: 0, opacity: 1 }}
+                                            animate={{ width: 60, opacity: 0 }}
+                                            transition={{ duration: 0.3, ease: 'easeOut' }}
+                                        />
+                                    ))}
+                                    {/* 스파크 파티클 */}
+                                    {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
+                                        <motion.div
+                                            key={`spark-${deg}`}
+                                            className="absolute left-1/2 top-1/2 w-2 h-2 rounded-full bg-amber-300"
+                                            initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+                                            animate={{
+                                                x: Math.cos((deg * Math.PI) / 180) * 55,
+                                                y: Math.sin((deg * Math.PI) / 180) * 55,
+                                                opacity: 0,
+                                                scale: 0,
+                                            }}
+                                            transition={{ duration: 0.4, ease: 'easeOut' }}
+                                        />
+                                    ))}
+                                </div>
+                            )}
                         </div>
-                        <div className="mb-2 flex justify-between text-sm">
-                            <span className="flex items-center gap-1">
-                                <Heart className="h-3.5 w-3.5 text-red-500" /> HP
-                            </span>
-                            <span className="font-bold">{playerHp} / {totalStats.hp}</span>
-                        </div>
-                        <div className="h-4 rounded-full bg-foreground/10 overflow-hidden">
-                            <motion.div
-                                animate={{ width: `${playerHpPct}%` }}
-                                className="h-full rounded-full bg-green-500 transition-all duration-300"
-                            />
-                        </div>
-                    </motion.div>
-
-                    {/* 몬스터 */}
-                    <motion.div
-                        initial={{ opacity: 0, x: 30 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="glass p-2 rounded-2xl bg-white/5 z-10"
-                    >
-                        <div className="text-center mb-4 flex flex-col items-center">
-                            <motion.div
-                                animate={isAttacking
-                                    ? { x: -attackDistance, scale: 0.9, rotate: -12 }
-                                    : { x: 0, scale: 1, rotate: 0 }
-                                }
-                                transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-                                className="text-4xl mb-2 w-25 h-40 flex items-center justify-center"
-                            >
-                                {selectedMonster?.emoji}
-                            </motion.div>
-                            <h3 className="font-bold text-lg">{t(selectedMonster?.name)}</h3>
-                            <span className={`inline-block px-2 py-0.5 rounded-full text-white text-xs font-bold ${selectedMonster?.isBoss ? 'bg-purple-500' : 'bg-blue-500'}`}>
-                                LV.{selectedMonster?.level} {selectedMonster?.isBoss ? t('보스') : ''}
-                            </span>
-                        </div>
-                        <div className="mb-2 flex justify-between text-sm">
-                            <span className="flex items-center gap-1">
-                                <Heart className="h-3.5 w-3.5 text-red-500" /> HP
-                            </span>
-                            <span className="font-bold">{monsterHp} / {selectedMonster?.hp}</span>
-                        </div>
-                        <div className="h-4 rounded-full bg-foreground/10 overflow-hidden">
-                            <motion.div
-                                animate={{ width: `${monsterHpPct}%` }}
-                                className="h-full rounded-full bg-red-500 transition-all duration-300"
-                            />
-                        </div>
-                    </motion.div>
-                </motion.div>
-
-                {/* 배틀 로그 */}
-                <div ref={logRef} className="glass p-4 rounded-xl bg-white/5 mb-6 h-30 overflow-y-auto">
-                    {battleLog.map((log, i) => (
-                        <motion.p
-                            key={i}
-                            initial={{ opacity: 0, x: -10 }}
+                        {/* 플레이어 */}
+                        <motion.div
+                            initial={{ opacity: 0, x: -30 }}
                             animate={{ opacity: 1, x: 0 }}
-                            className="text-sm text-foreground/70 py-1"
+                            className="glass p-2 rounded-2xl bg-white/5 z-10"
                         >
-                            {log}
-                        </motion.p>
-                    ))}
-                </div>
-
-                {/* 액션 버튼 */}
-                {battleState === 'fighting' && (
-                    <div className="space-y-3">
-                        <div className="flex gap-4">
-                            <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={handleAttack}
-                                disabled={autoBattle}
-                                className={`flex-1 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-colors ${autoBattle ? 'bg-red-500/50 text-white/50 cursor-not-allowed' : 'bg-red-500 text-white hover:bg-red-600'}`}
-                            >
-                                <Swords className="h-5 w-5" /> {autoBattle ? t('자동 전투 중...') : t('공격!')}
-                            </motion.button>
-                            <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={exitBattle}
-                                className="px-6 py-4 rounded-xl bg-foreground/10 text-foreground/60 font-bold hover:bg-foreground/20 transition-colors"
-                            >
-                                {t('도망치기')}
-                            </motion.button>
-                        </div>
-                        <label className="flex items-center justify-center gap-2 cursor-pointer select-none">
-                            <input
-                                type="checkbox"
-                                checked={autoBattle}
-                                onChange={(e) => toggleAutoBattle(e.target.checked)}
-                                className="w-4 h-4 rounded accent-red-500"
-                            />
-                            <span className="text-sm text-foreground/60 font-semibold">{t('자동 전투')}</span>
-                        </label>
-                    </div>
-                )}
-
-                {/* 결과 오버레이 */}
-                <AnimatePresence>
-                    {battleState === 'won' && (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="glass px-8 rounded-2xl bg-white/5 text-center"
-                        >
-                            <div className="flex gap-3 justify-center">
-                                <button
-                                    onClick={() => startBattle(selectedDungeon)}
-                                    className="px-3 py-1.5 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors flex items-center gap-2"
+                            <div className="text-center mb-4">
+                                <motion.div
+                                    animate={isAttacking
+                                        ? { x: attackDistance, scale: 0.9, rotate: 12 }
+                                        : { x: 0, scale: 1, rotate: 0 }
+                                    }
+                                    transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                                 >
-                                    <Swords className="h-4 w-4" /> {t('다시 도전')}
-                                </button>
-                                <button
-                                    onClick={exitBattle}
-                                    className="px-3 py-1.5 rounded-xl bg-foreground/10 text-foreground/60 font-bold hover:bg-foreground/20 transition-colors"
-                                >
-                                    {t('다른 던전 선택')}
-                                </button>
+                                    {character.image ? (
+                                        <img src={character.image} alt={character.name} className="w-27 h-40 object-cover rounded-xl mx-auto mb-2 border border-amber-500" />
+                                    ) : (
+                                        <div className="text-4xl mb-2">🐾</div>
+                                    )}
+                                </motion.div>
+                                <h3 className="font-bold text-lg">{character.name}</h3>
+                                <p className="text-xs text-foreground/50">{ELEMENT_EMOJI[character.element]} {t(character.className)}</p>
+                            </div>
+                            <div className="mb-2 flex justify-between text-sm">
+                                <span className="flex items-center gap-1">
+                                    <Heart className="h-3.5 w-3.5 text-red-500" /> HP
+                                </span>
+                                <span className="font-bold">{playerHp} / {getTotalStats(character).hp}</span>
+                            </div>
+                            <div className="h-4 rounded-full bg-foreground/10 overflow-hidden">
+                                <motion.div
+                                    animate={{ width: `${Math.max((playerHp / getTotalStats(character).hp) * 100, 0)}%` }}
+                                    className="h-full rounded-full bg-green-500 transition-all duration-300"
+                                />
                             </div>
                         </motion.div>
-                    )}
-                    {battleState === 'lost' && (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="mt-6 glass p-8 rounded-2xl bg-white/5 text-center"
-                        >
-                            <Skull className="h-16 w-16 text-red-500 mx-auto mb-4" />
-                            <h3 className="text-2xl font-black mb-2">{t('패배...')}</h3>
-                            <p className="text-foreground/60 mb-4">{t('다음에는 더 강해져서 돌아오자!')}</p>
-                            <div className="flex gap-3 justify-center">
-                                <button
-                                    onClick={() => { router.push("/superpet/room") }}
-                                    className="px-6 py-3 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors"
-                                >
-                                    {t('집으로...')}
-                                </button>
 
+                        {/* 몬스터 */}
+                        <motion.div
+                            initial={{ opacity: 0, x: 30 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="glass p-2 rounded-2xl bg-white/5 z-10"
+                        >
+                            <div className="text-center mb-4 flex flex-col items-center">
+                                <motion.div
+                                    animate={isAttacking
+                                        ? { x: -attackDistance, scale: 0.9, rotate: -12 }
+                                        : { x: 0, scale: 1, rotate: 0 }
+                                    }
+                                    transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                                    className="text-4xl mb-2 w-25 h-40 flex items-center justify-center"
+                                >
+                                    {selectedMonster?.emoji}
+                                </motion.div>
+                                <h3 className="font-bold text-lg">{t(selectedMonster?.name)}</h3>
+                                <span className={`inline-block px-2 py-0.5 rounded-full text-white text-xs font-bold ${selectedMonster?.isBoss ? 'bg-purple-500' : 'bg-blue-500'}`}>
+                                    LV.{selectedMonster?.level} {selectedMonster?.isBoss ? t('보스') : ''}
+                                </span>
+                            </div>
+                            <div className="mb-2 flex justify-between text-sm">
+                                <span className="flex items-center gap-1">
+                                    <Heart className="h-3.5 w-3.5 text-red-500" /> HP
+                                </span>
+                                <span className="font-bold">{monsterHp} / {selectedMonster?.hp}</span>
+                            </div>
+                            <div className="h-4 rounded-full bg-foreground/10 overflow-hidden">
+                                <motion.div
+                                    animate={{ width: `${Math.max((monsterHp / selectedMonster.hp) * 100, 0)}%` }}
+                                    className="h-full rounded-full bg-red-500 transition-all duration-300"
+                                />
                             </div>
                         </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
-        );
-    }
-
-    // 던전 목록
-    return (
-        <div className="max-w-4xl mx-auto px-4 py-2 lg:p-12">
-            <div className="text-center mb-4">
-                <motion.h1
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-4xl font-black tracking-tighter mb-3 lg:mb-12"
-                >
-                    {lang === 'ko'
-                        ? <>던전 <span className="text-red-500">탐험</span></>
-                        : <>{t('던전')} <span className="text-red-500">Exploration</span></>
-                    }
-                </motion.h1>
-                <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.1 }}
-                    className="text-foreground/60"
-                >
-                    <span className="font-bold text-foreground">{character.name}</span> (Lv.{character.level} {ELEMENT_EMOJI[character.element]} {t(character.className)}) {t('으로 도전!')}
-                </motion.p>
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.15 }}
-                    className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-foreground/5 text-sm"
-                >
-                    <Heart className="h-4 w-4 text-red-500" />
-                    <span className="font-bold">{character.currentHp}</span>
-                    <span className="text-foreground/40">/ {getTotalStats(character).hp}</span>
-                </motion.div>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                {dungeons.map((dungeon, idx) => (
-                    <motion.div
-                        key={dungeon.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.1 }}
-                        whileHover={{ y: -5 }}
-                        className="p-6 rounded-2xl bg-white/5 shadow-lg flex flex-col border-1 border-foreground/20"
-                    >
-                        <div className="text-center mb-4">
-                            <h3 className="text-lg font-bold mb-1">{t(dungeon.name)}</h3>
-                            <span className="inline-block px-2.5 py-0.5 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs font-bold">
-                                {dungeon.levelRange}
-                            </span>
-                        </div>
-                        <p className="text-sm text-foreground/60 leading-relaxed mb-4 flex-1">
-                            {t(dungeon.description)}
-                        </p>
-                        <div className="flex flex-wrap gap-1 text-xs text-foreground/50 mb-4">
-                            <Gift className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                            {Array.from(new Set(dungeon.monsters.flatMap(m => m.drops.map(d => d.itemId)))).map((itemId) => {
-                                const item = GAME_ITEMS[itemId];
-                                return item ? <span key={itemId}>{item.emoji}</span> : null;
-                            })}
-                        </div>
-                        <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => startBattle(dungeon)}
-                            className="w-full py-3 rounded-xl bg-red-500 text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-red-600 transition-colors"
-                        >
-                            <Swords className="h-4 w-4" /> {t('도전하기')}
-                        </motion.button>
                     </motion.div>
-                ))}
-            </div>
+
+                    {/* 배틀 로그 */}
+                    <div ref={logRef} className="glass p-4 rounded-xl bg-white/5 mb-6 h-30 overflow-y-auto">
+                        {battleLog.map((log, i) => (
+                            <motion.p
+                                key={i}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                className="text-sm text-foreground/70 py-1"
+                            >
+                                {log}
+                            </motion.p>
+                        ))}
+                    </div>
+
+                    {/* 액션 버튼 */}
+                    {battleState === 'fighting' && (
+                        <div className="space-y-3">
+                            <div className="flex gap-4">
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={handleAttack}
+                                    disabled={autoBattle}
+                                    className={`flex-1 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-colors ${autoBattle ? 'bg-red-500/50 text-white/50 cursor-not-allowed' : 'bg-red-500 text-white hover:bg-red-600'}`}
+                                >
+                                    <Swords className="h-5 w-5" /> {autoBattle ? t('자동 전투 중...') : t('공격!')}
+                                </motion.button>
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={exitBattle}
+                                    className="px-6 py-4 rounded-xl bg-foreground/10 text-foreground/60 font-bold hover:bg-foreground/20 transition-colors"
+                                >
+                                    {t('도망치기')}
+                                </motion.button>
+                            </div>
+                            <label className="flex items-center justify-center gap-2 cursor-pointer select-none">
+                                <input
+                                    type="checkbox"
+                                    checked={autoBattle}
+                                    onChange={(e) => toggleAutoBattle(e.target.checked)}
+                                    className="w-4 h-4 rounded accent-red-500"
+                                />
+                                <span className="text-sm text-foreground/60 font-semibold">{t('자동 전투')}</span>
+                            </label>
+                        </div>
+                    )}
+
+                    {/* 결과 오버레이 */}
+                    <AnimatePresence>
+                        {battleState === 'won' && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="glass px-8 rounded-2xl bg-white/5 text-center"
+                            >
+                                <div className="flex gap-3 justify-center">
+                                    <button
+                                        onClick={() => startBattle(selectedDungeon)}
+                                        className="px-3 py-1.5 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors flex items-center gap-2"
+                                    >
+                                        <Swords className="h-4 w-4" /> {t('다시 도전')}
+                                    </button>
+                                    <button
+                                        onClick={exitBattle}
+                                        className="px-3 py-1.5 rounded-xl bg-foreground/10 text-foreground/60 font-bold hover:bg-foreground/20 transition-colors"
+                                    >
+                                        {t('다른 던전 선택')}
+                                    </button>
+                                </div>
+
+                                {/* 보유 식품 목록 및 사용 버튼 */}
+                                <div className="mt-8 pt-8 border-t border-white/10">
+                                    <h4 className="text-sm font-bold text-foreground/50 mb-4">{t('배고파..?')}</h4>
+                                    <div className="space-y-3">
+                                        {inventory
+                                            .filter(entry => entry.item.type === 'food')
+                                            .map((entry, idx) => {
+                                                const item = entry.item;
+                                                return (
+                                                    <div key={`${item.id}-${idx}`} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="relative">
+                                                                <span className="text-2xl">{item.emoji}</span>
+                                                                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 flex items-center justify-center px-1 rounded-full bg-foreground text-background text-[10px] font-bold">
+                                                                    {entry.quantity}
+                                                                </span>
+                                                            </div>
+                                                            <div className="text-left">
+                                                                <div className={`text-sm font-bold ${ITEM_RARITY_TEXT[item.rarity]}`}>{t(item.name)}</div>
+                                                                <div className="text-[10px] text-foreground/40">{t(item.rarity)}</div>
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => handleUseFood(item.id)}
+                                                            className="px-4 py-2 rounded-lg bg-green-500/20 text-green-500 text-xs font-bold hover:bg-green-500/30 transition-colors flex items-center gap-1.5"
+                                                        >
+                                                            {t('먹이기')}
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })}
+                                        {inventory.filter(entry => entry.item.type === 'food').length === 0 && (
+                                            <p className="text-sm text-foreground/40 italic py-4">{t('보유 중인 식품이 없습니다.')}</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                        {battleState === 'lost' && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="mt-6 glass p-8 rounded-2xl bg-white/5 text-center"
+                            >
+                                <Skull className="h-16 w-16 text-red-500 mx-auto mb-4" />
+                                <h3 className="text-2xl font-black mb-2">{t('패배...')}</h3>
+                                <p className="text-foreground/60 mb-4">{t('다음에는 더 강해져서 돌아오자!')}</p>
+                                <div className="flex gap-3 justify-center">
+                                    <button
+                                        onClick={() => { router.push("/superpet/room") }}
+                                        className="px-6 py-3 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors"
+                                    >
+                                        {t('집으로...')}
+                                    </button>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            ) : (
+                <div className="max-w-4xl mx-auto px-4 py-2 lg:p-12">
+                    <div className="text-center mb-4">
+                        <motion.h1
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="text-4xl font-black tracking-tighter mb-3 lg:mb-12"
+                        >
+                            {lang === 'ko'
+                                ? <>던전 <span className="text-red-500">탐험</span></>
+                                : <>{t('던전')} <span className="text-red-500">Exploration</span></>
+                            }
+                        </motion.h1>
+                        <motion.p
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.1 }}
+                            className="text-foreground/60"
+                        >
+                            <span className="font-bold text-foreground">{character.name}</span> (Lv.{character.level} {ELEMENT_EMOJI[character.element]} {t(character.className)}) {t('으로 도전!')}
+                        </motion.p>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.15 }}
+                            className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-foreground/5 text-sm"
+                        >
+                            <Heart className="h-4 w-4 text-red-500" />
+                            <span className="font-bold">{character.currentHp}</span>
+                            <span className="text-foreground/40">/ {getTotalStats(character).hp}</span>
+                        </motion.div>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                        {dungeons.map((dungeon, idx) => (
+                            <motion.div
+                                key={dungeon.id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.1 }}
+                                whileHover={{ y: -5 }}
+                                className="p-6 rounded-2xl bg-white/5 shadow-lg flex flex-col border-1 border-foreground/20"
+                            >
+                                <div className="text-center mb-4">
+                                    <h3 className="text-lg font-bold mb-1">{t(dungeon.name)}</h3>
+                                    <span className="inline-block px-2.5 py-0.5 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs font-bold">
+                                        {dungeon.levelRange}
+                                    </span>
+                                </div>
+                                <p className="text-sm text-foreground/60 leading-relaxed mb-4 flex-1">
+                                    {t(dungeon.description)}
+                                </p>
+                                <div className="flex flex-wrap gap-1 text-xs text-foreground/50 mb-4">
+                                    <Gift className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                                    {Array.from(new Set(dungeon.monsters.flatMap(m => m.drops.map(d => d.itemId)))).map((itemId) => {
+                                        const item = GAME_ITEMS[itemId];
+                                        return item ? <span key={itemId}>{item.emoji}</span> : null;
+                                    })}
+                                </div>
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => startBattle(dungeon)}
+                                    className="w-full py-3 rounded-xl bg-red-500 text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-red-600 transition-colors"
+                                >
+                                    <Swords className="h-4 w-4" /> {t('도전하기')}
+                                </motion.button>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* 체력 부족 경고 모달 */}
             <AnimatePresence>
@@ -1220,6 +1279,28 @@ export default function Dungeon() {
                                 </Link>
                             </div>
                         </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* 토스트 알림 */}
+            <AnimatePresence mode="wait">
+                {activeToast && (
+                    <motion.div
+                        key={activeToast.key}
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 16 }}
+                        className="fixed inset-x-0 bottom-20 z-50 flex justify-center px-4"
+                    >
+                        <div
+                            className={`w-full max-w-sm rounded-full px-4 py-3 text-sm font-semibold shadow-lg text-center ${activeToast.tone === 'success'
+                                ? 'bg-emerald-600 text-white'
+                                : 'bg-red-600 text-white'
+                                }`}
+                        >
+                            {activeToast.message}
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>

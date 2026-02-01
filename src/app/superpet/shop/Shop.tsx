@@ -29,17 +29,17 @@ export default function Shop() {
     const { t } = useLanguage();
     const [character, setCharacter] = useState<Character | null>(null);
     const [activeTab, setActiveTab] = useState<ShopTab>('gold');
-    const [toast, setToast] = useState<{ message: string; tone: 'success' | 'error' } | null>(null);
+    const [activeToast, setActiveToast] = useState<{ message: string; tone: 'success' | 'error'; key: number } | null>(null);
 
     useEffect(() => {
         setCharacter(loadCharacter());
     }, []);
 
     useEffect(() => {
-        if (!toast) return;
-        const timer = setTimeout(() => setToast(null), 1500);
+        if (!activeToast) return;
+        const timer = setTimeout(() => setActiveToast(null), 2400);
         return () => clearTimeout(timer);
-    }, [toast]);
+    }, [activeToast]);
 
     const handleBuy = (item: GameItem) => {
         if (!character) return;
@@ -47,14 +47,14 @@ export default function Shop() {
         if (activeTab === 'gold') {
             const price = item.shopGoldPrice!;
             if (character.gold < price) {
-                setToast({ message: t('골드가 부족합니다!'), tone: 'error' });
+                setActiveToast({ message: t('골드가 부족합니다!'), tone: 'error', key: Date.now() });
                 return;
             }
             character.gold -= price;
         } else {
             const price = item.shopGemPrice!;
             if (character.gem < price) {
-                setToast({ message: t('젬이 부족합니다!'), tone: 'error' });
+                setActiveToast({ message: t('젬이 부족합니다!'), tone: 'error', key: Date.now() });
                 return;
             }
             character.gem -= price;
@@ -63,7 +63,11 @@ export default function Shop() {
         saveCharacter(character);
         addItemToInventory(item.id, 1);
         setCharacter({ ...character });
-        setToast({ message: `${item.emoji} ${t(item.name)} ${t('구매 완료!')}`, tone: 'success' });
+        setActiveToast({
+            message: `${item.emoji} ${t(item.name)} ${t('구매 완료!')}`,
+            tone: 'success',
+            key: Date.now()
+        });
     };
 
     if (!character) {
@@ -216,17 +220,24 @@ export default function Shop() {
                 </div>
             )}
 
-            {/* 토스트 */}
-            <AnimatePresence>
-                {toast && (
+            {/* 토스트 알림 */}
+            <AnimatePresence mode="wait">
+                {activeToast && (
                     <motion.div
-                        initial={{ opacity: 0, y: 40 }}
+                        key={activeToast.key}
+                        initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 40 }}
-                        className={`fixed bottom-20 left-1/2 -translate-x-1/2 px-6 py-3 rounded-xl shadow-lg font-bold text-sm z-50 ${toast.tone === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
-                            }`}
+                        exit={{ opacity: 0, y: 16 }}
+                        className="fixed inset-x-0 bottom-20 z-50 flex justify-center px-4"
                     >
-                        {toast.message}
+                        <div
+                            className={`w-full max-w-sm rounded-full px-4 py-3 text-sm font-semibold shadow-lg text-center ${activeToast.tone === 'success'
+                                ? 'bg-emerald-600 text-white'
+                                : 'bg-red-600 text-white'
+                                }`}
+                        >
+                            {activeToast.message}
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>

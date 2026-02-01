@@ -239,6 +239,8 @@ export const koToEn: Record<string, string> = {
     '패배...': 'Defeat...',
     '다음에는 더 강해져서 돌아오자!': 'Come back stronger next time!',
     '집으로...': 'Go Home...',
+    '배고파..?': 'Hungry..?',
+    '먹이기': 'Feed',
 
     // === 전투 로그 메시지 ===
     '이(가) 나타났다!': ' appeared!',
