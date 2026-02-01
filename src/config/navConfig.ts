@@ -21,6 +21,7 @@ import {
 
 export interface NavItem {
     name: string;
+    nameEn?: string;
     href: string;
     icon: LucideIcon;
 }
@@ -43,10 +44,10 @@ export const navConfigs: NavConfig = {
         { name: 'Room', href: '/baby/room', icon: Handshake },
     ],
     superpet: [
-        { name: '홈', href: '/superpet', icon: Home },
-        { name: '던전', href: '/superpet/dungeon', icon: Swords },
-        { name: '상점', href: '/superpet/shop', icon: ShoppingCart },
-        { name: '룸', href: '/superpet/room', icon: Warehouse },
+        { name: '홈', nameEn: 'Home', href: '/superpet', icon: Home },
+        { name: '던전', nameEn: 'Dungeon', href: '/superpet/dungeon', icon: Swords },
+        { name: '상점', nameEn: 'Shop', href: '/superpet/shop', icon: ShoppingCart },
+        { name: '룸', nameEn: 'Room', href: '/superpet/room', icon: Warehouse },
     ],
 };
 

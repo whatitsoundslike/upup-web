@@ -14,20 +14,40 @@ import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { navConfigs, defaultNavItems, type NavItem, navRoomLogo } from '@/config/navConfig';
+import { Globe } from 'lucide-react';
 
 export function Navbar() {
     const pathname = usePathname();
     const { theme, setTheme } = useTheme();
     const [isOpen, setIsOpen] = React.useState(false);
     const [mounted, setMounted] = React.useState(false);
+    const [lang, setLang] = React.useState<'ko' | 'en'>('ko');
 
-    React.useEffect(() => setMounted(true), []);
+    React.useEffect(() => {
+        setMounted(true);
+        const saved = localStorage.getItem('superpet-lang');
+        if (saved === 'en') setLang('en');
+    }, []);
 
     // 현재 경로에서 1-depth 추출 (예: /tesla/news -> 'tesla')
     const firstSegment = pathname.split('/')[1] || '';
 
     // 해당 섹션의 네비게이션 아이템 가져오기
     const navItems: NavItem[] = navConfigs[firstSegment] || defaultNavItems;
+
+    const isSuperpet = firstSegment === 'superpet';
+
+    const toggleLang = () => {
+        const next = lang === 'ko' ? 'en' : 'ko';
+        setLang(next);
+        localStorage.setItem('superpet-lang', next);
+        window.dispatchEvent(new Event('superpet-lang-change'));
+    };
+
+    const getNavName = (item: NavItem) => {
+        if (isSuperpet && lang === 'en' && item.nameEn) return item.nameEn;
+        return item.name;
+    };
 
     const logoSrc: string = navRoomLogo[firstSegment] || '/room-icon/logo.png';
 
@@ -55,7 +75,7 @@ export function Navbar() {
                         <div className="flex items-baseline space-x-4">
                             {navItems.map((item) => (
                                 <Link
-                                    key={item.name}
+                                    key={item.href}
                                     href={item.href}
                                     className={cn(
                                         "px-3 py-2 rounded-md text-sm font-medium transition-colors",
@@ -64,13 +84,23 @@ export function Navbar() {
                                             : "text-foreground/70 hover:text-foreground hover:bg-foreground/5"
                                     )}
                                 >
-                                    {item.name}
+                                    {getNavName(item)}
                                 </Link>
                             ))}
                         </div>
                     </div>
 
                     <div className="flex items-center gap-4">
+                        {mounted && isSuperpet && (
+                            <button
+                                onClick={toggleLang}
+                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-full hover:bg-foreground/5 transition-colors text-sm font-semibold"
+                                aria-label="Toggle language"
+                            >
+                                <Globe className="h-4 w-4" />
+                                <span>{lang === 'ko' ? 'EN' : 'KO'}</span>
+                            </button>
+                        )}
                         {mounted && (
                             <button
                                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
@@ -106,7 +136,7 @@ export function Navbar() {
                         <div className="space-y-1 px-2 pb-3 pt-2 sm:px-3">
                             {navItems.map((item) => (
                                 <Link
-                                    key={item.name}
+                                    key={item.href}
                                     href={item.href}
                                     onClick={() => setIsOpen(false)}
                                     className={cn(
@@ -117,7 +147,7 @@ export function Navbar() {
                                     )}
                                 >
                                     <item.icon className="h-5 w-5" />
-                                    {item.name}
+                                    {getNavName(item)}
                                 </Link>
                             ))}
                         </div>
@@ -131,17 +161,36 @@ export function Navbar() {
 
 export function MobileBottomNav() {
     const pathname = usePathname();
+    const [lang, setLang] = React.useState<'ko' | 'en'>('ko');
+
+    React.useEffect(() => {
+        const saved = localStorage.getItem('superpet-lang');
+        if (saved === 'en') setLang('en');
+
+        const handleChange = () => {
+            const current = localStorage.getItem('superpet-lang');
+            setLang(current === 'en' ? 'en' : 'ko');
+        };
+        window.addEventListener('superpet-lang-change', handleChange);
+        return () => window.removeEventListener('superpet-lang-change', handleChange);
+    }, []);
 
     // 현재 경로에서 1-depth 추출
     const firstSegment = pathname.split('/')[1] || '';
     const navItems: NavItem[] = navConfigs[firstSegment] || defaultNavItems;
+    const isSuperpet = firstSegment === 'superpet';
+
+    const getNavName = (item: NavItem) => {
+        if (isSuperpet && lang === 'en' && item.nameEn) return item.nameEn;
+        return item.name;
+    };
 
     return (
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t dark:border-white/10 px-4 py-2" style={{ backgroundColor: 'var(--background-hex)' }}>
             <div className="flex items-center justify-around">
                 {navItems.map((item) => (
                     <Link
-                        key={item.name}
+                        key={item.href}
                         href={item.href}
                         className={cn(
                             "flex flex-col items-center gap-1 p-2 rounded-lg transition-colors",
@@ -151,7 +200,7 @@ export function MobileBottomNav() {
                         )}
                     >
                         <item.icon className="h-5 w-5" />
-                        <span className="text-[10px] font-medium">{item.name}</span>
+                        <span className="text-[10px] font-medium">{getNavName(item)}</span>
                     </Link>
                 ))}
             </div>

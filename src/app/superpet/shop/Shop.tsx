@@ -13,6 +13,7 @@ import {
     saveCharacter,
     addItemToInventory,
 } from '../types';
+import { useLanguage } from '../i18n/LanguageContext';
 
 type ShopTab = 'gold' | 'gem';
 
@@ -25,6 +26,7 @@ function getGemShopItems(): GameItem[] {
 }
 
 export default function Shop() {
+    const { t } = useLanguage();
     const [character, setCharacter] = useState<Character | null>(null);
     const [activeTab, setActiveTab] = useState<ShopTab>('gold');
     const [toast, setToast] = useState<{ message: string; tone: 'success' | 'error' } | null>(null);
@@ -45,14 +47,14 @@ export default function Shop() {
         if (activeTab === 'gold') {
             const price = item.shopGoldPrice!;
             if (character.gold < price) {
-                setToast({ message: '골드가 부족합니다!', tone: 'error' });
+                setToast({ message: t('골드가 부족합니다!'), tone: 'error' });
                 return;
             }
             character.gold -= price;
         } else {
             const price = item.shopGemPrice!;
             if (character.gem < price) {
-                setToast({ message: '젬이 부족합니다!', tone: 'error' });
+                setToast({ message: t('젬이 부족합니다!'), tone: 'error' });
                 return;
             }
             character.gem -= price;
@@ -61,7 +63,7 @@ export default function Shop() {
         saveCharacter(character);
         addItemToInventory(item.id, 1);
         setCharacter({ ...character });
-        setToast({ message: `${item.emoji} ${item.name} 구매 완료!`, tone: 'success' });
+        setToast({ message: `${item.emoji} ${t(item.name)} ${t('구매 완료!')}`, tone: 'success' });
     };
 
     if (!character) {
@@ -72,16 +74,16 @@ export default function Shop() {
                     animate={{ opacity: 1, scale: 1 }}
                 >
                     <PawPrint className="h-16 w-16 text-amber-500 mx-auto mb-6" />
-                    <h2 className="text-2xl font-black mb-3">캐릭터가 없습니다</h2>
+                    <h2 className="text-2xl font-black mb-3">{t('캐릭터가 없습니다')}</h2>
                     <p className="text-foreground/60 mb-6">
-                        상점을 이용하려면 먼저 캐릭터를 생성하세요!
+                        {t('상점을 이용하려면 먼저 캐릭터를 생성하세요!')}
                     </p>
                     <Link
                         href="/superpet"
                         className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 transition-colors"
                     >
                         <PawPrint className="h-5 w-5" />
-                        캐릭터 만들러 가기
+                        {t('캐릭터 만들러 가기')}
                     </Link>
                 </motion.div>
             </div>
@@ -100,7 +102,7 @@ export default function Shop() {
                     className="text-4xl font-black tracking-tighter mb-3"
                 >
                     <ShoppingCart className="inline h-8 w-8 text-amber-500 mr-2" />
-                    상점
+                    {t('상점')}
                 </motion.h1>
             </div>
 
@@ -114,12 +116,12 @@ export default function Shop() {
                 <div className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-500/10 text-sm">
                     <Coins className="h-4 w-4 text-amber-500" />
                     <span className="font-bold text-amber-600">{character.gold.toLocaleString()}</span>
-                    <span className="text-foreground/40 text-xs">골드</span>
+                    <span className="text-foreground/40 text-xs">{t('골드')}</span>
                 </div>
                 <div className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-purple-500/10 text-sm">
                     <Gem className="h-4 w-4 text-purple-500" />
                     <span className="font-bold text-purple-600">{character.gem.toLocaleString()}</span>
-                    <span className="text-foreground/40 text-xs">젬</span>
+                    <span className="text-foreground/40 text-xs">{t('젬')}</span>
                 </div>
             </motion.div>
 
@@ -138,7 +140,7 @@ export default function Shop() {
                         }`}
                 >
                     <Coins className="h-4 w-4" />
-                    골드 상점
+                    {t('골드 상점')}
                 </button>
                 <button
                     onClick={() => setActiveTab('gem')}
@@ -148,7 +150,7 @@ export default function Shop() {
                         }`}
                 >
                     <Gem className="h-4 w-4" />
-                    젬 상점
+                    {t('젬 상점')}
                 </button>
             </motion.div>
 
@@ -160,7 +162,7 @@ export default function Shop() {
                     className="text-center py-16 text-foreground/40"
                 >
                     <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p className="font-semibold">판매 중인 상품이 없습니다</p>
+                    <p className="font-semibold">{t('판매 중인 상품이 없습니다')}</p>
                 </motion.div>
             ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
@@ -176,15 +178,15 @@ export default function Shop() {
                                 className={`p-5 rounded-2xl border-2 text-center ${ITEM_RARITY_COLORS[item.rarity]}`}
                             >
                                 <div className="text-4xl mb-3">{item.emoji}</div>
-                                <h3 className="font-bold text-sm mb-1">{item.name}</h3>
-                                <p className="text-xs text-foreground/50 mb-3 line-clamp-2">{item.description}</p>
+                                <h3 className="font-bold text-sm mb-1">{t(item.name)}</h3>
+                                <p className="text-xs text-foreground/50 mb-3 line-clamp-2">{t(item.description)}</p>
 
                                 {/* 스탯 미리보기 */}
                                 <div className="flex flex-wrap justify-center gap-1 text-[11px] text-foreground/50 mb-3">
                                     {item.stats.hp > 0 && <span>HP+{item.stats.hp}</span>}
-                                    {item.stats.attack > 0 && <span>공+{item.stats.attack}</span>}
-                                    {item.stats.defense > 0 && <span>방+{item.stats.defense}</span>}
-                                    {item.stats.speed > 0 && <span>속+{item.stats.speed}</span>}
+                                    {item.stats.attack > 0 && <span>{t('공')}+{item.stats.attack}</span>}
+                                    {item.stats.defense > 0 && <span>{t('방')}+{item.stats.defense}</span>}
+                                    {item.stats.speed > 0 && <span>{t('속')}+{item.stats.speed}</span>}
                                 </div>
 
                                 {/* 가격 & 구매 */}
@@ -208,7 +210,7 @@ export default function Shop() {
                                         : 'bg-foreground/10 text-foreground/30 cursor-not-allowed'
                                         }`}
                                 >
-                                    구매
+                                    {t('구매')}
                                 </button>
                             </motion.div>
                         );

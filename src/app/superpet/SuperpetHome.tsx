@@ -17,6 +17,7 @@ import {
     type PetInfo
 } from './types';
 import { getItem } from './storage';
+import { useLanguage } from './i18n/LanguageContext';
 
 const ELEMENT_COLORS: Record<string, string> = {
     '불': 'bg-red-500',
@@ -26,6 +27,7 @@ const ELEMENT_COLORS: Record<string, string> = {
 };
 
 export default function SuperpetHome() {
+    const { t, lang } = useLanguage();
     const [petName, setPetName] = useState('');
     const [petType, setPetType] = useState<PetInfo['type']>('dog');
     const [traits, setTraits] = useState<string[]>([]);
@@ -109,7 +111,7 @@ export default function SuperpetHome() {
                             <img className='mx-auto' src="/superpet_thumbnail.webp" alt="logo" />
                         </motion.p>
                     </div>
-                    <div className="text-center mb-4 text-blue-500">본 게임은 베타서비스 중입니다.</div>
+                    <div className="text-center mb-4 text-blue-500">{t('본 게임은 베타서비스 중입니다.')}</div>
 
                     {/* 캐릭터 생성 결과 */}
                     {createdCharacter && !showForm && (
@@ -144,9 +146,9 @@ export default function SuperpetHome() {
                                     <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-white text-xs font-bold">
                                         Lv.{createdCharacter.level}
                                     </span>
-                                    <span className="text-foreground/60 text-sm font-semibold">{createdCharacter.className}</span>
+                                    <span className="text-foreground/60 text-sm font-semibold">{t(createdCharacter.className)}</span>
                                     <span className={`px-2.5 py-0.5 rounded-full text-white text-xs font-bold ${ELEMENT_COLORS[createdCharacter.element]}`}>
-                                        {createdCharacter.element}
+                                        {t(createdCharacter.element)}
                                     </span>
                                 </motion.div>
                                 <motion.p
@@ -155,7 +157,10 @@ export default function SuperpetHome() {
                                     transition={{ delay: 0.45 }}
                                     className="text-foreground/60 text-sm mt-3"
                                 >
-                                    반가워, <span className="font-bold text-foreground">{createdCharacter.name}</span>! 정말 멋진 모험가가 탄생했어!
+                                    {lang === 'ko'
+                                        ? <>반가워, <span className="font-bold text-foreground">{createdCharacter.name}</span>! 정말 멋진 모험가가 탄생했어!</>
+                                        : <>Welcome, <span className="font-bold text-foreground">{createdCharacter.name}</span>! {t('정말 멋진 모험가가 탄생했어!')}</>
+                                    }
                                 </motion.p>
                             </div>
 
@@ -172,17 +177,17 @@ export default function SuperpetHome() {
                                 </div>
                                 <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-500/10">
                                     <Sword className="h-4 w-4 text-red-500" />
-                                    <span className="text-sm text-foreground/70">공격</span>
+                                    <span className="text-sm text-foreground/70">{t('공격')}</span>
                                     <span className="ml-auto font-bold">{createdCharacter.attack}</span>
                                 </div>
                                 <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-blue-500/10">
                                     <Shield className="h-4 w-4 text-blue-500" />
-                                    <span className="text-sm text-foreground/70">방어</span>
+                                    <span className="text-sm text-foreground/70">{t('방어')}</span>
                                     <span className="ml-auto font-bold">{createdCharacter.defense}</span>
                                 </div>
                                 <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-green-500/10">
                                     <Feather className="h-4 w-4 text-green-500" />
-                                    <span className="text-sm text-foreground/70">속도</span>
+                                    <span className="text-sm text-foreground/70">{t('속도')}</span>
                                     <span className="ml-auto font-bold">{createdCharacter.speed}</span>
                                 </div>
                             </motion.div>
@@ -202,7 +207,7 @@ export default function SuperpetHome() {
                                     className="w-full py-4 rounded-xl bg-red-500 text-white font-bold text-lg shadow-lg hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
                                 >
                                     <Swords className="h-5 w-5" />
-                                    모험 시작하기
+                                    {t('모험 시작하기')}
                                 </Link>
                             </motion.div>
                         </motion.div>
@@ -231,10 +236,10 @@ export default function SuperpetHome() {
                                         <div className="text-center mb-4">
                                             <h3 className="text-xl font-black mb-1">{char.name}</h3>
                                             <p className="text-foreground/60 text-sm mb-2">
-                                                {char.className} | LV.{char.level}
+                                                {t(char.className)} | LV.{char.level}
                                             </p>
                                             <span className={`inline-block px-2.5 py-0.5 rounded-full text-white text-xs font-bold ${ELEMENT_COLORS[char.element]}`}>
-                                                {char.element}
+                                                {t(char.element)}
                                             </span>
                                         </div>
 
@@ -256,7 +261,7 @@ export default function SuperpetHome() {
                                         {activeCharacterId === char.id ? (
                                             <div className="w-full py-2.5 rounded-lg bg-foreground/10 text-foreground/50 text-sm font-bold text-center flex items-center justify-center gap-2 cursor-not-allowed">
                                                 <PawPrint className="h-4 w-4" />
-                                                선택됨
+                                                {t('선택됨')}
                                             </div>
                                         ) : (
                                             <Link
@@ -265,7 +270,7 @@ export default function SuperpetHome() {
                                                 className="w-full py-2.5 rounded-lg bg-amber-500 text-white text-sm font-bold text-center hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
                                             >
                                                 <PawPrint className="h-4 w-4" />
-                                                선택
+                                                {t('선택')}
                                             </Link>
                                         )}
                                     </motion.div>
@@ -281,7 +286,7 @@ export default function SuperpetHome() {
                                         className="glass p-6 rounded-2xl shadow-lg bg-white/5 hover:bg-white/10 transition-colors flex flex-col items-center justify-center min-h-[200px] border-2 border-dashed border-foreground/20"
                                     >
                                         <Plus className="h-12 w-12 text-amber-500 mb-3" />
-                                        <span className="text-sm font-bold text-foreground/60">새 캐릭터 만들기</span>
+                                        <span className="text-sm font-bold text-foreground/60">{t('새 캐릭터 만들기')}</span>
                                         <span className="text-xs text-foreground/40 mt-1">({characters.length}/3)</span>
                                     </motion.button>
                                 )}
@@ -299,19 +304,19 @@ export default function SuperpetHome() {
                         >
                             <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
                                 <PawPrint className="h-5 w-5 text-amber-500" />
-                                캐릭터 생성
+                                {t('캐릭터 생성')}
                             </h2>
 
                             {/* 펫 이름 */}
                             <div className="mb-6">
                                 <label className="block text-sm font-semibold mb-2 text-foreground/80">
-                                    펫 이름
+                                    {t('펫 이름')}
                                 </label>
                                 <input
                                     type="text"
                                     value={petName}
                                     onChange={(e) => setPetName(e.target.value)}
-                                    placeholder="반려동물 이름을 입력하세요"
+                                    placeholder={t('반려동물 이름을 입력하세요')}
                                     className="w-full px-4 py-3 rounded-xl bg-foreground/5 border border-foreground/10 focus:border-amber-500 focus:outline-none transition-colors"
                                     maxLength={20}
                                 />
@@ -320,7 +325,7 @@ export default function SuperpetHome() {
                             {/* 종류 선택 */}
                             <div className="mb-6">
                                 <label className="block text-sm font-semibold mb-2 text-foreground/80">
-                                    종류
+                                    {t('종류')}
                                 </label>
                                 <div className="flex gap-3">
                                     {PET_TYPES.map((pt) => (
@@ -332,7 +337,7 @@ export default function SuperpetHome() {
                                                 : 'bg-foreground/5 text-foreground/60 hover:bg-foreground/10'
                                                 }`}
                                         >
-                                            {pt.label}
+                                            {t(pt.label)}
                                         </button>
                                     ))}
                                 </div>
@@ -341,7 +346,7 @@ export default function SuperpetHome() {
                             {/* 특성 선택 */}
                             <div className="mb-8">
                                 <label className="block text-sm font-semibold mb-2 text-foreground/80">
-                                    특성 선택 <span className="text-foreground/40 font-normal">({traits.length}/3)</span>
+                                    {t('특성 선택')} <span className="text-foreground/40 font-normal">({traits.length}/3)</span>
                                 </label>
                                 <div className="flex flex-wrap gap-2">
                                     {PET_TRAITS.map((trait) => (
@@ -353,7 +358,7 @@ export default function SuperpetHome() {
                                                 : 'bg-foreground/5 text-foreground/60 hover:bg-foreground/10'
                                                 }`}
                                         >
-                                            {trait}
+                                            {t(trait)}
                                         </button>
                                     ))}
                                 </div>
@@ -368,7 +373,7 @@ export default function SuperpetHome() {
                                 className="w-full py-4 rounded-xl bg-amber-500 text-white font-bold text-lg shadow-lg hover:bg-amber-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 <Sparkles className="h-5 w-5" />
-                                캐릭터 생성
+                                {t('캐릭터 생성')}
                             </motion.button>
 
                             {/* 취소 버튼 */}
@@ -377,7 +382,7 @@ export default function SuperpetHome() {
                                     onClick={() => setShowForm(false)}
                                     className="mt-3 w-full py-2 text-sm text-foreground/60 hover:text-foreground/80 transition-colors"
                                 >
-                                    취소
+                                    {t('취소')}
                                 </button>
                             )}
                         </motion.div>
@@ -405,10 +410,10 @@ export default function SuperpetHome() {
                         >
                             <div className="text-center mb-6">
                                 <Trash2 className="h-16 w-16 text-red-500 mx-auto mb-3" />
-                                <h3 className="text-xl font-black mb-2">캐릭터 삭제</h3>
+                                <h3 className="text-xl font-black mb-2">{t('캐릭터 삭제')}</h3>
                                 <p className="text-sm text-foreground/60">
-                                    정말로 이 캐릭터를 삭제하시겠습니까?<br />
-                                    이 작업은 되돌릴 수 없습니다.
+                                    {t('정말로 이 캐릭터를 삭제하시겠습니까?')}<br />
+                                    {t('이 작업은 되돌릴 수 없습니다.')}
                                 </p>
                             </div>
 
@@ -417,13 +422,13 @@ export default function SuperpetHome() {
                                     onClick={() => setDeleteConfirm(null)}
                                     className="flex-1 py-3 rounded-xl bg-foreground/10 text-foreground/60 font-bold hover:bg-foreground/20 transition-colors"
                                 >
-                                    취소
+                                    {t('취소')}
                                 </button>
                                 <button
                                     onClick={() => handleDeleteCharacter(deleteConfirm)}
                                     className="flex-1 py-3 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors"
                                 >
-                                    삭제
+                                    {t('삭제')}
                                 </button>
                             </div>
                         </motion.div>

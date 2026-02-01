@@ -25,6 +25,7 @@ import {
     saveCharacter,
     calculateEquipmentStats,
 } from '../types';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const STAT_ICONS = {
     hp: { icon: Heart, color: 'text-red-500 fill-red-500' },
@@ -33,7 +34,10 @@ const STAT_ICONS = {
     speed: { icon: Feather, color: 'text-green-500' },
 };
 
+const SLOT_OPTIONS: (EquipmentSlot | 'all')[] = ['all', '투구', '갑옷', '장갑', '부츠', '망토', '무기', '방패', '목걸이', '반지'];
+
 export default function Room() {
+    const { t, lang } = useLanguage();
     const [inventory, setInventory] = useState<InventoryItem[]>([]);
     const [character, setCharacter] = useState<Character | null>(null);
     const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
@@ -94,7 +98,12 @@ export default function Room() {
             const updatedChar = addGoldToCharacter(gold);
             setCharacter(updatedChar);
             setSelectedItem(null);
-            showToast(`${entry.item.name} ${entry.quantity}개를 ${gold}G에 판매했습니다!`, 'success');
+            showToast(
+                lang === 'ko'
+                    ? `${entry.item.name} ${entry.quantity}개를 ${gold}G에 판매했습니다!`
+                    : `Sold ${entry.quantity}x ${t(entry.item.name)} for ${gold}G!`,
+                'success'
+            );
         } else {
             const entry = inventory.find((e) => e.item.id === itemId);
             if (!entry || entry.quantity <= 0) return;
@@ -114,7 +123,12 @@ export default function Room() {
                 const remaining = updated.find((e) => e.item.id === itemId);
                 setSelectedItem(remaining ?? null);
             }
-            showToast(`${entry.item.name}을(를) ${gold}G에 판매했습니다!`, 'success');
+            showToast(
+                lang === 'ko'
+                    ? `${entry.item.name}을(를) ${gold}G에 판매했습니다!`
+                    : `Sold ${t(entry.item.name)} for ${gold}G!`,
+                'success'
+            );
         }
 
         setSellConfirm(null);
@@ -165,7 +179,7 @@ export default function Room() {
         : [];
 
     const filteredInventory = inventory.filter((entry) => {
-        if (searchName && !entry.item.name.includes(searchName)) return false;
+        if (searchName && !entry.item.name.includes(searchName) && !t(entry.item.name).toLowerCase().includes(searchName.toLowerCase())) return false;
         if (slotFilter !== 'all') {
             if (entry.item.type !== 'equipment' || entry.item.equipmentSlot !== slotFilter) return false;
         }
@@ -181,7 +195,7 @@ export default function Room() {
                     animate={{ opacity: 1, y: 0 }}
                     className="text-4xl font-black tracking-tighter mb-3"
                 >
-                    마이펫 <span className="text-amber-500">Room</span>
+                    {t('마이펫')} <span className="text-amber-500">Room</span>
                 </motion.h1>
                 <motion.p
                     initial={{ opacity: 0 }}
@@ -189,7 +203,7 @@ export default function Room() {
                     transition={{ delay: 0.1 }}
                     className="text-foreground/60 lg:mb-12"
                 >
-                    던전에서 획득한 아이템을 확인하세요
+                    {t('던전에서 획득한 아이템을 확인하세요')}
                 </motion.p>
             </div>
 
@@ -214,7 +228,7 @@ export default function Room() {
                                         Lv.{character.level}
                                     </span>
                                 </div>
-                                <p className="text-xs text-foreground/50">{character.className} / {character.element}</p>
+                                <p className="text-xs text-foreground/50">{t(character.className)} / {t(character.element)}</p>
                             </div>
                             <div className="flex flex-col gap-1 text-[11px] sm:flex-row sm:flex-wrap sm:gap-x-3 sm:gap-y-1 sm:text-xs text-foreground/60">
                                 {(Object.entries(STAT_ICONS) as [keyof typeof STAT_ICONS, (typeof STAT_ICONS)[keyof typeof STAT_ICONS]][]).map(([key, { icon: Icon, color }]) => {
@@ -249,12 +263,12 @@ export default function Room() {
                             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 text-sm">
                                 <Coins className="h-4 w-4 text-amber-500" />
                                 <span className="font-bold text-amber-600">{character.gold.toLocaleString()}</span>
-                                <span className="text-foreground/40 text-xs">골드</span>
+                                <span className="text-foreground/40 text-xs">{t('골드')}</span>
                             </div>
                             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/10 text-sm">
                                 <Gem className="h-4 w-4 text-purple-500" />
                                 <span className="font-bold text-purple-600">{character.gem.toLocaleString()}</span>
-                                <span className="text-foreground/40 text-xs">젬</span>
+                                <span className="text-foreground/40 text-xs">{t('젬')}</span>
                             </div>
                         </div>
                         {/* 경험치 바 */}
@@ -285,7 +299,7 @@ export default function Room() {
                     className="glass p-5 rounded-xl bg-white/5 mb-8 shadow-lg"
                 >
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-bold">장착 장비</h3>
+                        <h3 className="font-bold">{t('장착 장비')}</h3>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {equippedEntries.map(([slot, item]) => (
@@ -293,10 +307,9 @@ export default function Room() {
                                 key={slot}
                                 onClick={() => {
                                     if (item) {
-                                        // 장착된 아이템을 InventoryItem 형식으로 변환
                                         const inventoryFormat: InventoryItem = {
                                             item: item,
-                                            quantity: 0, // 장착된 아이템은 수량 0
+                                            quantity: 0,
                                             stats: { ...item.stats },
                                             equipedItem: [item]
                                         };
@@ -309,14 +322,12 @@ export default function Room() {
                             >
                                 <div className="text-2xl">{item?.emoji ?? '—'}</div>
                                 <div className="min-w-0 flex-1">
-                                    <div className="text-xs text-foreground/50">{slot}</div>
-                                    <div className="text-sm font-semibold truncate">{item ? item.name : '비어있음'}</div>
+                                    <div className="text-xs text-foreground/50">{t(slot)}</div>
+                                    <div className="text-sm font-semibold truncate">{item ? t(item.name) : t('비어있음')}</div>
                                     {item && (
                                         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] leading-tight text-foreground/60">
-                                            <span
-                                                className={`rounded-full px-2 py-0.5 font-semibold bg-foreground/5 ring-1 ring-foreground/10 ${ITEM_RARITY_TEXT[item.rarity]}`}
-                                            >
-                                                {item.rarity}
+                                            <span className={`rounded-full px-2 py-0.5 font-semibold bg-foreground/5 ring-1 ring-foreground/10 ${ITEM_RARITY_TEXT[item.rarity]}`}>
+                                                {t(item.rarity)}
                                             </span>
                                         </div>
                                     )}
@@ -335,15 +346,15 @@ export default function Room() {
                     className="glass p-12 rounded-2xl bg-white/5 text-center"
                 >
                     <Package className="h-16 w-16 text-foreground/20 mx-auto mb-4" />
-                    <h3 className="text-lg font-bold mb-2">아이템이 없습니다</h3>
+                    <h3 className="text-lg font-bold mb-2">{t('아이템이 없습니다')}</h3>
                     <p className="text-sm text-foreground/50 mb-6">
-                        던전에서 승리하면 아이템을 획득할 수 있어요!
+                        {t('던전에서 승리하면 아이템을 획득할 수 있어요!')}
                     </p>
                     <Link
                         href="/superpet/dungeon"
                         className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors"
                     >
-                        <Swords className="h-5 w-5" /> 던전 탐험하기
+                        <Swords className="h-5 w-5" /> {t('던전 탐험하기')}
                     </Link>
                 </motion.div>
             )}
@@ -361,22 +372,15 @@ export default function Room() {
                         onChange={(e) => setSlotFilter(e.target.value as EquipmentSlot | 'all')}
                         className="px-3 py-2.5 rounded-xl bg-foreground/5 border border-foreground/10 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50"
                     >
-                        <option value="all">전체 부위</option>
-                        <option value="투구">투구</option>
-                        <option value="갑옷">갑옷</option>
-                        <option value="장갑">장갑</option>
-                        <option value="부츠">부츠</option>
-                        <option value="망토">망토</option>
-                        <option value="무기">무기</option>
-                        <option value="방패">방패</option>
-                        <option value="목걸이">목걸이</option>
-                        <option value="반지">반지</option>
+                        {SLOT_OPTIONS.map((slot) => (
+                            <option key={slot} value={slot}>{slot === 'all' ? t('전체 부위') : t(slot)}</option>
+                        ))}
                     </select>
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/40" />
                         <input
                             type="text"
-                            placeholder="아이템 이름 검색"
+                            placeholder={t('아이템 이름 검색')}
                             value={searchName}
                             onChange={(e) => setSearchName(e.target.value)}
                             className="w-50 pl-9 pr-3 py-2.5 rounded-xl bg-foreground/5 border border-foreground/10 text-sm placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
@@ -400,11 +404,10 @@ export default function Room() {
                                 }`}
                         >
                             <div className="text-4xl mb-3">{entry.item.emoji}</div>
-                            <h4 className="text-sm font-bold mb-1 truncate">{entry.item.name}</h4>
+                            <h4 className="text-sm font-bold mb-1 truncate">{t(entry.item.name)}</h4>
                             <span className={`text-xs font-semibold ${ITEM_RARITY_TEXT[entry.item.rarity]}`}>
-                                {entry.item.rarity}
+                                {t(entry.item.rarity)}
                             </span>
-                            {/* 수량 뱃지 */}
                             <span className="absolute top-2 right-2 min-w-[24px] h-6 flex items-center justify-center px-1.5 rounded-full bg-foreground/80 text-background text-xs font-bold">
                                 {entry.quantity}
                             </span>
@@ -433,7 +436,6 @@ export default function Room() {
                                     onClick={(e) => e.stopPropagation()}
                                     className={`relative w-full max-w-sm p-6 rounded-2xl border-2 shadow-2xl bg-zinc-50 dark:bg-zinc-900 ${ITEM_RARITY_BORDER[modalItem.rarity]}`}
                                 >
-                                    {/* 닫기 */}
                                     <button
                                         onClick={() => setSelectedItem(null)}
                                         className="absolute top-4 right-4 text-foreground/40 hover:text-foreground transition-colors"
@@ -443,20 +445,19 @@ export default function Room() {
 
                                     <div className="text-center mb-4">
                                         <div className="text-6xl mb-3">{modalItem.emoji}</div>
-                                        <h3 className="text-xl font-black">{modalItem.name}</h3>
+                                        <h3 className="text-xl font-black">{t(modalItem.name)}</h3>
                                         <span className={`text-sm font-semibold ${ITEM_RARITY_TEXT[modalItem.rarity]}`}>
-                                            {modalItem.rarity}
+                                            {t(modalItem.rarity)}
                                         </span>
                                         <span className="text-sm text-foreground/50 ml-2">
-                                            {selectedItem.quantity > 0 ? `x${selectedItem.quantity}` : '장착중'}
+                                            {selectedItem.quantity > 0 ? `x${selectedItem.quantity}` : t('장착중')}
                                         </span>
                                     </div>
 
                                     <p className="text-sm text-foreground/60 leading-relaxed text-center mb-4">
-                                        {modalItem.description}
+                                        {t(modalItem.description)}
                                     </p>
 
-                                    {/* 능력치 */}
                                     <div className="grid grid-cols-2 gap-2 mb-6">
                                         {selectedItem.stats.hp > 0 && (
                                             <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-500/10 text-sm">
@@ -468,27 +469,26 @@ export default function Room() {
                                         {selectedItem.stats.attack > 0 && (
                                             <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-orange-500/10 text-sm">
                                                 <Zap className="h-3.5 w-3.5 text-orange-500" />
-                                                <span className="text-foreground/70">공격</span>
+                                                <span className="text-foreground/70">{t('공격')}</span>
                                                 <span className="ml-auto font-bold text-orange-500">+{selectedItem.stats.attack}</span>
                                             </div>
                                         )}
                                         {selectedItem.stats.defense > 0 && (
                                             <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-500/10 text-sm">
                                                 <Shield className="h-3.5 w-3.5 text-blue-500" />
-                                                <span className="text-foreground/70">방어</span>
+                                                <span className="text-foreground/70">{t('방어')}</span>
                                                 <span className="ml-auto font-bold text-blue-500">+{selectedItem.stats.defense}</span>
                                             </div>
                                         )}
                                         {selectedItem.stats.speed > 0 && (
                                             <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-green-500/10 text-sm">
                                                 <Gauge className="h-3.5 w-3.5 text-green-500" />
-                                                <span className="text-foreground/70">속도</span>
+                                                <span className="text-foreground/70">{t('속도')}</span>
                                                 <span className="ml-auto font-bold text-green-500">+{selectedItem.stats.speed}</span>
                                             </div>
                                         )}
                                     </div>
 
-                                    {/* 액션 버튼 */}
                                     <div className="space-y-2 mb-4">
                                         {modalItem.type === 'food' && (
                                             <button
@@ -496,7 +496,7 @@ export default function Room() {
                                                 disabled={selectedItem.quantity <= 0}
                                                 className="w-full py-3 rounded-xl bg-green-500 text-white font-bold hover:bg-green-600 disabled:bg-green-500/40 disabled:text-white/60 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                                             >
-                                                <Heart className="h-4 w-4" /> 사용하기
+                                                <Heart className="h-4 w-4" /> {t('사용하기')}
                                             </button>
                                         )}
                                         {modalItem.type === 'equipment' && modalItem.equipmentSlot && (() => {
@@ -508,34 +508,33 @@ export default function Room() {
                                                     onClick={() => handleUnequip(slot)}
                                                     className="w-full py-3 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
                                                 >
-                                                    <X className="h-4 w-4" /> 장비 해제
+                                                    <X className="h-4 w-4" /> {t('장비 해제')}
                                                 </button>
                                             ) : (
                                                 <button
                                                     onClick={() => handleEquip(selectedItem.item.id)}
                                                     className="w-full py-3 rounded-xl bg-blue-500 text-white font-bold hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
                                                 >
-                                                    <Shield className="h-4 w-4" /> 장착하기
+                                                    <Shield className="h-4 w-4" /> {t('장착하기')}
                                                 </button>
                                             );
                                         })()}
                                     </div>
 
-                                    {/* 판매 버튼 - 인벤토리에 있는 아이템만 판매 가능 */}
                                     {selectedItem.quantity > 0 && (
                                         <div className="flex gap-2">
                                             <button
                                                 onClick={() => handleSellRequest(selectedItem.item.id, false)}
                                                 className="flex-1 py-3 rounded-xl bg-amber-500/10 text-amber-600 font-semibold text-sm hover:bg-amber-500/20 transition-colors flex items-center justify-center gap-1.5"
                                             >
-                                                <Coins className="h-4 w-4" /> 1개 판매 ({ITEM_SELL_PRICE[modalItem.rarity]}G)
+                                                <Coins className="h-4 w-4" /> {t('1개 판매')} ({ITEM_SELL_PRICE[modalItem.rarity]}G)
                                             </button>
                                             {selectedItem.quantity > 1 && (
                                                 <button
                                                     onClick={() => handleSellRequest(selectedItem.item.id, true)}
                                                     className="py-3 px-4 rounded-xl bg-amber-500/10 text-amber-600 font-semibold text-sm hover:bg-amber-500/20 transition-colors"
                                                 >
-                                                    전부 판매 ({ITEM_SELL_PRICE[modalItem.rarity] * selectedItem.quantity}G)
+                                                    {t('전부 판매')} ({ITEM_SELL_PRICE[modalItem.rarity] * selectedItem.quantity}G)
                                                 </button>
                                             )}
                                         </div>
@@ -578,7 +577,7 @@ export default function Room() {
                     const totalGold = sellConfirm.sellAll
                         ? ITEM_SELL_PRICE[entry.item.rarity] * entry.quantity
                         : ITEM_SELL_PRICE[entry.item.rarity];
-                    const quantityText = sellConfirm.sellAll ? `${entry.quantity}개` : '1개';
+                    const quantityText = sellConfirm.sellAll ? `${entry.quantity}${lang === 'ko' ? '개' : 'x'}` : `1${lang === 'ko' ? '개' : 'x'}`;
 
                     return (
                         <motion.div
@@ -597,10 +596,19 @@ export default function Room() {
                             >
                                 <div className="text-center mb-6">
                                     <div className="text-5xl mb-3">{entry.item.emoji}</div>
-                                    <h3 className="text-xl font-black mb-2">정말 판매하시겠습니까?</h3>
+                                    <h3 className="text-xl font-black mb-2">{t('정말 판매하시겠습니까?')}</h3>
                                     <p className="text-sm text-foreground/60">
-                                        <span className="font-bold text-foreground">{entry.item.name}</span> {quantityText}를<br />
-                                        <span className="font-bold text-amber-600">{totalGold}G</span>에 판매합니다
+                                        {lang === 'ko' ? (
+                                            <>
+                                                <span className="font-bold text-foreground">{entry.item.name}</span> {quantityText}를<br />
+                                                <span className="font-bold text-amber-600">{totalGold}G</span>에 판매합니다
+                                            </>
+                                        ) : (
+                                            <>
+                                                Sell <span className="font-bold text-foreground">{quantityText} {t(entry.item.name)}</span><br />
+                                                for <span className="font-bold text-amber-600">{totalGold}G</span>
+                                            </>
+                                        )}
                                     </p>
                                 </div>
 
@@ -609,13 +617,13 @@ export default function Room() {
                                         onClick={() => setSellConfirm(null)}
                                         className="flex-1 py-3 rounded-xl bg-foreground/10 text-foreground/60 font-bold hover:bg-foreground/20 transition-colors"
                                     >
-                                        취소
+                                        {t('취소')}
                                     </button>
                                     <button
                                         onClick={handleSellConfirm}
                                         className="flex-1 py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
                                     >
-                                        <Coins className="h-4 w-4" /> 판매
+                                        <Coins className="h-4 w-4" /> {t('판매')}
                                     </button>
                                 </div>
                             </motion.div>
