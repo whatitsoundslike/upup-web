@@ -69,6 +69,13 @@ export default function SuperpetHome() {
         return () => window.removeEventListener('superpet-show-announcement', handleShowAnnouncement);
     }, []);
 
+    // 캐릭터 생성 시 상단으로 스크롤
+    useEffect(() => {
+        if (createdCharacter) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }, [createdCharacter]);
+
     const toggleTrait = (trait: string) => {
         setTraits((prev) =>
             prev.includes(trait)
@@ -155,24 +162,31 @@ export default function SuperpetHome() {
             {/* Hero */}
             <section className="py-2 bg-foreground/5 min-h-[80vh] flex items-center">
                 <div className="max-w-3xl mx-auto px-4 w-full">
-                    <div className="text-center mb-4">
-                        <motion.h1
-                            initial={{ opacity: 0, y: -20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="text-5xl font-black tracking-tighter mb-4 uppercase"
-                        >
-                            SUPER <span className="text-amber-500">PET</span> <span className="text-blue-500 text-[20px]">[Beta]</span>
-                        </motion.h1>
-                        <motion.p
-                            initial={{ opacity: 0, y: -20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
-                            className="text-foreground/60 text-xl"
-                        >
-                            <img className='w-full' src="/superpet_thumbnail.webp" alt="logo" />
-                        </motion.p>
-                    </div>
-                    <div className="text-center mb-4 text-blue-500">{t('본 게임은 베타서비스 중입니다.')}</div>
+
+                    {/* 홈 로고 영역 */}
+                    {!createdCharacter && (
+                        <div>
+                            <div className="text-center mb-4">
+                                <motion.h1
+                                    initial={{ opacity: 0, y: -20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="text-5xl font-black tracking-tighter mb-4 uppercase"
+                                >
+                                    SUPER <span className="text-amber-500">PET</span> <span className="text-blue-500 text-[20px]">[Beta]</span>
+                                </motion.h1>
+                                <motion.p
+                                    initial={{ opacity: 0, y: -20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.1 }}
+                                    className="text-foreground/60 text-xl"
+                                >
+                                    <img className='w-full' src="/superpet_thumbnail.webp" alt="logo" />
+                                </motion.p>
+                            </div>
+                            <div className="text-center mb-4 text-blue-500">{t('본 게임은 베타서비스 중입니다.')}</div>
+                        </div>
+                    )}
+
 
                     {/* 캐릭터 생성 결과 */}
                     {createdCharacter && !showForm && (
