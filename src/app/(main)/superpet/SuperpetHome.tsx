@@ -640,7 +640,8 @@ export default function SuperpetHome() {
                                 <p className="text-sm text-foreground/70 leading-relaxed text-left">
                                     - {t('이 게임은 시즌제로 운영되며 시즌 종료시의 게임 데이터는 명예의 전당에 기록됩니다.')}<br />
                                     - {t('매주 새로운 시즌이 시작됩니다.')}<br />
-                                    - {t('캐릭터 저장 기능이 추가되었습니다!')} (2026.02.03)
+                                    - {t('캐릭터 저장 기능이 추가되었습니다!')} (2026.02.03)<br />
+                                    - {t('랭킹 기능이 추가되었습니다!')} (2026.02.03)
                                 </p>
                             </div>
                             <button
