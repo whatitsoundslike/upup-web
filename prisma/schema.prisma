@@ -62,5 +62,7 @@ model GameSave {
   memberId  BigInt   @unique
   member    Member   @relation(fields: [memberId], references: [id])
   data      Json
+  rankScore Int      @default(0)
+  rankCharacterId String? @db.VarChar(64)
   updatedAt DateTime @default(now()) @updatedAt
 }

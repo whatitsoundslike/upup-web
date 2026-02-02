@@ -1,0 +1,1 @@
+ALTER TABLE `GameSave` ADD COLUMN `rankCharacterId` VARCHAR(64) NULL;

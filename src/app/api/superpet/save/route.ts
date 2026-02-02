@@ -2,6 +2,47 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 
+function getRankFromData(
+  data: Record<string, string | null>
+): { score: number; characterId: string | null } {
+  const charactersRaw = data['characters'];
+  if (!charactersRaw) return { score: 0, characterId: null };
+
+  try {
+    const characters = JSON.parse(charactersRaw) as Array<{
+      id?: string;
+      attack?: number;
+      defense?: number;
+      speed?: number;
+    }>;
+    if (!Array.isArray(characters) || characters.length === 0) {
+      return { score: 0, characterId: null };
+    }
+
+    let maxScore = 0;
+    let maxId: string | null = null;
+    for (const character of characters) {
+      const attack = Number(character?.attack ?? 0);
+      const defense = Number(character?.defense ?? 0);
+      const speed = Number(character?.speed ?? 0);
+      const score = attack + defense + speed;
+      if (score > maxScore) {
+        maxScore = score;
+        maxId = character?.id ?? null;
+      }
+    }
+
+    if (!Number.isFinite(maxScore)) return { score: 0, characterId: null };
+
+    return {
+      score: Math.max(0, Math.floor(maxScore)),
+      characterId: maxId,
+    };
+  } catch {
+    return { score: 0, characterId: null };
+  }
+}
+
 export async function GET() {
   try {
     const session = await getSession();
@@ -32,10 +73,11 @@ export async function POST(request: Request) {
     }
 
     const memberId = BigInt(session.sub);
+    const rank = getRankFromData(data);
     await prisma.gameSave.upsert({
       where: { memberId },
-      update: { data },
-      create: { memberId, data },
+      update: { data, rankScore: rank.score, rankCharacterId: rank.characterId },
+      create: { memberId, data, rankScore: rank.score, rankCharacterId: rank.characterId },
     });
 
     return NextResponse.json({ success: true });
