@@ -1,24 +1,24 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
-import { Swords, PawPrint, Shield, Heart, Sparkles, Plus, Trash2, Sword, Feather, Camera, X, Loader2 } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Camera, Feather, Heart, Loader2, PawPrint, Plus, Shield, Sparkles, Sword, Swords, Trash2, X } from 'lucide-react';
 import Link from 'next/link';
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useLanguage } from './i18n/LanguageContext';
+import { getItem, setItem } from './storage';
 import {
-    generateCharacter,
-    PET_TYPES,
-    PET_TRAITS,
-    loadAllCharacters,
     addCharacter,
     deleteCharacter,
-    setActiveCharacter,
-    saveCharacter,
+    generateCharacter,
+    loadAllCharacters,
     migrateCharacterData,
+    PET_TRAITS,
+    PET_TYPES,
+    saveCharacter,
+    setActiveCharacter,
     type Character,
     type PetInfo
 } from './types';
-import { getItem, setItem } from './storage';
-import { useLanguage } from './i18n/LanguageContext';
 
 const ELEMENT_COLORS: Record<string, string> = {
     '불': 'bg-red-500',
@@ -631,9 +631,10 @@ export default function SuperpetHome() {
                             <div className="text-center mb-6">
                                 <div className="text-5xl mb-4">🏆</div>
                                 <h3 className="text-xl font-black mb-3">{t('시즌 안내')}</h3>
-                                <p className="text-sm text-foreground/70 leading-relaxed">
-                                    {t('이 게임은 시즌제로 운영되며 시즌 종료시의 게임 데이터는 명예의 전당에 기록됩니다.')}<br /><br />
-                                    {t('매주 새로운 시즌이 시작됩니다.')}
+                                <p className="text-sm text-foreground/70 leading-relaxed text-left">
+                                    - {t('이 게임은 시즌제로 운영되며 시즌 종료시의 게임 데이터는 명예의 전당에 기록됩니다.')}<br />
+                                    - {t('매주 새로운 시즌이 시작됩니다.')}<br />
+                                    - {t('캐릭터 저장 기능이 추가되었습니다!')} (2026.02.03)
                                 </p>
                             </div>
                             <button
