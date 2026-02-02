@@ -13,13 +13,16 @@ import {
     LogOut,
     LogInIcon,
     MoreVertical,
+    Save,
+    Check,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { navConfigs, defaultNavItems, type NavItem, navRoomLogo } from '@/config/navConfig';
-import { Globe, Megaphone } from 'lucide-react';
+import { Globe } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
+import { saveToServer } from '@/app/(main)/superpet/gameSync';
 
 export function Navbar() {
     const pathname = usePathname();
@@ -30,6 +33,17 @@ export function Navbar() {
     const { user, loading: authLoading, logout } = useAuth();
     const [menuOpen, setMenuOpen] = React.useState(false);
     const menuRef = React.useRef<HTMLDivElement>(null);
+    const [saveStatus, setSaveStatus] = React.useState<'idle' | 'saving' | 'saved'>('idle');
+
+    const handleSave = async () => {
+        if (saveStatus === 'saving') return;
+        setSaveStatus('saving');
+        const ok = await saveToServer();
+        setSaveStatus(ok ? 'saved' : 'idle');
+        if (ok) {
+            setTimeout(() => setSaveStatus('idle'), 2000);
+        }
+    };
 
     React.useEffect(() => {
         setMounted(true);
@@ -60,10 +74,6 @@ export function Navbar() {
         setLang(next);
         localStorage.setItem('superpet-lang', next);
         window.dispatchEvent(new Event('superpet-lang-change'));
-    };
-
-    const showAnnouncement = () => {
-        window.dispatchEvent(new Event('superpet-show-announcement'));
     };
 
     const getNavName = (item: NavItem) => {
@@ -112,18 +122,42 @@ export function Navbar() {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-4">
-                        {/* Announcement - always visible */}
-                        {mounted && isSuperpet && (
+                    <div className="flex items-center gap-2">
+                        {mounted && !authLoading && (
+                            user ? (
+                                <div className="hidden md:flex items-center">
+                                    <span className="text-sm text-foreground/70 font-bold ">
+                                        {user.name}
+                                    </span>
+                                    <button
+                                        onClick={logout}
+                                        className="p-2 rounded-full hover:bg-foreground/5 transition-colors"
+                                        aria-label="로그아웃"
+                                    >
+                                        <LogOut className="h-4 w-4" />
+                                    </button>
+                                </div>
+                            ) : (
+                                <Link
+                                    href={`/login?callbackUrl=${encodeURIComponent(pathname)}`}
+                                    className="hidden md:block p-2 rounded-full hover:bg-foreground/5 transition-colors"
+                                    aria-label="로그인"
+                                >
+                                    <div className="flex items-center gap-1">{lang === 'ko' ? '로그인' : 'LogIn'}<LogIn className="h-4 w-4" /></div>
+                                </Link>
+                            )
+                        )}
+                        {/* Desktop: save button */}
+                        {mounted && isSuperpet && user && (
                             <button
-                                onClick={showAnnouncement}
-                                className="p-2 rounded-full hover:bg-foreground/5 transition-colors"
-                                aria-label="Show announcement"
+                                onClick={handleSave}
+                                disabled={saveStatus === 'saving'}
+                                className="hidden md:flex items-center gap-1 p-2 rounded-full hover:bg-foreground/5 transition-colors"
+                                aria-label="저장"
                             >
-                                <Megaphone className="h-4 w-4" />
+                                {saveStatus === 'saved' ? <Check className="h-4 w-4 text-green-500" /> : <Save className="h-4 w-4" />}
                             </button>
                         )}
-
                         {/* Desktop: inline buttons */}
                         {mounted && isSuperpet && (
                             <button
@@ -134,30 +168,6 @@ export function Navbar() {
                                 <Globe className="h-4 w-4" />
                                 <span>{lang === 'ko' ? 'EN' : 'KO'}</span>
                             </button>
-                        )}
-                        {mounted && !authLoading && (
-                            user ? (
-                                <div className="hidden md:flex items-center gap-2">
-                                    <span className="text-sm text-foreground/70">
-                                        {user.name || user.email}
-                                    </span>
-                                    <button
-                                        onClick={logout}
-                                        className="p-2 rounded-full hover:bg-foreground/5 transition-colors"
-                                        aria-label="로그아웃"
-                                    >
-                                        <div className="flex items-center">로그아웃<LogOut className="h-4 w-4" /></div>
-                                    </button>
-                                </div>
-                            ) : (
-                                <Link
-                                    href={`/login?callbackUrl=${encodeURIComponent(pathname)}`}
-                                    className="hidden md:block p-2 rounded-full hover:bg-foreground/5 transition-colors"
-                                    aria-label="로그인"
-                                >
-                                    <div className="flex items-center">로그인<LogIn className="h-4 w-4" /></div>
-                                </Link>
-                            )
                         )}
                         {mounted && (
                             <button
@@ -189,6 +199,16 @@ export function Navbar() {
                                             className="absolute right-0 top-full mt-2 w-48 rounded-lg border dark:border-white/10 shadow-lg py-1 z-50"
                                             style={{ backgroundColor: 'var(--background-hex)' }}
                                         >
+                                            {isSuperpet && user && (
+                                                <button
+                                                    onClick={() => { handleSave(); setMenuOpen(false); }}
+                                                    disabled={saveStatus === 'saving'}
+                                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-foreground/5 transition-colors"
+                                                >
+                                                    {saveStatus === 'saved' ? <Check className="h-4 w-4 text-green-500" /> : <Save className="h-4 w-4" />}
+                                                    <span>{saveStatus === 'saved' ? '저장 완료' : '저장'}</span>
+                                                </button>
+                                            )}
                                             {isSuperpet && (
                                                 <button
                                                     onClick={() => { toggleLang(); setMenuOpen(false); }}

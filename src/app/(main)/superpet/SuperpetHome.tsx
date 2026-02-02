@@ -205,11 +205,11 @@ export default function SuperpetHome() {
         <div className="relative overflow-hidden">
             {/* Hero */}
             <section className="py-2 bg-foreground/5 min-h-[80vh] flex items-center">
-                <div className="max-w-3xl mx-auto px-4 w-full">
+                <div className="max-w-2xl mx-auto px-4 w-full">
 
                     {/* 홈 로고 영역 */}
                     {!createdCharacter && (
-                        <div>
+                        <div className="flex flex-col items-center">
                             <div className="text-center mb-4">
                                 <motion.h1
                                     initial={{ opacity: 0, y: -20 }}
@@ -227,7 +227,12 @@ export default function SuperpetHome() {
                                     <img className='w-full' src="/superpet_thumbnail.webp" alt="logo" />
                                 </motion.p>
                             </div>
-                            <div className="text-center mb-4 text-blue-500">{t('본 게임은 베타서비스 중입니다.')}</div>
+                            <button
+                                onClick={() => setShowAnnouncement(true)}
+                                className="w-[200px] mx-auto bg-amber-500 rounded-full p-2  text-center mb-4 text-lg text-foreground/60 hover:text-foreground transition-colors"
+                            >
+                                📢 {t('공지사항')}
+                            </button>
                         </div>
                     )}
 

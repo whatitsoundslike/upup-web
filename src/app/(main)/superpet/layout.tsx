@@ -2,6 +2,7 @@ import { LanguageProvider } from './i18n/LanguageContext';
 import CoupangLeftBanner from './components/CoupangLeftBanner';
 import CoupangRightBanner from './components/CoupangRightBanner';
 import BottomBanner from './components/BottomBanner';
+import AutoSave from './components/AutoSave';
 
 export default function SuperpetLayout({ children }: { children: React.ReactNode }) {
     return (
@@ -16,6 +17,8 @@ export default function SuperpetLayout({ children }: { children: React.ReactNode
                         <CoupangRightBanner className="w-30" />
                     </div>
                 </div>
+
+                <AutoSave />
 
                 {/* Main Content */}
                 <main className="flex-grow">

@@ -16,6 +16,7 @@ model Member {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
   rooms     Room[]
+  gameSave  GameSave?
 }
 
 model Room {
@@ -54,4 +55,12 @@ model Record {
   images    Json
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
+}
+
+model GameSave {
+  id        BigInt   @id @default(autoincrement())
+  memberId  BigInt   @unique
+  member    Member   @relation(fields: [memberId], references: [id])
+  data      Json
+  updatedAt DateTime @default(now()) @updatedAt
 }

@@ -4,21 +4,6 @@ const STORAGE_VERSION = 'v3';
 const STORAGE_PREFIX = `superpet_${STORAGE_VERSION}_`;
 const VERSION_KEY = 'superpet_storage_version';
 
-// 모든 superpet 관련 키 목록 (이전 버전 포함)
-const LEGACY_KEYS = [
-    'superpet-character',
-    'superpet-characters',
-    'superpet-active-character',
-    'superpet-inventory',
-    'superpet_autoBattle',
-];
-
-function clearLegacyData() {
-    for (const key of LEGACY_KEYS) {
-        localStorage.removeItem(key);
-    }
-}
-
 function clearPrefixedData() {
     const keysToRemove: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
@@ -36,7 +21,6 @@ function checkVersion() {
     if (typeof window === 'undefined') return;
     const stored = localStorage.getItem(VERSION_KEY);
     if (stored !== STORAGE_VERSION) {
-        clearLegacyData();
         clearPrefixedData();
         localStorage.setItem(VERSION_KEY, STORAGE_VERSION);
     }
