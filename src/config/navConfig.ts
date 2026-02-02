@@ -46,6 +46,7 @@ export const navConfigs: NavConfig = {
     superpet: [
         { name: '홈', nameEn: 'Home', href: '/superpet', icon: Home },
         { name: '던전', nameEn: 'Dungeon', href: '/superpet/dungeon', icon: Swords },
+        { name: '랭킹', nameEn: 'Ranking', href: '/superpet/ranking', icon: Star },
         { name: '상점', nameEn: 'Shop', href: '/superpet/shop', icon: ShoppingCart },
         { name: '룸', nameEn: 'Room', href: '/superpet/room', icon: Warehouse },
     ],

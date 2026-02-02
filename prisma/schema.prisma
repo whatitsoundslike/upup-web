@@ -65,4 +65,7 @@ model GameSave {
   rankScore Int      @default(0)
   rankCharacterId String? @db.VarChar(64)
   updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([rankScore])
+  @@index([rankScore, updatedAt])
 }

@@ -323,4 +323,9 @@ export const koToEn: Record<string, string> = {
     '매주 새로운 시즌이 시작됩니다.': 'A new season starts every week.',
     '캐릭터 저장 기능이 추가되었습니다!': 'Character save function has been added!',
     '확인': 'OK',
+
+    // === 랭킹 ===
+    '랭킹 불러오는 중...': 'Loading rankings...',
+    '랭킹 데이터가 없습니다.': 'No ranking data available.',
+    '랭킹 TOP20': 'Ranking TOP20',
 };

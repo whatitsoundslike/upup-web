@@ -2,6 +2,39 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 
+type SavedEquipmentItem = {
+  stats?: {
+    hp?: number;
+    attack?: number;
+    defense?: number;
+    speed?: number;
+  };
+};
+
+type SavedEquipment = Record<string, SavedEquipmentItem | null> | null;
+
+type SavedCharacter = {
+  id?: string;
+  attack?: number;
+  defense?: number;
+  speed?: number;
+  equipment?: SavedEquipment;
+};
+
+function sumEquipmentStats(equipment?: SavedEquipment) {
+  const totals = { attack: 0, defense: 0, speed: 0 };
+  if (!equipment || typeof equipment !== 'object') return totals;
+
+  for (const item of Object.values(equipment)) {
+    if (!item?.stats) continue;
+    totals.attack += Number(item.stats.attack ?? 0);
+    totals.defense += Number(item.stats.defense ?? 0);
+    totals.speed += Number(item.stats.speed ?? 0);
+  }
+
+  return totals;
+}
+
 function getRankFromData(
   data: Record<string, string | null>
 ): { score: number; characterId: string | null } {
@@ -9,12 +42,7 @@ function getRankFromData(
   if (!charactersRaw) return { score: 0, characterId: null };
 
   try {
-    const characters = JSON.parse(charactersRaw) as Array<{
-      id?: string;
-      attack?: number;
-      defense?: number;
-      speed?: number;
-    }>;
+    const characters = JSON.parse(charactersRaw) as SavedCharacter[];
     if (!Array.isArray(characters) || characters.length === 0) {
       return { score: 0, characterId: null };
     }
@@ -22,9 +50,10 @@ function getRankFromData(
     let maxScore = 0;
     let maxId: string | null = null;
     for (const character of characters) {
-      const attack = Number(character?.attack ?? 0);
-      const defense = Number(character?.defense ?? 0);
-      const speed = Number(character?.speed ?? 0);
+      const equipStats = sumEquipmentStats(character?.equipment);
+      const attack = Number(character?.attack ?? 0) + equipStats.attack;
+      const defense = Number(character?.defense ?? 0) + equipStats.defense;
+      const speed = Number(character?.speed ?? 0) + equipStats.speed;
       const score = attack + defense + speed;
       if (score > maxScore) {
         maxScore = score;
