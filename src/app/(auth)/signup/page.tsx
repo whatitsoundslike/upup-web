@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Mail, Lock, User, UserPlus, Loader2 } from 'lucide-react';
+import { Mail, Lock, User, UserPlus, Loader2, Pencil } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 import { cn } from '@/lib/utils';
 
@@ -79,7 +79,7 @@ export default function SignupPage() {
       <div className="flex justify-center mb-8">
         <Link href="/">
           <Image
-            src="/default_thumbnail.jpg"
+            src="/zroom_logo.webp"
             alt="ZROOM"
             width={128}
             height={48}
@@ -108,7 +108,7 @@ export default function SignupPage() {
         </div>
 
         <div className="relative">
-          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-foreground/40" />
+          <Pencil className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-foreground/40" />
           <input
             type="text"
             value={name}
