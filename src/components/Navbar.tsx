@@ -9,12 +9,15 @@ import {
     X,
     Moon,
     Sun,
+    LogIn,
+    LogOut,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { navConfigs, defaultNavItems, type NavItem, navRoomLogo } from '@/config/navConfig';
 import { Globe, Megaphone } from 'lucide-react';
+import { useAuth } from '@/components/AuthProvider';
 
 export function Navbar() {
     const pathname = usePathname();
@@ -22,6 +25,7 @@ export function Navbar() {
     const [isOpen, setIsOpen] = React.useState(false);
     const [mounted, setMounted] = React.useState(false);
     const [lang, setLang] = React.useState<'ko' | 'en'>('ko');
+    const { user, loading: authLoading, logout } = useAuth();
 
     React.useEffect(() => {
         setMounted(true);
@@ -113,6 +117,30 @@ export function Navbar() {
                                     <span>{lang === 'ko' ? 'EN' : 'KO'}</span>
                                 </button>
                             </>
+                        )}
+                        {mounted && !authLoading && (
+                            user ? (
+                                <div className="flex items-center gap-2">
+                                    <span className="hidden md:inline text-sm text-foreground/70">
+                                        {user.name || user.email}
+                                    </span>
+                                    <button
+                                        onClick={logout}
+                                        className="p-2 rounded-full hover:bg-foreground/5 transition-colors"
+                                        aria-label="로그아웃"
+                                    >
+                                        <div>로그아웃</div>
+                                    </button>
+                                </div>
+                            ) : (
+                                <Link
+                                    href="/login"
+                                    className="p-2 rounded-full hover:bg-foreground/5 transition-colors"
+                                    aria-label="로그인"
+                                >
+                                    <div>로그인</div>
+                                </Link>
+                            )
                         )}
                         {mounted && (
                             <button

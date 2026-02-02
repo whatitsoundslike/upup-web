@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import "../styles/globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { Navbar, MobileBottomNav } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
+import { AuthProvider } from "@/components/AuthProvider";
 import Script from "next/script";
 
 
 export const metadata: Metadata = {
   title: "ZROOM - 관심사로 연결되는 우리들의 공간",
-  description: "아직도 혼자 해? ZROOM에서 너와 딱 맞는 취미 방에 입장해 봐. 지금 가장 핫한 취향들이 실시간으로 모이는 곳!",
+  description: "Zroom, 내 방이 곧 나의 세계 🏠✨ 취미와 관심사로 가득 찬 나만의 공간을 기록하고, 비슷한 취향을 가진 사람들과 만나보세요. 덕질 아이템부터 소소한 컬렉션까지, 우리 각자의 특별한 이야기가 시작됩니다.",
   keywords: "ZROOM, 지룸, 취미SNS, 관심사채팅, 덕질공유, 크루모임, 실시간소통",
   verification: {
     other: {
@@ -18,7 +17,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "ZROOM - 관심사로 연결되는 우리들의 공간",
-    description: "아직도 혼자 해? ZROOM에서 너와 딱 맞는 취미 방에 입장해 봐. 지금 가장 핫한 취향들이 실시간으로 모이는 곳!",
+    description: "Zroom, 내 방이 곧 나의 세계 🏠✨ 취미와 관심사로 가득 찬 나만의 공간을 기록하고, 비슷한 취향을 가진 사람들과 만나보세요. 덕질 아이템부터 소소한 컬렉션까지, 우리 각자의 특별한 이야기가 시작됩니다.",
     type: "website",
     locale: "ko_KR",
     siteName: "ZROOM",
@@ -57,12 +56,9 @@ export default function RootLayout({
           `}
         </Script>
         <ThemeProvider>
-          <Navbar />
-          <main className="flex-grow">
+          <AuthProvider>
             {children}
-          </main>
-          <Footer />
-          <MobileBottomNav />
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
