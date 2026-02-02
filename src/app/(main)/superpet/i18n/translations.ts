@@ -20,6 +20,7 @@ export const koToEn: Record<string, string> = {
     '방어': 'DEF',
     '속도': 'SPD',
     '장착중': 'Equipped',
+    'HP': '체력',
 
     // === SuperpetHome ===
     '본 게임은 베타서비스 중입니다.': 'This game is currently in beta.',

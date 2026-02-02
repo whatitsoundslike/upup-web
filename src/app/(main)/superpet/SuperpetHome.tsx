@@ -16,6 +16,7 @@ import {
     PET_TYPES,
     saveCharacter,
     setActiveCharacter,
+    getTotalStats,
     type Character,
     type PetInfo
 } from './types';
@@ -394,18 +395,23 @@ export default function SuperpetHome() {
                                         </div>
 
                                         {/* HP 바 */}
-                                        <div className="mb-4">
-                                            <div className="flex items-center justify-between mb-1">
-                                                <span className="text-xs text-foreground/60">HP</span>
-                                                <span className="text-xs font-bold">{char.currentHp} / {char.hp}</span>
-                                            </div>
-                                            <div className="h-2 rounded-full bg-foreground/10 overflow-hidden">
-                                                <div
-                                                    style={{ width: `${Math.max((char.currentHp / char.hp) * 100, 0)}%` }}
-                                                    className="h-full rounded-full bg-red-500 transition-all"
-                                                />
-                                            </div>
-                                        </div>
+                                        {(() => {
+                                            const stats = getTotalStats(char);
+                                            return (
+                                                <div className="mb-4">
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <span className="text-xs text-foreground/60">{t('HP')}</span>
+                                                        <span className="text-xs font-bold">{char.currentHp} / {stats.hp}</span>
+                                                    </div>
+                                                    <div className="h-2 rounded-full bg-foreground/10 overflow-hidden">
+                                                        <div
+                                                            style={{ width: `${Math.max((char.currentHp / stats.hp) * 100, 0)}%` }}
+                                                            className="h-full rounded-full bg-red-500 transition-all"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
 
                                         {/* 선택 버튼 */}
                                         {activeCharacterId === char.id ? (
