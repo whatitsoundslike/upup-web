@@ -11,6 +11,8 @@ import {
     Sun,
     LogIn,
     LogOut,
+    LogInIcon,
+    MoreVertical,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -26,11 +28,23 @@ export function Navbar() {
     const [mounted, setMounted] = React.useState(false);
     const [lang, setLang] = React.useState<'ko' | 'en'>('ko');
     const { user, loading: authLoading, logout } = useAuth();
+    const [menuOpen, setMenuOpen] = React.useState(false);
+    const menuRef = React.useRef<HTMLDivElement>(null);
 
     React.useEffect(() => {
         setMounted(true);
         const saved = localStorage.getItem('superpet-lang');
         if (saved === 'en') setLang('en');
+    }, []);
+
+    React.useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+                setMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
     // 현재 경로에서 1-depth 추출 (예: /tesla/news -> 'tesla')
@@ -57,7 +71,7 @@ export function Navbar() {
         return item.name;
     };
 
-    const logoSrc: string = navRoomLogo[firstSegment] || '/room-icon/logo.png';
+    const logoSrc: string = navRoomLogo[firstSegment] || '/room-icon/tesla.png';
 
     return (
         <nav className="sticky top-0 z-50 w-full border-b dark:border-white/10 mdmax-w-[500px] mx-auto" style={{ backgroundColor: 'var(--background-hex)' }}>
@@ -99,29 +113,32 @@ export function Navbar() {
                     </div>
 
                     <div className="flex items-center gap-4">
+                        {/* Announcement - always visible */}
                         {mounted && isSuperpet && (
-                            <>
-                                <button
-                                    onClick={showAnnouncement}
-                                    className="p-2 rounded-full hover:bg-foreground/5 transition-colors"
-                                    aria-label="Show announcement"
-                                >
-                                    <Megaphone className="h-4 w-4" />
-                                </button>
-                                <button
-                                    onClick={toggleLang}
-                                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-full hover:bg-foreground/5 transition-colors text-sm font-semibold"
-                                    aria-label="Toggle language"
-                                >
-                                    <Globe className="h-4 w-4" />
-                                    <span>{lang === 'ko' ? 'EN' : 'KO'}</span>
-                                </button>
-                            </>
+                            <button
+                                onClick={showAnnouncement}
+                                className="p-2 rounded-full hover:bg-foreground/5 transition-colors"
+                                aria-label="Show announcement"
+                            >
+                                <Megaphone className="h-4 w-4" />
+                            </button>
+                        )}
+
+                        {/* Desktop: inline buttons */}
+                        {mounted && isSuperpet && (
+                            <button
+                                onClick={toggleLang}
+                                className="hidden md:flex items-center gap-1 px-2.5 py-1.5 rounded-full hover:bg-foreground/5 transition-colors text-sm font-semibold"
+                                aria-label="Toggle language"
+                            >
+                                <Globe className="h-4 w-4" />
+                                <span>{lang === 'ko' ? 'EN' : 'KO'}</span>
+                            </button>
                         )}
                         {mounted && !authLoading && (
                             user ? (
-                                <div className="flex items-center gap-2">
-                                    <span className="hidden md:inline text-sm text-foreground/70">
+                                <div className="hidden md:flex items-center gap-2">
+                                    <span className="text-sm text-foreground/70">
                                         {user.name || user.email}
                                     </span>
                                     <button
@@ -129,27 +146,89 @@ export function Navbar() {
                                         className="p-2 rounded-full hover:bg-foreground/5 transition-colors"
                                         aria-label="로그아웃"
                                     >
-                                        <div>로그아웃</div>
+                                        <div className="flex items-center">로그아웃<LogOut className="h-4 w-4" /></div>
                                     </button>
                                 </div>
                             ) : (
                                 <Link
-                                    href="/login"
-                                    className="p-2 rounded-full hover:bg-foreground/5 transition-colors"
+                                    href={`/login?callbackUrl=${encodeURIComponent(pathname)}`}
+                                    className="hidden md:block p-2 rounded-full hover:bg-foreground/5 transition-colors"
                                     aria-label="로그인"
                                 >
-                                    <div>로그인</div>
+                                    <div className="flex items-center">로그인<LogIn className="h-4 w-4" /></div>
                                 </Link>
                             )
                         )}
                         {mounted && (
                             <button
                                 onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                                className="p-2 rounded-full hover:bg-foreground/5 transition-colors"
+                                className="hidden md:block p-2 rounded-full hover:bg-foreground/5 transition-colors"
                                 aria-label="Toggle theme"
                             >
                                 {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
                             </button>
+                        )}
+
+                        {/* Mobile: dropdown menu */}
+                        {mounted && (
+                            <div className="relative md:hidden" ref={menuRef}>
+                                <button
+                                    onClick={() => setMenuOpen(!menuOpen)}
+                                    className="p-2 rounded-full hover:bg-foreground/5 transition-colors"
+                                    aria-label="메뉴"
+                                >
+                                    <MoreVertical className="h-5 w-5" />
+                                </button>
+                                <AnimatePresence>
+                                    {menuOpen && (
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.95 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0, scale: 0.95 }}
+                                            transition={{ duration: 0.15 }}
+                                            className="absolute right-0 top-full mt-2 w-48 rounded-lg border dark:border-white/10 shadow-lg py-1 z-50"
+                                            style={{ backgroundColor: 'var(--background-hex)' }}
+                                        >
+                                            {isSuperpet && (
+                                                <button
+                                                    onClick={() => { toggleLang(); setMenuOpen(false); }}
+                                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-foreground/5 transition-colors"
+                                                >
+                                                    <Globe className="h-4 w-4" />
+                                                    <span>{lang === 'ko' ? 'English' : '한국어'}</span>
+                                                </button>
+                                            )}
+                                            {!authLoading && (
+                                                user ? (
+                                                    <button
+                                                        onClick={() => { logout(); setMenuOpen(false); }}
+                                                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-foreground/5 transition-colors"
+                                                    >
+                                                        <LogOut className="h-4 w-4" />
+                                                        <span>로그아웃</span>
+                                                    </button>
+                                                ) : (
+                                                    <Link
+                                                        href={`/login?callbackUrl=${encodeURIComponent(pathname)}`}
+                                                        onClick={() => setMenuOpen(false)}
+                                                        className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-foreground/5 transition-colors"
+                                                    >
+                                                        <LogIn className="h-4 w-4" />
+                                                        <span>로그인</span>
+                                                    </Link>
+                                                )
+                                            )}
+                                            <button
+                                                onClick={() => { setTheme(theme === 'dark' ? 'light' : 'dark'); setMenuOpen(false); }}
+                                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-foreground/5 transition-colors"
+                                            >
+                                                {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                                                <span>{theme === 'dark' ? '라이트 모드' : '다크 모드'}</span>
+                                            </button>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
                         )}
                     </div>
                 </div>

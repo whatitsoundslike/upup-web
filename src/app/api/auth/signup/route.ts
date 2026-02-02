@@ -6,11 +6,11 @@ import { AUTH_COOKIE_NAME } from '@/config/auth';
 
 export async function POST(request: Request) {
   try {
-    const { name, email, password } = await request.json();
+    const { name, uid, password } = await request.json();
 
-    if (!email || !password) {
+    if (!uid || !password) {
       return NextResponse.json(
-        { error: '이메일과 비밀번호를 입력해주세요.' },
+        { error: '아이디와 비밀번호를 입력해주세요.' },
         { status: 400 }
       );
     }
@@ -22,21 +22,22 @@ export async function POST(request: Request) {
       );
     }
 
-    const existing = await prisma.member.findUnique({ where: { email } });
+    const existing = await prisma.member.findUnique({ where: { uid } });
     if (existing) {
       return NextResponse.json(
-        { error: '이미 사용 중인 이메일입니다.' },
+        { error: '이미 사용 중인 아이디입니다.' },
         { status: 409 }
       );
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const member = await prisma.member.create({
-      data: { name: name || null, email, password: hashedPassword },
+      data: { name: name || null, uid, email: null, password: hashedPassword },
     });
 
     const token = await signToken({
       sub: member.id.toString(),
+      uid: member.uid,
       email: member.email,
       name: member.name,
     });
@@ -44,6 +45,7 @@ export async function POST(request: Request) {
     const response = NextResponse.json({
       user: {
         id: member.id.toString(),
+        uid: member.uid,
         email: member.email,
         name: member.name,
       },

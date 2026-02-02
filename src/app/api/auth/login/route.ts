@@ -6,19 +6,19 @@ import { AUTH_COOKIE_NAME } from '@/config/auth';
 
 export async function POST(request: Request) {
   try {
-    const { email, password } = await request.json();
+    const { uid, password } = await request.json();
 
-    if (!email || !password) {
+    if (!uid || !password) {
       return NextResponse.json(
-        { error: '이메일과 비밀번호를 입력해주세요.' },
+        { error: '아이디와 비밀번호를 입력해주세요.' },
         { status: 400 }
       );
     }
 
-    const member = await prisma.member.findUnique({ where: { email } });
+    const member = await prisma.member.findUnique({ where: { uid } });
     if (!member) {
       return NextResponse.json(
-        { error: '이메일 또는 비밀번호가 올바르지 않습니다.' },
+        { error: '아이디 또는 비밀번호가 올바르지 않습니다.' },
         { status: 401 }
       );
     }
@@ -26,13 +26,14 @@ export async function POST(request: Request) {
     const isValid = await bcrypt.compare(password, member.password);
     if (!isValid) {
       return NextResponse.json(
-        { error: '이메일 또는 비밀번호가 올바르지 않습니다.' },
+        { error: '아이디 또는 비밀번호가 올바르지 않습니다.' },
         { status: 401 }
       );
     }
 
     const token = await signToken({
       sub: member.id.toString(),
+      uid: member.uid,
       email: member.email,
       name: member.name,
     });
@@ -40,6 +41,7 @@ export async function POST(request: Request) {
     const response = NextResponse.json({
       user: {
         id: member.id.toString(),
+        uid: member.uid,
         email: member.email,
         name: member.name,
       },

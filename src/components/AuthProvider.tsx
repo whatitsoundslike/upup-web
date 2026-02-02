@@ -1,11 +1,12 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 interface User {
   id: string;
-  email: string;
+  uid: string;
+  email: string | null;
   name: string | null;
 }
 
@@ -19,14 +20,15 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue>({
   user: null,
   loading: true,
-  refreshUser: async () => {},
-  logout: async () => {},
+  refreshUser: async () => { },
+  logout: async () => { },
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
 
   const refreshUser = useCallback(async () => {
     try {
@@ -47,9 +49,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     setUser(null);
-    router.push('/');
+    const firstSegment = pathname.split('/')[1] || '';
+    router.push(firstSegment ? `/${firstSegment}` : '/');
     router.refresh();
-  }, [router]);
+  }, [router, pathname]);
 
   useEffect(() => {
     refreshUser();

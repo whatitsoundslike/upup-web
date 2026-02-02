@@ -4,7 +4,8 @@ import { AUTH_COOKIE_NAME, JWT_EXPIRES_IN } from '@/config/auth';
 
 export interface JwtPayload {
   sub: string;
-  email: string;
+  uid: string;
+  email: string | null;
   name: string | null;
   [key: string]: unknown;
 }

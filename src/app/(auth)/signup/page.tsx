@@ -13,6 +13,7 @@ export default function SignupPage() {
   const router = useRouter();
   const { refreshUser } = useAuth();
 
+  const [uid, setUid] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,6 +24,16 @@ export default function SignupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (uid.length < 6) {
+      setError('아이디는 6자 이상이어야 합니다.');
+      return;
+    }
+
+    if (name.length < 2) {
+      setError('닉네임은 2자 이상이어야 합니다.');
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError('비밀번호가 일치하지 않습니다.');
@@ -40,7 +51,7 @@ export default function SignupPage() {
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ uid, name, email, password }),
       });
 
       const data = await res.json();
@@ -85,9 +96,9 @@ export default function SignupPage() {
           <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-foreground/40" />
           <input
             type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="이름 (선택)"
+            value={uid}
+            onChange={(e) => setUid(e.target.value)}
+            placeholder="아이디"
             className={cn(
               "w-full pl-10 pr-4 py-3 rounded-lg border dark:border-white/10",
               "bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-tesla-red/50",
@@ -97,13 +108,12 @@ export default function SignupPage() {
         </div>
 
         <div className="relative">
-          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-foreground/40" />
+          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-foreground/40" />
           <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="이메일"
-            required
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="닉네임"
             className={cn(
               "w-full pl-10 pr-4 py-3 rounded-lg border dark:border-white/10",
               "bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-tesla-red/50",
@@ -111,6 +121,7 @@ export default function SignupPage() {
             )}
           />
         </div>
+
 
         <div className="relative">
           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-foreground/40" />

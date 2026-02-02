@@ -8,9 +8,10 @@ datasource db {
 }
 
 model Member {
-  id        BigInt      @id @default(autoincrement())
+  id        BigInt   @id @default(autoincrement())
+  uid       String   @unique
   name      String?
-  email     String   @unique
+  email     String?  @unique
   password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
@@ -18,20 +19,20 @@ model Member {
 }
 
 model Room {
-  id        BigInt      @id @default(autoincrement())
-  member    Member   @relation(fields: [memberId], references: [id])
-  memberId  BigInt
-  name      String?
+  id          BigInt   @id @default(autoincrement())
+  member      Member   @relation(fields: [memberId], references: [id])
+  memberId    BigInt
+  name        String?
   description String?
-  images    Json
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now())
-  items     Item[]
-  records   Record[]
+  images      Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+  items       Item[]
+  records     Record[]
 }
 
 model Item {
-  id        BigInt      @id @default(autoincrement())
+  id        BigInt   @id @default(autoincrement())
   room      Room     @relation(fields: [roomId], references: [id])
   roomId    BigInt
   memberId  BigInt
@@ -45,7 +46,7 @@ model Item {
 }
 
 model Record {
-  id        BigInt      @id @default(autoincrement())
+  id        BigInt   @id @default(autoincrement())
   room      Room     @relation(fields: [roomId], references: [id])
   roomId    BigInt
   memberId  BigInt
@@ -54,4 +55,3 @@ model Record {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
 }
-  
