@@ -20,7 +20,6 @@ export const koToEn: Record<string, string> = {
     '방어': 'DEF',
     '속도': 'SPD',
     '장착중': 'Equipped',
-    'HP': '체력',
 
     // === SuperpetHome ===
     '본 게임은 베타서비스 중입니다.': 'This game is currently in beta.',
@@ -323,6 +322,7 @@ export const koToEn: Record<string, string> = {
     '매주 새로운 시즌이 시작됩니다.': 'A new season starts every week.',
     '캐릭터 저장 기능이 추가되었습니다!': 'Character save function has been added!',
     '확인': 'OK',
+    '공지사항': 'Notice',
 
     // === 랭킹 ===
     '랭킹 불러오는 중...': 'Loading rankings...',
