@@ -34,6 +34,7 @@ export function Navbar() {
     const [menuOpen, setMenuOpen] = React.useState(false);
     const menuRef = React.useRef<HTMLDivElement>(null);
     const [saveStatus, setSaveStatus] = React.useState<'idle' | 'saving' | 'saved'>('idle');
+    const [showSaveModal, setShowSaveModal] = React.useState(false);
 
     const handleSave = async () => {
         if (saveStatus === 'saving') return;
@@ -41,6 +42,7 @@ export function Navbar() {
         const ok = await saveToServer();
         setSaveStatus(ok ? 'saved' : 'idle');
         if (ok) {
+            setShowSaveModal(true);
             setTimeout(() => setSaveStatus('idle'), 2000);
         }
     };
@@ -123,36 +125,12 @@ export function Navbar() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                        {mounted && !authLoading && (
-                            user ? (
-                                <div className="hidden md:flex items-center">
-                                    <span className="text-sm text-foreground/70 font-bold ">
-                                        {user.name}
-                                    </span>
-                                    <button
-                                        onClick={logout}
-                                        className="p-2 rounded-full hover:bg-foreground/5 transition-colors"
-                                        aria-label="로그아웃"
-                                    >
-                                        <LogOut className="h-4 w-4" />
-                                    </button>
-                                </div>
-                            ) : (
-                                <Link
-                                    href={`/login?callbackUrl=${encodeURIComponent(pathname)}`}
-                                    className="hidden md:block p-2 rounded-full hover:bg-foreground/5 transition-colors"
-                                    aria-label="로그인"
-                                >
-                                    <div className="flex items-center gap-1">{lang === 'ko' ? '로그인' : 'LogIn'}<LogIn className="h-4 w-4" /></div>
-                                </Link>
-                            )
-                        )}
                         {/* Desktop: save button */}
                         {mounted && isSuperpet && user && (
                             <button
                                 onClick={handleSave}
                                 disabled={saveStatus === 'saving'}
-                                className="hidden md:flex items-center gap-1 p-2 rounded-full hover:bg-foreground/5 transition-colors"
+                                className="md:flex items-center gap-1 p-2 rounded-full hover:bg-foreground/5 transition-colors"
                                 aria-label="저장"
                             >
                                 {saveStatus === 'saved' ? <Check className="h-4 w-4 text-green-500" /> : <Save className="h-4 w-4" />}
@@ -199,16 +177,6 @@ export function Navbar() {
                                             className="absolute right-0 top-full mt-2 w-48 rounded-lg border dark:border-white/10 shadow-lg py-1 z-50"
                                             style={{ backgroundColor: 'var(--background-hex)' }}
                                         >
-                                            {isSuperpet && user && (
-                                                <button
-                                                    onClick={() => { handleSave(); setMenuOpen(false); }}
-                                                    disabled={saveStatus === 'saving'}
-                                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-foreground/5 transition-colors"
-                                                >
-                                                    {saveStatus === 'saved' ? <Check className="h-4 w-4 text-green-500" /> : <Save className="h-4 w-4" />}
-                                                    <span>{saveStatus === 'saved' ? '저장 완료' : '저장'}</span>
-                                                </button>
-                                            )}
                                             {isSuperpet && (
                                                 <button
                                                     onClick={() => { toggleLang(); setMenuOpen(false); }}
@@ -250,6 +218,30 @@ export function Navbar() {
                                 </AnimatePresence>
                             </div>
                         )}
+                        {mounted && !authLoading && (
+                            user ? (
+                                <div className="hidden md:flex items-center">
+                                    <span className="text-sm text-foreground/70 font-bold ">
+                                        {user.name}
+                                    </span>
+                                    <button
+                                        onClick={logout}
+                                        className="p-2 rounded-full hover:bg-foreground/5 transition-colors"
+                                        aria-label="로그아웃"
+                                    >
+                                        <LogOut className="h-4 w-4" />
+                                    </button>
+                                </div>
+                            ) : (
+                                <Link
+                                    href={`/login?callbackUrl=${encodeURIComponent(pathname)}`}
+                                    className="hidden md:block p-2 rounded-full hover:bg-foreground/5 transition-colors"
+                                    aria-label="로그인"
+                                >
+                                    <div className="flex items-center gap-1">{lang === 'ko' ? '로그인' : 'LogIn'}<LogIn className="h-4 w-4" /></div>
+                                </Link>
+                            )
+                        )}
                     </div>
                 </div>
             </div>
@@ -281,6 +273,44 @@ export function Navbar() {
                                 </Link>
                             ))}
                         </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {showSaveModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 px-4"
+                        onClick={() => setShowSaveModal(false)}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="relative w-full max-w-sm p-6 rounded-2xl shadow-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-green-500"
+                        >
+                            <div className="text-center mb-6">
+                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/10 mb-4">
+                                    <Check className="h-8 w-8 text-green-500" />
+                                </div>
+                                <h3 className="text-xl font-black mb-2">{lang === 'ko' ? '저장 완료' : 'Save Complete'}</h3>
+                                <p className="text-sm text-foreground/60 leading-relaxed">
+                                    {lang === 'ko'
+                                        ? '게임 데이터가 서버에 안전하게 저장되었습니다.'
+                                        : 'Your game data has been safely saved to the server.'}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setShowSaveModal(false)}
+                                className="w-full py-3 rounded-xl bg-green-500 text-white font-bold hover:bg-green-600 transition-colors"
+                            >
+                                {lang === 'ko' ? '확인' : 'Confirm'}
+                            </button>
+                        </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>
