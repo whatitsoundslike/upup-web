@@ -1,15 +1,24 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { NextResponse } from 'next/server';
+import { put } from '@vercel/blob';
+import sharp from 'sharp';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export async function POST(request: Request) {
     try {
-        const { image, name, className, element, style } = await request.json();
+        const { image, name, className, element, style, characterId } = await request.json();
 
         if (!image) {
             return NextResponse.json(
                 { success: false, error: '이미지가 없습니다' },
+                { status: 400 }
+            );
+        }
+
+        if (!characterId) {
+            return NextResponse.json(
+                { success: false, error: '캐릭터 ID가 없습니다' },
                 { status: 400 }
             );
         }
@@ -89,11 +98,7 @@ export async function POST(request: Request) {
 - Rich colors, detailed armor or magical accessories on the animal
 - Epic and powerful atmosphere`;
 
-        const cardResult = await cardModel.generateContent([
-            {
-                inlineData: { mimeType, data: base64Data },
-            },
-            `
+        const fullPrompt = `
 Transform this animal into a fantasy RPG card game character portrait.
 Character info:
 - Name: "${name || 'Hero'}"
@@ -104,14 +109,20 @@ ${stylePrompt}
 - It must maintain a human-like bipedal form (standing on two legs)
 - Portrait orientation, centered composition
 - Fix the aspect ratio to 9:16
-- Set the resolution to 171 px wide and 304 px high.
+- Set the resolution to 169 px wide and 300 px high.
 - The animal's features should still be recognizable
 - Add the text 'SSR' to the top-right corner of the card, and add five stars in the bottom-middle of the card.
 - Write the name "${name || 'Hero'}" at the bottom of the card.
 - Please fill it so there are no gaps along the border.
-Do not include any other text or numbers.
-Important: If the input is not an animal photo, return a failure response.`,
+Do not include any other text or numbers.`;
+
+        const cardResult = await cardModel.generateContent([
+            {
+                inlineData: { mimeType, data: base64Data },
+            },
+            fullPrompt,
         ]);
+
 
         // 응답에서 이미지 파트 추출
         const parts = cardResult.response.candidates?.[0]?.content?.parts;
@@ -133,9 +144,21 @@ Important: If the input is not an animal photo, return a failure response.`,
             );
         }
 
-        const cardImage = `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`;
+        // Step 3: Sharp로 이미지 리사이즈 (세로 300px)
+        const imageBuffer = Buffer.from(imagePart.inlineData.data, 'base64');
+        const resizedImageBuffer = await sharp(imageBuffer)
+            .resize({ height: 300, withoutEnlargement: true })
+            .webp({ quality: 100 })
+            .toBuffer();
 
-        return NextResponse.json({ success: true, cardImage });
+        // Step 4: Vercel Blob에 업로드
+        const blob = await put(`/superpet/player/${characterId}`, resizedImageBuffer, {
+            access: 'public',
+            contentType: 'image/webp',
+        });
+
+        return NextResponse.json({ success: true, cardImage: blob.url });
+
     } catch (error) {
         console.error('Card generation error:', error);
         return NextResponse.json(

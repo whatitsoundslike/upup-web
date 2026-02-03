@@ -128,6 +128,7 @@ export default function SuperpetHome() {
                         className: char.className,
                         element: char.element,
                         style: cardStyle,
+                        characterId: char.id,
                     }),
                 });
                 const data = await res.json();
@@ -647,7 +648,7 @@ export default function SuperpetHome() {
                                     - {t('캐릭터 저장 기능이 추가되었습니다!')} (2026.02.03)<br />
                                     - {t('랭킹 기능이 추가되었습니다!')} (2026.02.03)
                                     - {t('무료 사료 배달 기능이 추가되었습니다! 웹 접속시 10분 마다 사료가 지급됩니다.')} (2026.02.03)<br />
-                                    
+
                                 </p>
                             </div>
                             <button
