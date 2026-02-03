@@ -23,6 +23,7 @@ type RankingEntry = {
 export default function Ranking() {
   const { t } = useLanguage();
   const [rankings, setRankings] = useState<RankingEntry[]>([]);
+  const [updatedAt, setUpdatedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,6 +34,7 @@ export default function Ranking() {
         const payload = await res.json();
         if (!mounted) return;
         setRankings(Array.isArray(payload?.data) ? payload.data : []);
+        if (payload?.updatedAt) setUpdatedAt(payload.updatedAt);
       } catch {
         if (!mounted) return;
         setRankings([]);
@@ -61,6 +63,11 @@ export default function Ranking() {
           <div>
             <p className="text-xs font-semibold tracking-[0.3em] text-amber-500/80 uppercase">Superpet</p>
             <h1 className="text-3xl font-black text-foreground">{t('랭킹 TOP20')}</h1>
+            {updatedAt && (
+              <p className="text-xs text-foreground/40 mt-0.5">
+                {new Date(updatedAt).toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })} {t('기준')}
+              </p>
+            )}
           </div>
         </div>
 

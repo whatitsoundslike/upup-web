@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { unstable_cache } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 
 type SavedCharacter = {
@@ -102,18 +103,18 @@ function getBestCharacter(characters: SavedCharacter[], rankCharacterId?: string
   return { character: best, score: bestScore };
 }
 
-export async function GET() {
-  try {
-  const saves = await prisma.gameSave.findMany({
-    orderBy: { rankScore: 'desc' },
-    take: 20,
-  });
+const getCachedRankings = unstable_cache(
+  async () => {
+    const saves = await prisma.gameSave.findMany({
+      orderBy: { rankScore: 'desc' },
+      take: 20,
+    });
 
-  const rankings: RankingEntry[] = [];
-  for (const save of saves) {
-    const characters = parseCharacters(save.data);
-    const best = getBestCharacter(characters, save.rankCharacterId);
-    if (!best || !best.character?.id || !best.character?.name) continue;
+    const rankings: RankingEntry[] = [];
+    for (const save of saves) {
+      const characters = parseCharacters(save.data);
+      const best = getBestCharacter(characters, save.rankCharacterId);
+      if (!best || !best.character?.id || !best.character?.name) continue;
 
       const equipment = best.character.equipment && typeof best.character.equipment === 'object'
         ? Object.values(best.character.equipment)
@@ -147,7 +148,16 @@ export async function GET() {
       });
     }
 
-    return NextResponse.json({ data: rankings });
+    return { data: rankings, updatedAt: new Date().toISOString() };
+  },
+  ['superpet-rankings'],
+  { revalidate: 3600 }
+);
+
+export async function GET() {
+  try {
+    const result = await getCachedRankings();
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Ranking list error:', error);
     return NextResponse.json({ error: '랭킹 데이터를 불러오지 못했습니다.' }, { status: 500 });
