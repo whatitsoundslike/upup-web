@@ -47,12 +47,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
+    // If on superpet page, save game state and clear local data
+    const firstSegment = pathname.split('/')[1] || '';
+    if (firstSegment === 'superpet') {
+      try {
+        // Dynamically import to avoid loading on non-superpet pages
+        const { saveToServer } = await import('@/app/(main)/superpet/gameSync');
+        const { clearGameData } = await import('@/app/(main)/superpet/storage');
+
+        // Save current game state to server
+        await saveToServer();
+
+        // Clear local game data
+        clearGameData();
+      } catch (error) {
+        console.error('Failed to save game data during logout:', error);
+      }
+    }
+
+    // Proceed with logout
     await fetch('/api/auth/logout', { method: 'POST' });
     setUser(null);
-    const firstSegment = pathname.split('/')[1] || '';
-    router.push(firstSegment ? `/${firstSegment}` : '/');
-    router.refresh();
-  }, [router, pathname]);
+
+    // Force full page reload to home
+    window.location.href = firstSegment ? `/${firstSegment}` : '/';
+  }, [pathname]);
 
   useEffect(() => {
     refreshUser();

@@ -40,3 +40,11 @@ export function setItem(key: string, value: string): void {
 export function removeItem(key: string): void {
     localStorage.removeItem(STORAGE_PREFIX + key);
 }
+
+export function clearGameData(): void {
+    // Clear only game-related data, preserve other data like language preferences
+    const gameKeys = ['characters', 'active-character', 'inventory'];
+    for (const key of gameKeys) {
+        removeItem(key);
+    }
+}
