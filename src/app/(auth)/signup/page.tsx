@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { Mail, Lock, User, UserPlus, Loader2, Pencil } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 import { cn } from '@/lib/utils';
+import { saveToServer } from '@/app/(main)/superpet/gameSync';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -62,6 +63,7 @@ export default function SignupPage() {
       }
 
       await refreshUser();
+      await saveToServer();
       router.push('/');
     } catch {
       setError('서버 오류가 발생했습니다.');

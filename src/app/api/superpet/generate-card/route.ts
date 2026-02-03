@@ -91,7 +91,8 @@ Style requirements:
 - Rich colors, detailed armor or magical accessories on the animal
 - Epic and powerful atmosphere
 - Portrait orientation, centered composition
-- Fix the aspect ratio to 6:9
+- Fix the aspect ratio to 9:16
+- Set the resolution to 171 px wide and 304 px high.
 - The animal's features should still be recognizable
 - Add the text 'SSR' to the top-right corner of the card, and add five stars in the bottom-middle of the card.
 - Write the name "${name || 'Hero'}" at the bottom of the card.

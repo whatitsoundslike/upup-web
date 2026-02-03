@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import { Mail, Lock, LogIn, Loader2, User } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 import { cn } from '@/lib/utils';
-import { loadFromServer } from '@/app/(main)/superpet/gameSync';
+import { syncOnLogin } from '@/app/(main)/superpet/gameSync';
 
 function LoginForm() {
   const router = useRouter();
@@ -41,7 +41,7 @@ function LoginForm() {
       }
 
       await refreshUser();
-      await loadFromServer();
+      await syncOnLogin();
       router.push(callbackUrl);
     } catch {
       setError('서버 오류가 발생했습니다.');
