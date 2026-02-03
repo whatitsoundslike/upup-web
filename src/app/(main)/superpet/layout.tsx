@@ -3,6 +3,7 @@ import CoupangLeftBanner from './components/CoupangLeftBanner';
 import CoupangRightBanner from './components/CoupangRightBanner';
 import BottomBanner from './components/BottomBanner';
 import AutoSave from './components/AutoSave';
+import FeedReward from './components/FeedReward';
 
 export default function SuperpetLayout({ children }: { children: React.ReactNode }) {
     return (
@@ -19,6 +20,7 @@ export default function SuperpetLayout({ children }: { children: React.ReactNode
                 </div>
 
                 <AutoSave />
+                <FeedReward />
 
                 {/* Main Content */}
                 <main className="flex-grow">

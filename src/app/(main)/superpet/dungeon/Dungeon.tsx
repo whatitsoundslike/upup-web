@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Swords, Shield, Star, Trophy, ArrowLeft,
-    Heart, Skull, Zap, PawPrint, Gift,
+    Heart, Skull, Zap, PawPrint, Gift, Timer,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
@@ -594,11 +594,26 @@ export default function Dungeon() {
     const [showImpact, setShowImpact] = useState(false);
     const [impactKey, setImpactKey] = useState(0);
     const [attackDistance, setAttackDistance] = useState(100);
+    const [feedCountdown, setFeedCountdown] = useState('');
     const router = useRouter();
 
     useEffect(() => {
         setCharacter(loadCharacter());
         setInventory(loadInventory());
+    }, []);
+
+    useEffect(() => {
+        const FEED_INTERVAL = 10 * 60 * 1000;
+        const update = () => {
+            const last = Number(getItem('last-feed-time') || Date.now());
+            const remaining = Math.max(0, FEED_INTERVAL - (Date.now() - last));
+            const min = Math.floor(remaining / 60000);
+            const sec = Math.floor((remaining % 60000) / 1000);
+            setFeedCountdown(`${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`);
+        };
+        update();
+        const interval = setInterval(update, 1000);
+        return () => clearInterval(interval);
     }, []);
 
     useEffect(() => {
@@ -1172,6 +1187,16 @@ export default function Dungeon() {
                             <span className="text-foreground/40">/ {getTotalStats(character).hp}</span>
                         </motion.div>
                     </div>
+
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                        className="flex items-center justify-center gap-2 mb-6 text-sm text-foreground/50"
+                    >
+                        <Timer className="h-4 w-4" />
+                        <span>{t('다음 사료 배달까지')} <span className="font-bold text-amber-500">{feedCountdown}</span></span>
+                    </motion.div>
 
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                         {dungeons.map((dungeon, idx) => (
