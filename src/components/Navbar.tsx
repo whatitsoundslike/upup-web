@@ -23,6 +23,7 @@ import { navConfigs, defaultNavItems, type NavItem, navRoomLogo } from '@/config
 import { Globe } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 import { saveToServer } from '@/app/(main)/superpet/gameSync';
+import ProgressModal from '@/app/(main)/superpet/components/ProgressModal';
 
 export function Navbar() {
     const pathname = usePathname();
@@ -276,6 +277,8 @@ export function Navbar() {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            <ProgressModal isOpen={saveStatus === 'saving'} message={lang === 'ko' ? '데이터를 저장하고 있습니다...' : 'Saving data...'} />
 
             <AnimatePresence>
                 {showSaveModal && (

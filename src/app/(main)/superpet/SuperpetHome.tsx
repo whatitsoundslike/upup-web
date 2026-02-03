@@ -20,6 +20,8 @@ import {
     type Character,
     type PetInfo
 } from './types';
+import { saveToServer } from './gameSync';
+import ProgressModal from './components/ProgressModal';
 
 const ELEMENT_COLORS: Record<string, string> = {
     '불': 'bg-red-500',
@@ -32,7 +34,7 @@ export default function SuperpetHome() {
     const { t, lang } = useLanguage();
     const [petName, setPetName] = useState('');
     const [petType, setPetType] = useState<PetInfo['type']>('dog');
-    const [cardStyle, setCardStyle] = useState<'cute' | 'powerful'>('cute');
+    const [cardStyle, setCardStyle] = useState<'cute' | 'powerful' | null>(null);
     const [traits, setTraits] = useState<string[]>([]);
     const [characters, setCharacters] = useState<Character[]>([]);
     const [showForm, setShowForm] = useState(false);
@@ -42,7 +44,7 @@ export default function SuperpetHome() {
     const [showAnnouncement, setShowAnnouncement] = useState(false);
     const [petPhoto, setPetPhoto] = useState<string | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
-    const [generateProgress, setGenerateProgress] = useState(0);
+    const [progressMessage, setProgressMessage] = useState('');
     const [generateError, setGenerateError] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isSharing, setIsSharing] = useState(false);
@@ -81,21 +83,6 @@ export default function SuperpetHome() {
         }
     }, [createdCharacter]);
 
-    // 생성 중 프로그레스바 시뮬레이션
-    useEffect(() => {
-        if (!isGenerating) {
-            setGenerateProgress(0);
-            return;
-        }
-        setGenerateProgress(0);
-        const interval = setInterval(() => {
-            setGenerateProgress((prev) => {
-                if (prev >= 90) return prev;
-                return prev + Math.random() * 8 + 2;
-            });
-        }, 1500);
-        return () => clearInterval(interval);
-    }, [isGenerating]);
 
     const toggleTrait = (trait: string) => {
         setTraits((prev) =>
@@ -125,9 +112,12 @@ export default function SuperpetHome() {
 
         if (fileInputRef.current) fileInputRef.current.value = '';
 
+        // 프로그레스 모달 표시
+        setProgressMessage(petPhoto ? t('멋진 캐릭터 카드를 생성 중입니다...') : t('데이터를 저장하고 있습니다...'));
+        setIsGenerating(true);
+
         // 2단계: 사진이 있으면 캐릭터 정보와 함께 카드 생성
         if (petPhoto) {
-            setIsGenerating(true);
             try {
                 const res = await fetch('/api/superpet/generate-card', {
                     method: 'POST',
@@ -142,11 +132,8 @@ export default function SuperpetHome() {
                 });
                 const data = await res.json();
                 if (data.success && data.cardImage) {
-                    // 캐릭터에 생성된 카드 이미지 반영
                     char.image = data.cardImage;
                     saveCharacter(char);
-                    setCharacters(loadAllCharacters());
-                    setCreatedCharacter({ ...char });
                 } else {
                     setGenerateError(data.error || t('카드 생성에 실패했습니다'));
                 }
@@ -154,13 +141,17 @@ export default function SuperpetHome() {
                 setGenerateError(t('카드 생성에 실패했습니다'));
             }
             setPetPhoto(null);
-            setIsGenerating(false);
         }
 
+        // 3단계: 서버 저장
+        setProgressMessage(t('데이터를 저장하고 있습니다...'));
+        await saveToServer();
+
+        setIsGenerating(false);
         setCharacters(loadAllCharacters());
         setPetName('');
         setTraits([]);
-        setCardStyle('cute');
+        setCardStyle(null);
         setShowForm(false);
         setCreatedCharacter(char);
     };
@@ -501,8 +492,8 @@ export default function SuperpetHome() {
                                             key={pt.key}
                                             onClick={() => setPetType(pt.key)}
                                             className={`flex-1 py-3 rounded-xl font-semibold text-sm transition-all ${petType === pt.key
-                                                ? 'bg-amber-500 text-white shadow-lg'
-                                                : 'bg-foreground/5 text-foreground/60 hover:bg-foreground/10'
+                                                ? 'bg-amber-500 text-white shadow-lg border border-amber-500'
+                                                : 'bg-foreground/5 text-foreground/60 hover:bg-foreground/10 border border-foreground/20'
                                                 }`}
                                         >
                                             {t(pt.label)}
@@ -514,14 +505,17 @@ export default function SuperpetHome() {
                             {/* 카드 스타일 선택 */}
                             <div className="mb-6">
                                 <label className="block text-sm font-semibold mb-2 text-foreground/80">
-                                    {t('카드 스타일')}
+                                    {t('카드 스타일')} <span className="text-red-500">*</span>
                                 </label>
+                                {cardStyle === null && (
+                                    <p className="text-xs text-foreground/40 mt-1 text-red-500">{t('카드 스타일을 선택해주세요')}</p>
+                                )}
                                 <div className="flex gap-3">
                                     <button
                                         onClick={() => setCardStyle('cute')}
                                         className={`flex-1 py-3 rounded-xl font-semibold text-sm transition-all ${cardStyle === 'cute'
-                                            ? 'bg-amber-500 text-white shadow-lg'
-                                            : 'bg-foreground/5 text-foreground/60 hover:bg-foreground/10'
+                                            ? 'bg-amber-500 text-white shadow-lg border border-amber-500'
+                                            : 'bg-foreground/5 text-foreground/60 hover:bg-foreground/10 border border-foreground/20'
                                             }`}
                                     >
                                         {t('귀여운 카툰')}
@@ -529,8 +523,8 @@ export default function SuperpetHome() {
                                     <button
                                         onClick={() => setCardStyle('powerful')}
                                         className={`flex-1 py-3 rounded-xl font-semibold text-sm transition-all ${cardStyle === 'powerful'
-                                            ? 'bg-amber-500 text-white shadow-lg'
-                                            : 'bg-foreground/5 text-foreground/60 hover:bg-foreground/10'
+                                            ? 'bg-amber-500 text-white shadow-lg border border-amber-500'
+                                            : 'bg-foreground/5 text-foreground/60 hover:bg-foreground/10 border border-foreground/20'
                                             }`}
                                     >
                                         {t('강력한 일러스트')}
@@ -541,7 +535,7 @@ export default function SuperpetHome() {
                             {/* 특성 선택 */}
                             <div className="mb-8">
                                 <label className="block text-sm font-semibold mb-2 text-foreground/80">
-                                    {t('특성 선택')} <span className="text-foreground/40 font-normal">({traits.length}/3)</span>
+                                    {t('특성 선택')} <span className="text-red-500">*</span> <span className="text-foreground/40 font-normal">({traits.length}/3)</span>
                                 </label>
                                 <div className="flex flex-wrap gap-2">
                                     {PET_TRAITS.map((trait) => (
@@ -549,8 +543,8 @@ export default function SuperpetHome() {
                                             key={trait}
                                             onClick={() => toggleTrait(trait)}
                                             className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${traits.includes(trait)
-                                                ? 'bg-amber-500 text-white shadow-md'
-                                                : 'bg-foreground/5 text-foreground/60 hover:bg-foreground/10'
+                                                ? 'bg-amber-500 text-white shadow-md border border-amber-500'
+                                                : 'bg-foreground/5 text-foreground/60 hover:bg-foreground/10 border border-foreground/20'
                                                 }`}
                                         >
                                             {t(trait)}
@@ -600,37 +594,17 @@ export default function SuperpetHome() {
                                 </div>
                             )}
 
-                            {/* 생성 버튼 / 프로그레스바 */}
-                            {isGenerating ? (
-                                <div className="w-full rounded-xl bg-foreground/5 border border-foreground/10 p-4">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className="text-sm font-semibold text-foreground/70 flex items-center gap-2">
-                                            <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
-                                            {t('멋진 캐릭터 카드를 생성 중입니다...')}
-                                        </span>
-                                        <span className="text-xs font-bold text-amber-500">{Math.round(generateProgress)}%</span>
-                                    </div>
-                                    <div className="h-3 rounded-full bg-foreground/10 overflow-hidden">
-                                        <motion.div
-                                            className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500"
-                                            initial={{ width: 0 }}
-                                            animate={{ width: `${generateProgress}%` }}
-                                            transition={{ duration: 0.3, ease: 'easeOut' }}
-                                        />
-                                    </div>
-                                </div>
-                            ) : (
-                                <motion.button
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={handleGenerate}
-                                    disabled={!petName.trim() || traits.length < 3 || !petPhoto}
-                                    className="w-full py-4 rounded-xl bg-amber-500 text-white font-bold text-lg shadow-lg hover:bg-amber-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                >
-                                    <Sparkles className="h-5 w-5" />
-                                    {t('캐릭터 생성')}
-                                </motion.button>
-                            )}
+                            {/* 생성 버튼 */}
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={handleGenerate}
+                                disabled={!petName.trim() || traits.length < 3 || !petPhoto || !cardStyle || isGenerating}
+                                className="w-full py-4 rounded-xl bg-amber-500 text-white font-bold text-lg shadow-lg hover:bg-amber-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                                <Sparkles className="h-5 w-5" />
+                                {t('캐릭터 생성')}
+                            </motion.button>
 
                             {/* 취소 버튼 */}
                             {characters.length > 0 && (
@@ -686,6 +660,9 @@ export default function SuperpetHome() {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* 프로그레스 모달 */}
+            <ProgressModal isOpen={isGenerating} message={progressMessage} />
 
             {/* 삭제 확인 모달 */}
             <AnimatePresence>

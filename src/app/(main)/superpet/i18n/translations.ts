@@ -277,6 +277,7 @@ export const koToEn: Record<string, string> = {
     '캐릭터를 찾을 수 없습니다.': 'Character not found.',
     '인벤토리에 해당 아이템이 없습니다.': 'Item not found in inventory.',
     'HP가 이미 최대치입니다.': 'HP is already at maximum.',
+    '데이터를 저장하고 있습니다...': 'Saving data...',
 
     // === Shop ===
     '골드 상점': 'Gold Shop',
