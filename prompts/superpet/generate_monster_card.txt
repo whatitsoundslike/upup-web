@@ -1,0 +1,38 @@
+I’m going to create a monster card called ‘숲지기’. 
+- Add the text 'SR' to the top-right corner of the card, and add three stars in the bottom-middle of the card. 
+- Fantasy RPG art style with dramatic lighting and magical effects 
+- Include ornate card frame/border design 
+- Portrait orientation, centered composition 
+- Fix the aspect ratio to 9:16 
+- Set the resolution to 171 px wide and 304 px high. 
+- Please fill it so there are no gaps along the border. 
+- Don’t include the name on the card. Do not include any other text or numbers.
+
+
+
+I’m going to create a monster card called ‘대지의 군주’. 
+- Add the text 'SR' to the top-right corner of the card, and add four stars in the bottom-middle of the card. 
+- Fantasy RPG art style with dramatic lighting and magical effects 
+- Include ornate card frame/border design 
+- Portrait orientation, centered composition 
+- Fix the aspect ratio to 9:16 
+- Set the resolution to 171 px wide and 304 px high. 
+- Please fill it so there are no gaps along the border. 
+- Don’t include the name on the card. Do not include any other text or numbers.
+
+
+
+I’m going to create a monster card called ‘마룡’. 
+- Add the text 'SSR' to the top-right corner of the card, and add five stars in the bottom-middle of the card. 
+- Epic and powerful atmosphere;
+- Fantasy RPG art style with dramatic lighting and magical effects 
+- Include ornate card frame/border design 
+- Portrait orientation, centered composition 
+- Fix the aspect ratio to 9:16 
+- Set the resolution to 171 px wide and 304 px high. 
+- Please fill it so there are no gaps along the border. 
+- Don’t include the name on the card. Do not include any other text or numbers.
+
+
+
+https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/Earth_Lord.jpg

@@ -105,9 +105,15 @@ function getBestCharacter(characters: SavedCharacter[], rankCharacterId?: string
 
 const getCachedRankings = unstable_cache(
   async () => {
-    const saves = await prisma.gameSave.findMany({
+    const topIds = await prisma.gameSave.findMany({
+      select: { id: true },
       orderBy: { rankScore: 'desc' },
       take: 20,
+    });
+
+    const saves = await prisma.gameSave.findMany({
+      where: { id: { in: topIds.map((s) => s.id) } },
+      orderBy: { rankScore: 'desc' },
     });
 
     const rankings: RankingEntry[] = [];

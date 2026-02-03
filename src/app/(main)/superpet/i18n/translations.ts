@@ -173,24 +173,12 @@ export const koToEn: Record<string, string> = {
     '고대의 용들이 서식하는 위험한 계곡. 강력한 드래곤들이 도사리고 있다': 'A dangerous valley inhabited by ancient dragons. Powerful dragons lurk within.',
 
     // === 몬스터 이름 ===
-    '떠돌이 비둘기': 'Wandering Pigeon',
-    '길고양이': 'Stray Cat',
-    '한강 괴물': 'Han River Monster',
-    '산토끼': 'Mountain Rabbit',
-    '멧돼지': 'Wild Boar',
-    '산신령': 'Mountain Spirit',
-    '산악 독수리': 'Mountain Eagle',
-    '반달가슴곰': 'Asiatic Black Bear',
-    '천왕봉 수호자': 'Guardian of Cheonwangbong',
-    '백록': 'White Deer',
-    '화산 정령': 'Volcano Spirit',
-    '백두산 신룡': 'Divine Dragon',
     '솔잎 다람쥐': 'Pine Squirrel',
     '숲속 여우': 'Forest Fox',
     '은빛 올빼미': 'Silver Owl',
     '독버섯 정령': 'Mushroom Spirit',
     '은빛 늑대': 'Silver Wolf',
-    '소나무 수호령': 'Pine Guardian',
+    '숲지기': 'Forest Guardian',
     '이끼 요정': 'Moss Fairy',
     '숲 정령': 'Forest Spirit',
     '나무 골렘': 'Tree Golem',
@@ -228,7 +216,7 @@ export const koToEn: Record<string, string> = {
     // === 전투 UI ===
     '공격!': 'Attack!',
     '자동 전투': 'Auto Battle',
-    '자동 전투 중...': 'Auto Battling...',
+    '자동 전투 진행 중...': 'Auto Battling...',
     '도망치기': 'Flee',
 
     // === 전투 결과 ===
@@ -236,6 +224,8 @@ export const koToEn: Record<string, string> = {
     '획득 아이템': 'Obtained Items',
     '드롭된 아이템이 없습니다': 'No items dropped',
     '다시 도전': 'Try Again',
+    '전투 포기': 'Give Up',
+    '모험 계속하기': 'Continue',
     '다른 던전 선택': 'Select Another',
     '패배...': 'Defeat...',
     '다음에는 더 강해져서 돌아오자!': 'Come back stronger next time!',

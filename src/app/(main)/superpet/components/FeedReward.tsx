@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { addItemToInventory, loadCharacter } from '../types';
 import { getItem, setItem } from '../storage';
 
-const FEED_INTERVAL = 10 * 60 * 1000; // 10 minutes
+const FEED_INTERVAL = 30 * 60 * 1000; // 30 minutes
 
 export default function FeedReward() {
     const [showModal, setShowModal] = useState(false);

@@ -25,6 +25,8 @@ interface DroppedItem {
 interface MonsterData {
     name: string;
     emoji: string;
+    imageUrl?: string;
+    videoUrl?: string;
     level: number;
     hp: number;
     attack: number;
@@ -123,13 +125,14 @@ const dungeons: DungeonData[] = [
                 ],
             },
             {
-                name: '소나무 수호령',
+                name: '숲지기',
                 emoji: '🌲',
                 level: 10,
                 hp: 150,
                 attack: 17,
                 isBoss: true,
-                spawnChance: 2,
+                spawnChance: 5,
+                imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/Forest_Guardian.jpg",
                 drops: [
                     { itemId: 'dubai_cookie', chance: 100 },
                     { itemId: 'iron_helmet', chance: 20 },
@@ -235,7 +238,8 @@ const dungeons: DungeonData[] = [
                 hp: 300,
                 attack: 60,
                 isBoss: true,
-                spawnChance: 2,
+                spawnChance: 5,
+                imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/Great_Forest_Spirit.jpg",
                 drops: [
                     { itemId: 'dubai_cookie', chance: 100 },
                     { itemId: 'bronze_helmet', chance: 10 },
@@ -341,7 +345,8 @@ const dungeons: DungeonData[] = [
                 hp: 700,
                 attack: 100,
                 isBoss: true,
-                spawnChance: 2,
+                spawnChance: 5,
+                videoUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/Earth_Lord_mov.mp4",
                 drops: [
                     { itemId: 'dubai_cookie', chance: 100 },
                     { itemId: 'knight_helmet', chance: 5 },
@@ -448,6 +453,7 @@ const dungeons: DungeonData[] = [
                 attack: 150,
                 isBoss: true,
                 spawnChance: 1,
+                videoUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/Phoenix_mov.mp4",
                 drops: [
                     { itemId: 'dubai_cookie', chance: 100 },
                     { itemId: 'phoenix_helmet', chance: 5 },
@@ -554,6 +560,7 @@ const dungeons: DungeonData[] = [
                 attack: 200,
                 isBoss: true,
                 spawnChance: 1,
+                videoUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/Evil_Dragon_mov.mp4",
                 drops: [
                     { itemId: 'legend_meat', chance: 100 },
                     { itemId: 'dragon_helmet', chance: 1 },
@@ -981,7 +988,7 @@ export default function Dungeon() {
                                     transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                                 >
                                     {character.image ? (
-                                        <img src={character.image} alt={character.name} className="w-23 h-40 object-cover rounded-xl mx-auto mb-2 border border-amber-500" />
+                                        <img src={character.image} alt={character.name} className="w-23 h-40 lg:w-54 lg:h-80 object-cover rounded-xl mx-auto mb-2 border border-amber-500" />
                                     ) : (
                                         <div className="text-4xl mb-2">🐾</div>
                                     )}
@@ -1016,9 +1023,15 @@ export default function Dungeon() {
                                         : { x: 0, scale: 1, rotate: 0 }
                                     }
                                     transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-                                    className="text-4xl mb-2 w-25 h-40 flex items-center justify-center"
+                                    className="text-4xl mb-2 w-25 h-40 lg:w-50 lg:h-80 flex items-center justify-center"
                                 >
-                                    {selectedMonster?.emoji}
+                                    {selectedMonster?.imageUrl ? (
+                                        <img src={selectedMonster.imageUrl} alt={selectedMonster.name} className="w-full h-full object-cover rounded-xl border border-red-500" />
+                                    ) : selectedMonster?.videoUrl ? (
+                                        <video src={selectedMonster.videoUrl} autoPlay loop muted playsInline className="w-full h-full object-cover rounded-xl border border-red-500" />
+                                    ) : (
+                                        selectedMonster?.emoji
+                                    )}
                                 </motion.div>
                                 <h3 className="font-bold text-lg">{t(selectedMonster?.name)}</h3>
                                 <span className={`inline-block px-2 py-0.5 rounded-full text-white text-xs font-bold ${selectedMonster?.isBoss ? 'bg-purple-500' : 'bg-blue-500'}`}>
@@ -1066,7 +1079,7 @@ export default function Dungeon() {
                                 onClick={exitBattle}
                                 className="w-full py-3 rounded-xl bg-foreground/5 text-foreground/40 text-sm font-bold hover:bg-foreground/10 transition-colors"
                             >
-                                {t('전투 포기 (도망치기)')}
+                                {t('전투 포기')}
                             </motion.button>
                         </div>
                     )}
@@ -1085,7 +1098,7 @@ export default function Dungeon() {
                                         onClick={() => startBattle(selectedDungeon)}
                                         className="px-3 py-1.5 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors flex items-center gap-2"
                                     >
-                                        <Swords className="h-4 w-4" /> {t('다시 도전')}
+                                        <Swords className="h-4 w-4" /> {t('모험 계속하기')}
                                     </button>
                                     <button
                                         onClick={exitBattle}
