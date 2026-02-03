@@ -5,7 +5,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export async function POST(request: Request) {
     try {
-        const { image, name, className, element } = await request.json();
+        const { image, name, className, element, style } = await request.json();
 
         if (!image) {
             return NextResponse.json(
@@ -71,31 +71,44 @@ export async function POST(request: Request) {
         const elementMap: Record<string, string> = { '불': 'Fire', '물': 'Water', '풍': 'Wind', '땅': 'Earth' };
         const elementEn = elementMap[element] || 'Fire';
 
+        const isCute = style === 'cute';
+        const stylePrompt = isCute
+            ? `Style requirements:
+- Cute, adorable chibi/kawaii cartoon style with soft pastel colors
+- The animal should be depicted as an adorable, round, and charming ${classEn} character
+- Big expressive eyes, small body, oversized head proportions (chibi style)
+- Soft shading, rounded shapes, and a warm friendly atmosphere
+- The card must reflect the ${elementEn} element theme with cute effects (${elementEn === 'Fire' ? 'tiny cute flames, warm pastel red/orange tones' : elementEn === 'Water' ? 'cute water bubbles, soft blue tones, sparkly ice' : elementEn === 'Wind' ? 'gentle leaf swirls, soft green/mint aura' : 'cute pebbles, warm brown/cream tones'})
+- ${classEn === 'Berserker' ? 'Tiny adorable armor, oversized cute weapon' : classEn === 'Paladin' ? 'Mini holy knight outfit, small round shield, soft golden glow' : 'Cute dark hoodie, tiny daggers, playful shadow effects'}
+- Cartoon/anime card game art style with soft lighting`
+            : `Style requirements:
+- The animal should be depicted as a powerful, heroic ${classEn} character
+- The card must reflect the ${elementEn} element theme (${elementEn === 'Fire' ? 'flames, warm red/orange tones' : elementEn === 'Water' ? 'water, cool blue tones, ice crystals' : elementEn === 'Wind' ? 'wind swirls, green/cyan aura' : 'earth, rocks, brown/amber tones'})
+- ${classEn === 'Berserker' ? 'Heavy armor, massive weapon, aggressive battle stance' : classEn === 'Paladin' ? 'Holy knight armor, shield, divine golden light aura' : 'Dark leather outfit, daggers/claws, stealthy shadow effects'}
+- Fantasy RPG art style with dramatic lighting and magical effects
+- Rich colors, detailed armor or magical accessories on the animal
+- Epic and powerful atmosphere`;
+
         const cardResult = await cardModel.generateContent([
             {
                 inlineData: { mimeType, data: base64Data },
             },
             `
-Transform this animal into an epic fantasy RPG card game character portrait.
+Transform this animal into a fantasy RPG card game character portrait.
 Character info:
 - Name: "${name || 'Hero'}"
 - Class: ${classEn}
 - Element: ${elementEn}
-Style requirements:
-- The animal should be depicted as a powerful, heroic ${classEn} character
-- The card must reflect the ${elementEn} element theme (${elementEn === 'Fire' ? 'flames, warm red/orange tones' : elementEn === 'Water' ? 'water, cool blue tones, ice crystals' : elementEn === 'Wind' ? 'wind swirls, green/cyan aura' : 'earth, rocks, brown/amber tones'})
-- ${classEn === 'Berserker' ? 'Heavy armor, massive weapon, aggressive battle stance' : classEn === 'Paladin' ? 'Holy knight armor, shield, divine golden light aura' : 'Dark leather outfit, daggers/claws, stealthy shadow effects'}
-- Fantasy RPG art style with dramatic lighting and magical effects
+${stylePrompt}
 - Include ornate card frame/border design
 - It must maintain a human-like bipedal form (standing on two legs)
-- Rich colors, detailed armor or magical accessories on the animal
-- Epic and powerful atmosphere
 - Portrait orientation, centered composition
 - Fix the aspect ratio to 9:16
 - Set the resolution to 171 px wide and 304 px high.
 - The animal's features should still be recognizable
 - Add the text 'SSR' to the top-right corner of the card, and add five stars in the bottom-middle of the card.
 - Write the name "${name || 'Hero'}" at the bottom of the card.
+- Please fill it so there are no gaps along the border.
 Do not include any other text or numbers.
 Important: If the input is not an animal photo, return a failure response.`,
         ]);

@@ -32,6 +32,7 @@ export default function SuperpetHome() {
     const { t, lang } = useLanguage();
     const [petName, setPetName] = useState('');
     const [petType, setPetType] = useState<PetInfo['type']>('dog');
+    const [cardStyle, setCardStyle] = useState<'cute' | 'powerful'>('cute');
     const [traits, setTraits] = useState<string[]>([]);
     const [characters, setCharacters] = useState<Character[]>([]);
     const [showForm, setShowForm] = useState(false);
@@ -136,6 +137,7 @@ export default function SuperpetHome() {
                         name: char.name,
                         className: char.className,
                         element: char.element,
+                        style: cardStyle,
                     }),
                 });
                 const data = await res.json();
@@ -158,6 +160,7 @@ export default function SuperpetHome() {
         setCharacters(loadAllCharacters());
         setPetName('');
         setTraits([]);
+        setCardStyle('cute');
         setShowForm(false);
         setCreatedCharacter(char);
     };
@@ -254,7 +257,7 @@ export default function SuperpetHome() {
                                         className="mb-4"
                                     >
                                         {createdCharacter.image ? (
-                                            <img src={createdCharacter.image} alt={createdCharacter.name} className="w-54 h-80 object-cover rounded-2xl mx-auto shadow-lg border-2 border-amber-500" />
+                                            <img src={createdCharacter.image} alt={createdCharacter.name} className="w-45 h-80 object-cover rounded-2xl mx-auto shadow-lg border-2 border-amber-500" />
                                         ) : (
                                             <span className="text-6xl">🐾</span>
                                         )}
@@ -505,6 +508,33 @@ export default function SuperpetHome() {
                                             {t(pt.label)}
                                         </button>
                                     ))}
+                                </div>
+                            </div>
+
+                            {/* 카드 스타일 선택 */}
+                            <div className="mb-6">
+                                <label className="block text-sm font-semibold mb-2 text-foreground/80">
+                                    {t('카드 스타일')}
+                                </label>
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => setCardStyle('cute')}
+                                        className={`flex-1 py-3 rounded-xl font-semibold text-sm transition-all ${cardStyle === 'cute'
+                                            ? 'bg-amber-500 text-white shadow-lg'
+                                            : 'bg-foreground/5 text-foreground/60 hover:bg-foreground/10'
+                                            }`}
+                                    >
+                                        {t('귀여운 카툰')}
+                                    </button>
+                                    <button
+                                        onClick={() => setCardStyle('powerful')}
+                                        className={`flex-1 py-3 rounded-xl font-semibold text-sm transition-all ${cardStyle === 'powerful'
+                                            ? 'bg-amber-500 text-white shadow-lg'
+                                            : 'bg-foreground/5 text-foreground/60 hover:bg-foreground/10'
+                                            }`}
+                                    >
+                                        {t('강력한 일러스트')}
+                                    </button>
                                 </div>
                             </div>
 

@@ -223,7 +223,7 @@ export default function Room() {
                     >
                         <div className="flex items-center gap-4 mb-3">
                             {character.image ? (
-                                <img src={character.image} alt={character.name} className="w-27 h-40 object-cover rounded-xl border border-amber-500" />
+                                <img src={character.image} alt={character.name} className="w-23 h-40 object-cover rounded-xl border border-amber-500" />
                             ) : (
                                 <div className="text-3xl">🐾</div>
                             )}
