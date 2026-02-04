@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import ProgressModal from '@/app/(main)/superpet/components/ProgressModal';
 
 interface User {
   id: string;
@@ -27,6 +28,7 @@ const AuthContext = createContext<AuthContextValue>({
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -58,12 +60,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Save current game state to server only if characters exist
         const characters = getItem('characters');
         if (characters && JSON.parse(characters).length > 0) {
+          setSaving(true);
           await saveToServer();
+          setSaving(false);
         }
 
         // Clear local game data
         clearGameData();
       } catch (error) {
+        setSaving(false);
         console.error('Failed to save game data during logout:', error);
       }
     }
@@ -80,9 +85,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshUser();
   }, [refreshUser]);
 
+  const savingMessage = typeof window !== 'undefined' && localStorage.getItem('superpet-lang') === 'en'
+    ? 'Saving data...'
+    : '데이터를 저장하고 있습니다...';
+
   return (
     <AuthContext.Provider value={{ user, loading, refreshUser, logout }}>
       {children}
+      <ProgressModal isOpen={saving} message={savingMessage} />
     </AuthContext.Provider>
   );
 }

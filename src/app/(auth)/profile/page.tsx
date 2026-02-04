@@ -1,13 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Lock, Pencil, Loader2, ArrowLeft, User, CreditCard, IdCard } from 'lucide-react';
+import { Lock, Pencil, Loader2, ArrowLeft, User, IdCard } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 import { cn } from '@/lib/utils';
+import { koToEn } from '@/app/(main)/superpet/i18n/translations';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -20,6 +21,24 @@ export default function ProfilePage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [lang, setLang] = useState<'ko' | 'en'>('ko');
+
+  const t = useCallback((korean: string): string => {
+    if (lang === 'ko') return korean;
+    return koToEn[korean] ?? korean;
+  }, [lang]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('superpet-lang');
+    if (saved === 'en') setLang('en');
+
+    const handleChange = () => {
+      const current = localStorage.getItem('superpet-lang');
+      setLang(current === 'en' ? 'en' : 'ko');
+    };
+    window.addEventListener('superpet-lang-change', handleChange);
+    return () => window.removeEventListener('superpet-lang-change', handleChange);
+  }, []);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -39,22 +58,22 @@ export default function ProfilePage() {
     setSuccess('');
 
     if (name.length < 2) {
-      setError('닉네임은 2자 이상이어야 합니다.');
+      setError(t('닉네임은 2자 이상이어야 합니다.'));
       return;
     }
 
     if (newPassword && newPassword !== confirmPassword) {
-      setError('새 비밀번호가 일치하지 않습니다.');
+      setError(t('새 비밀번호가 일치하지 않습니다.'));
       return;
     }
 
     if (newPassword && newPassword.length < 6) {
-      setError('새 비밀번호는 6자 이상이어야 합니다.');
+      setError(t('새 비밀번호는 6자 이상이어야 합니다.'));
       return;
     }
 
     if (newPassword && !currentPassword) {
-      setError('현재 비밀번호를 입력해주세요.');
+      setError(t('현재 비밀번호를 입력해주세요.'));
       return;
     }
 
@@ -76,7 +95,7 @@ export default function ProfilePage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || '수정에 실패했습니다.');
+        setError(data.error || t('수정에 실패했습니다.'));
         return;
       }
 
@@ -84,9 +103,9 @@ export default function ProfilePage() {
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      setSuccess('정보가 수정되었습니다.');
+      setSuccess(t('정보가 수정되었습니다.'));
     } catch {
-      setError('서버 오류가 발생했습니다.');
+      setError(t('서버 오류가 발생했습니다.'));
     } finally {
       setLoading(false);
     }
@@ -111,7 +130,7 @@ export default function ProfilePage() {
         </Link>
       </div>
 
-      <h1 className="text-2xl font-bold text-center mb-8">내 정보 수정</h1>
+      <h1 className="text-2xl font-bold text-center mb-8">{t('내 정보 수정')}</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* 아이디 (읽기 전용) */}
@@ -135,13 +154,13 @@ export default function ProfilePage() {
         <div>
           <label className="flex items-center gap-1.5 text-sm font-medium text-foreground/60 mb-1.5">
             <User className="h-4 w-4" />
-            닉네임
+            {t('닉네임')}
           </label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="닉네임"
+            placeholder={t('닉네임')}
             className={cn(
               "w-full px-4 py-3 rounded-lg border dark:border-white/10",
               "bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-tesla-red/50",
@@ -151,7 +170,7 @@ export default function ProfilePage() {
         </div>
 
         <div className="pt-4 border-t dark:border-white/10">
-          <p className="text-sm text-foreground/50 mb-3">비밀번호 변경 (선택)</p>
+          <p className="text-sm text-foreground/50 mb-3">{t('비밀번호 변경 (선택)')}</p>
         </div>
 
         {/* 현재 비밀번호 */}
@@ -161,7 +180,7 @@ export default function ProfilePage() {
             type="password"
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
-            placeholder="현재 비밀번호"
+            placeholder={t('현재 비밀번호')}
             className={cn(
               "w-full pl-10 pr-4 py-3 rounded-lg border dark:border-white/10",
               "bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-tesla-red/50",
@@ -177,7 +196,7 @@ export default function ProfilePage() {
             type="password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            placeholder="새 비밀번호 (6자 이상)"
+            placeholder={t('새 비밀번호 (6자 이상)')}
             className={cn(
               "w-full pl-10 pr-4 py-3 rounded-lg border dark:border-white/10",
               "bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-tesla-red/50",
@@ -193,7 +212,7 @@ export default function ProfilePage() {
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="새 비밀번호 확인"
+            placeholder={t('새 비밀번호 확인')}
             className={cn(
               "w-full pl-10 pr-4 py-3 rounded-lg border dark:border-white/10",
               "bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-tesla-red/50",
@@ -235,14 +254,14 @@ export default function ProfilePage() {
           ) : (
             <Pencil className="h-5 w-5" />
           )}
-          {loading ? '수정 중...' : '수정하기'}
+          {loading ? t('수정 중...') : t('수정하기')}
         </button>
       </form>
 
       <p className="text-center mt-6 text-sm mb-10">
         <Link href="/" className="text-foreground/50 hover:text-foreground flex items-center justify-center gap-1">
           <ArrowLeft className="h-4 w-4" />
-          돌아가기
+          {t('돌아가기')}
         </Link>
       </p>
     </motion.div>

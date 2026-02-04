@@ -127,17 +127,6 @@ export function Navbar() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                        {/* Desktop: save button */}
-                        {mounted && isSuperpet && user && (
-                            <button
-                                onClick={handleSave}
-                                disabled={saveStatus === 'saving'}
-                                className="md:flex items-center gap-1 p-2 rounded-full hover:bg-foreground/5 transition-colors"
-                                aria-label="저장"
-                            >
-                                {saveStatus === 'saved' ? <Check className="h-4 w-4 text-green-500" /> : <Save className="h-4 w-4" />}
-                            </button>
-                        )}
                         {/* Desktop: inline buttons */}
                         {mounted && isSuperpet && (
                             <button
@@ -179,33 +168,24 @@ export function Navbar() {
                                             className="absolute right-0 top-full mt-2 w-48 rounded-lg border dark:border-white/10 shadow-lg py-1 z-50"
                                             style={{ backgroundColor: 'var(--background-hex)' }}
                                         >
-                                            {isSuperpet && (
-                                                <button
-                                                    onClick={() => { toggleLang(); setMenuOpen(false); }}
-                                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-foreground/5 transition-colors"
-                                                >
-                                                    <Globe className="h-4 w-4" />
-                                                    <span>{lang === 'ko' ? 'English' : '한국어'}</span>
-                                                </button>
-                                            )}
                                             {!authLoading && (
                                                 user ? (
                                                     <>
-                                                    <Link
-                                                        href="/profile"
-                                                        onClick={() => setMenuOpen(false)}
-                                                        className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-foreground/5 transition-colors"
-                                                    >
-                                                        <UserCog className="h-4 w-4" />
-                                                        <span>내 정보</span>
-                                                    </Link>
-                                                    <button
-                                                        onClick={() => { logout(); setMenuOpen(false); }}
-                                                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-foreground/5 transition-colors"
-                                                    >
-                                                        <LogOut className="h-4 w-4" />
-                                                        <span>로그아웃</span>
-                                                    </button>
+                                                        <Link
+                                                            href="/profile"
+                                                            onClick={() => setMenuOpen(false)}
+                                                            className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-foreground/5 transition-colors"
+                                                        >
+                                                            <UserCog className="h-4 w-4" />
+                                                            <span>내 정보</span>
+                                                        </Link>
+                                                        <button
+                                                            onClick={() => { logout(); setMenuOpen(false); }}
+                                                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-foreground/5 transition-colors"
+                                                        >
+                                                            <LogOut className="h-4 w-4" />
+                                                            <span>로그아웃</span>
+                                                        </button>
                                                     </>
                                                 ) : (
                                                     <Link
@@ -217,6 +197,15 @@ export function Navbar() {
                                                         <span>로그인</span>
                                                     </Link>
                                                 )
+                                            )}
+                                            {isSuperpet && (
+                                                <button
+                                                    onClick={() => { toggleLang(); setMenuOpen(false); }}
+                                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-foreground/5 transition-colors"
+                                                >
+                                                    <Globe className="h-4 w-4" />
+                                                    <span>{lang === 'ko' ? 'English' : '한국어'}</span>
+                                                </button>
                                             )}
                                             <button
                                                 onClick={() => { setTheme(theme === 'dark' ? 'light' : 'dark'); setMenuOpen(false); }}

@@ -71,11 +71,11 @@ export default function DungeonSelect({ character, feedCountdown, onStartBattle 
                             if (!boss) return null;
                             return (
                                 <div className="mb-4">
-                                    <div className="w-full aspect-[3/4]overflow-hidden mb-2">
+                                    <div className="w-full rounded-lg overflow-hidden mb-2">
                                         {boss.imageUrl ? (
-                                            <img src={boss.imageUrl} alt={boss.name} className="w-full h-full contain" />
+                                            <img src={boss.imageUrl} alt={boss.name} className="w-full h-full object-cover" />
                                         ) : boss.videoUrl ? (
-                                            <video src={boss.videoUrl} autoPlay loop muted playsInline className="w-full h-full contain" />
+                                            <video src={boss.videoUrl} autoPlay loop muted playsInline className="w-full h-full object-cover" />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center bg-foreground/5 text-5xl">{boss.emoji}</div>
                                         )}

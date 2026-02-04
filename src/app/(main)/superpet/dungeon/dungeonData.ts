@@ -38,11 +38,11 @@ export const ELEMENT_EMOJI: Record<string, string> = { '불': '🔥', '물': '�
 export const dungeons: DungeonData[] = [
     {
         id: 5,
-        name: '은빛 소나무 숲',
+        name: '깊은 숲',
         levelRange: 'LV 1~10',
         minLevel: 1,
         maxLevel: 10,
-        description: '은빛으로 빛나는 소나무가 가득한 신비로운 숲. 다양한 숲속 생물들이 서식한다',
+        description: '신비로운 숲. 다양한 숲속 생물들이 서식한다',
         monsters: [
             {
                 name: '솔잎 다람쥐',
@@ -122,7 +122,7 @@ export const dungeons: DungeonData[] = [
                 attack: 17,
                 isBoss: true,
                 spawnChance: 5,
-                imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/Forest_Guardian.jpg",
+                videoUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/Forest_Guardian_mov.mp4",
                 drops: [
                     { itemId: 'dubai_cookie', chance: 100 },
                     { itemId: 'iron_helmet', chance: 20 },
@@ -140,15 +140,15 @@ export const dungeons: DungeonData[] = [
     },
     {
         id: 6,
-        name: '정령의 숲길',
+        name: '고요한 호수',
         levelRange: 'LV 11~20',
         minLevel: 11,
         maxLevel: 20,
-        description: '고대 정령들이 숨쉬는 깊은 숲길. 자연의 힘이 강하게 느껴진다',
+        description: '고요한 호수. 물의 힘이 강하게 느껴진다',
         monsters: [
             {
-                name: '이끼 요정',
-                emoji: '🧚',
+                name: '틸라피아',
+                emoji: '🐟',
                 level: 12,
                 hp: 100,
                 attack: 40,
@@ -162,8 +162,8 @@ export const dungeons: DungeonData[] = [
                 ],
             },
             {
-                name: '숲 정령',
-                emoji: '🌿',
+                name: '메기',
+                emoji: '🐟',
                 level: 14,
                 hp: 110,
                 attack: 42,
@@ -177,8 +177,8 @@ export const dungeons: DungeonData[] = [
                 ],
             },
             {
-                name: '나무 골렘',
-                emoji: '🪵',
+                name: '물 뱀',
+                emoji: '🐍',
                 level: 16,
                 hp: 120,
                 attack: 44,
@@ -192,8 +192,8 @@ export const dungeons: DungeonData[] = [
                 ],
             },
             {
-                name: '덩굴 뱀',
-                emoji: '🐍',
+                name: '사이렌',
+                emoji: '🧜',
                 level: 18,
                 hp: 110,
                 attack: 50,
@@ -207,7 +207,7 @@ export const dungeons: DungeonData[] = [
                 ],
             },
             {
-                name: '어둠 정령',
+                name: '물 정령',
                 emoji: '👻',
                 level: 19,
                 hp: 120,
@@ -222,14 +222,14 @@ export const dungeons: DungeonData[] = [
                 ],
             },
             {
-                name: '숲의 대정령',
+                name: '레비아탄',
                 emoji: '🐉',
                 level: 20,
                 hp: 300,
                 attack: 60,
                 isBoss: true,
                 spawnChance: 5,
-                imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/Great_Forest_Spirit.jpg",
+                videoUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/Leviathan_mov.mp4",
                 drops: [
                     { itemId: 'dubai_cookie', chance: 100 },
                     { itemId: 'bronze_helmet', chance: 10 },
