@@ -205,7 +205,7 @@ export default function SuperpetHome() {
                 <div className="max-w-2xl mx-auto px-4 w-full">
 
                     {/* 홈 로고 영역 */}
-                    {!createdCharacter && (
+                    {!createdCharacter && characters.length === 0 && (
                         <div className="flex flex-col items-center">
                             <div className="text-center mb-4">
                                 <motion.h1
@@ -224,14 +224,15 @@ export default function SuperpetHome() {
                                     <img className='w-full' src="/superpet_thumbnail.webp" alt="logo" />
                                 </motion.p>
                             </div>
-                            <button
-                                onClick={() => setShowAnnouncement(true)}
-                                className="w-[200px] mx-auto bg-amber-500 rounded-full p-2  text-center mb-4 text-lg text-foreground/60 hover:text-foreground transition-colors"
-                            >
-                                📢 {t('공지사항')}
-                            </button>
                         </div>
                     )}
+
+                    <button
+                        onClick={() => setShowAnnouncement(true)}
+                        className="w-[200px] mx-auto bg-amber-500 rounded-full p-2  text-center mb-4 text-lg text-foreground/60 hover:text-foreground transition-colors"
+                    >
+                        📢 {t('공지사항')}
+                    </button>
 
 
                     {/* 캐릭터 생성 결과 */}
