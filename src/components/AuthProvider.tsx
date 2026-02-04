@@ -53,10 +53,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         // Dynamically import to avoid loading on non-superpet pages
         const { saveToServer } = await import('@/app/(main)/superpet/gameSync');
-        const { clearGameData } = await import('@/app/(main)/superpet/storage');
+        const { clearGameData, getItem } = await import('@/app/(main)/superpet/storage');
 
-        // Save current game state to server
-        await saveToServer();
+        // Save current game state to server only if characters exist
+        const characters = getItem('characters');
+        if (characters && JSON.parse(characters).length > 0) {
+          await saveToServer();
+        }
 
         // Clear local game data
         clearGameData();

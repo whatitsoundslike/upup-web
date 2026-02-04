@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { type Character, type GameItem, GAME_ITEMS, addItemToInventory, addExpToCharacter, DUNGEON_EXP, ITEM_RARITY_TEXT, loadCharacter, saveCharacter, getTotalStats, useFood, loadInventory, type InventoryItem } from '../types';
 import { getItem, setItem } from '../storage';
+import { saveToServer } from '../gameSync';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useRouter } from 'next/navigation';
 
@@ -812,6 +813,7 @@ export default function Dungeon() {
             }
             setBattleLog((prev) => [...prev, ...newLog]);
             setBattleState('won');
+            saveToServer();
             return;
         }
 
@@ -835,6 +837,7 @@ export default function Dungeon() {
                 setCharacter(dead);
                 setBattleLog((prev) => [...prev, ...newLog]);
                 setBattleState('lost');
+                saveToServer();
                 return;
             }
         }

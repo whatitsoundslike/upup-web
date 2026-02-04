@@ -2,7 +2,6 @@ import { LanguageProvider } from './i18n/LanguageContext';
 import CoupangLeftBanner from './components/CoupangLeftBanner';
 import CoupangRightBanner from './components/CoupangRightBanner';
 import BottomBanner from './components/BottomBanner';
-import AutoSave from './components/AutoSave';
 import FeedReward from './components/FeedReward';
 
 export default function SuperpetLayout({ children }: { children: React.ReactNode }) {
@@ -19,7 +18,6 @@ export default function SuperpetLayout({ children }: { children: React.ReactNode
                     </div>
                 </div>
 
-                <AutoSave />
                 <FeedReward />
 
                 {/* Main Content */}

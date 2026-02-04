@@ -191,6 +191,7 @@ export default function SuperpetHome() {
         const remaining = loadAllCharacters();
         setCharacters(remaining);
         setDeleteConfirm(null);
+        saveToServer();
         if (remaining.length === 0) {
             setActiveCharacterId(null);
             setShowForm(true);

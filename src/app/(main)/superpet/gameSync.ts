@@ -52,33 +52,3 @@ function getMaxLevel(charactersJson: string | null): number {
     return 0;
   }
 }
-
-export async function syncOnLogin(): Promise<boolean> {
-  try {
-    const res = await fetch('/api/superpet/save');
-    if (!res.ok) return await saveToServer();
-
-    const { data: serverData } = await res.json();
-
-    if (!serverData) {
-      return await saveToServer();
-    }
-
-    const localMaxLevel = getMaxLevel(getItem('characters'));
-    const serverMaxLevel = getMaxLevel(serverData['characters'] ?? null);
-
-    if (localMaxLevel > serverMaxLevel) {
-      return await saveToServer();
-    }
-
-    for (const key of SYNC_KEYS) {
-      const value = serverData[key];
-      if (value != null) {
-        setItem(key, value);
-      }
-    }
-    return true;
-  } catch {
-    return false;
-  }
-}
