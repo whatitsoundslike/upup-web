@@ -21,6 +21,7 @@ interface BattleScreenProps {
     attackDistance: number;
     battleFieldRef: RefObject<HTMLDivElement | null>;
     logRef: RefObject<HTMLDivElement | null>;
+    feedCountdown: string;
     onStartBattle: (dungeon: DungeonData) => void;
     onExitBattle: () => void;
     onUseFood: (itemId: string) => void;
@@ -41,6 +42,7 @@ export default function BattleScreen({
     attackDistance,
     battleFieldRef,
     logRef,
+    feedCountdown,
     onStartBattle,
     onExitBattle,
     onUseFood,
@@ -50,14 +52,6 @@ export default function BattleScreen({
 
     return (
         <div className="max-w-3xl mx-auto px-4 py-2">
-            <motion.h2
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-2xl font-black mb-2 text-center"
-            >
-                {t(selectedDungeon.name)}
-            </motion.h2>
-
             {/* 배틀 필드 */}
             <motion.div
                 ref={battleFieldRef}
@@ -149,7 +143,7 @@ export default function BattleScreen({
                             transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                         >
                             {character.image ? (
-                                <img src={character.image} alt={character.name} className="w-23 h-40 lg:w-45 lg:h-80 object-cover rounded-xl mx-auto mb-2 border border-amber-500" />
+                                <img src={character.image} alt={character.name} className="w-23 h-40 lg:w-45 lg:h-80 object-cover mx-auto mb-2" />
                             ) : (
                                 <div className="text-4xl mb-2">🐾</div>
                             )}
@@ -175,7 +169,7 @@ export default function BattleScreen({
                 <motion.div
                     initial={{ opacity: 0, x: 30 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="glass p-2 rounded-2xl bg-white/5 z-10"
+                    className="glass p-2 rounded-2xl bg-white/5 z-9"
                 >
                     <div className="text-center mb-4 flex flex-col items-center">
                         <motion.div
@@ -187,9 +181,9 @@ export default function BattleScreen({
                             className="text-4xl mb-2 w-25 h-40 lg:w-50 lg:h-80 flex items-center justify-center"
                         >
                             {selectedMonster?.imageUrl ? (
-                                <img src={selectedMonster.imageUrl} alt={selectedMonster.name} className="w-full h-full object-cover rounded-xl border border-red-500" />
+                                <img src={selectedMonster.imageUrl} alt={selectedMonster.name} className="w-21 h-35 lg:w-40 lg:h-70 contain" />
                             ) : selectedMonster?.videoUrl ? (
-                                <video src={selectedMonster.videoUrl} autoPlay loop muted playsInline className="w-full h-full object-cover rounded-xl border border-red-500" />
+                                <video src={selectedMonster.videoUrl} autoPlay loop muted playsInline className="w-full h-full contain" />
                             ) : (
                                 selectedMonster?.emoji
                             )}
@@ -254,19 +248,16 @@ export default function BattleScreen({
                         exit={{ opacity: 0 }}
                         className="glass px-8 rounded-2xl bg-white/5 text-center"
                     >
-                        <div className="flex gap-3 justify-center">
+                        <div className="flex gap-3 justify-center items-center">
                             <button
                                 onClick={() => onStartBattle(selectedDungeon)}
                                 className="px-3 py-1.5 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors flex items-center gap-2"
                             >
                                 <Swords className="h-4 w-4" /> {t('모험 계속하기')}
                             </button>
-                            <button
-                                onClick={onExitBattle}
-                                className="px-3 py-1.5 rounded-xl bg-foreground/10 text-foreground/60 font-bold hover:bg-foreground/20 transition-colors"
-                            >
-                                {t('다른 던전 선택')}
-                            </button>
+                            <div className="px-3 py-1.5 rounded-xl bg-foreground/5 text-foreground/50 text-sm font-bold flex items-center gap-1.5">
+                                🍖 {t('무료 사료')} {feedCountdown}
+                            </div>
                         </div>
 
                         {/* 보유 식품 목록 및 사용 버튼 */}
@@ -317,13 +308,16 @@ export default function BattleScreen({
                         <Skull className="h-16 w-16 text-red-500 mx-auto mb-4" />
                         <h3 className="text-2xl font-black mb-2">{t('패배...')}</h3>
                         <p className="text-foreground/60 mb-4">{t('다음에는 더 강해져서 돌아오자!')}</p>
-                        <div className="flex gap-3 justify-center">
+                        <div className="flex gap-3 justify-center items-center">
                             <button
                                 onClick={() => { router.push("/superpet/room") }}
                                 className="px-6 py-3 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors"
                             >
                                 {t('집으로...')}
                             </button>
+                            <div className="px-3 py-1.5 rounded-xl bg-foreground/5 text-foreground/50 text-sm font-bold flex items-center gap-1.5">
+                                🍖 {t('무료 사료')} {feedCountdown}
+                            </div>
                         </div>
                     </motion.div>
                 )}

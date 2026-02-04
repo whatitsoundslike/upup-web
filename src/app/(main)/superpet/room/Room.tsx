@@ -26,6 +26,7 @@ import {
     calculateEquipmentStats,
 } from '../types';
 import { useLanguage } from '../i18n/LanguageContext';
+import { useDebouncedSave } from '../gameSync';
 
 const STAT_ICONS = {
     hp: { icon: Heart, color: 'text-red-500 fill-red-500' },
@@ -46,6 +47,7 @@ export default function Room() {
     const [searchName, setSearchName] = useState('');
     const [slotFilter, setSlotFilter] = useState<EquipmentSlot | 'all'>('all');
     const [isSharing, setIsSharing] = useState(false);
+    const debouncedSaveToServer = useDebouncedSave();
 
     useEffect(() => {
         setInventory(loadInventory());
@@ -129,6 +131,7 @@ export default function Room() {
                 ? `${result.itemName}을(를) 사용하여 HP ${result.hpRecovered} 회복했습니다!`
                 : `Used ${t(result.itemName!)} to recover ${result.hpRecovered} HP!`;
             showToast(msg, 'success');
+            debouncedSaveToServer();
         } else {
             showToast(t(result.message), 'error');
         }
@@ -142,6 +145,7 @@ export default function Room() {
             const remaining = loadInventory().find((e) => e.item.id === itemId);
             setSelectedItem(remaining ?? null);
             showToast(result.message, 'success');
+            debouncedSaveToServer();
         } else {
             showToast(result.message, 'error');
         }
@@ -153,6 +157,7 @@ export default function Room() {
             setInventory(loadInventory());
             setCharacter(loadCharacter());
             showToast(result.message, 'success');
+            debouncedSaveToServer();
         } else {
             showToast(result.message, 'error');
         }

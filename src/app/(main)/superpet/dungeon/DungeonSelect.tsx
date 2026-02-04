@@ -96,13 +96,6 @@ export default function DungeonSelect({ character, feedCountdown, onStartBattle 
                         <p className="text-sm text-foreground/60 leading-relaxed mb-4 flex-1">
                             {t(dungeon.description)}
                         </p>
-                        <div className="flex flex-wrap gap-1 text-xs text-foreground/50 mb-4">
-                            <Gift className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                            {Array.from(new Set(dungeon.monsters.flatMap(m => m.drops.map(d => d.itemId)))).map((itemId) => {
-                                const item = GAME_ITEMS[itemId];
-                                return item ? <span key={itemId}>{item.emoji}</span> : null;
-                            })}
-                        </div>
                         <motion.button
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}

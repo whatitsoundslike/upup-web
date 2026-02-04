@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useRef } from 'react';
 import { getItem, setItem } from './storage';
 
 const SYNC_KEYS = ['characters', 'active-character', 'inventory'] as const;
@@ -51,4 +52,27 @@ function getMaxLevel(charactersJson: string | null): number {
   } catch {
     return 0;
   }
+}
+
+export function useDebouncedSave(delay = 10000) {
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const debouncedSave = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      saveToServer();
+      timerRef.current = null;
+    }, delay);
+  }, [delay]);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        saveToServer();
+      }
+    };
+  }, []);
+
+  return debouncedSave;
 }

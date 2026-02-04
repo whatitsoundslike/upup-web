@@ -32,6 +32,7 @@ export interface Character {
     gem: number;
     equipment: EquippedItems;
     image?: string;
+    videoUrl?: string;
 }
 
 // 레벨별 필요 경험치 (레벨 1→2: 100, 2→3: 150, ...)

@@ -113,6 +113,11 @@ export function Navbar() {
                                 <Link
                                     key={item.href}
                                     href={item.href}
+                                    onClick={() => {
+                                        if (pathname === item.href) {
+                                            window.dispatchEvent(new CustomEvent('nav-reset', { detail: item.href }));
+                                        }
+                                    }}
                                     className={cn(
                                         "px-3 py-2 rounded-md text-sm font-medium transition-colors",
                                         pathname === item.href
@@ -355,6 +360,11 @@ export function MobileBottomNav() {
                     <Link
                         key={item.href}
                         href={item.href}
+                        onClick={() => {
+                            if (pathname === item.href) {
+                                window.dispatchEvent(new CustomEvent('nav-reset', { detail: item.href }));
+                            }
+                        }}
                         className={cn(
                             "flex flex-col items-center gap-1 p-2 rounded-lg transition-colors",
                             pathname === item.href

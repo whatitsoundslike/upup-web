@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { type Character, GAME_ITEMS, addItemToInventory, addExpToCharacter, ITEM_RARITY_TEXT, loadCharacter, saveCharacter, getTotalStats, useFood, loadInventory, type InventoryItem } from '../types';
 import { getItem } from '../storage';
-import { saveToServer } from '../gameSync';
+import { useDebouncedSave } from '../gameSync';
 import { useLanguage } from '../i18n/LanguageContext';
 import { type DungeonData, type MonsterData, type BattleState } from './dungeonData';
 import DungeonSelect from './DungeonSelect';
@@ -37,11 +37,28 @@ export default function Dungeon() {
     const [impactKey, setImpactKey] = useState(0);
     const [attackDistance, setAttackDistance] = useState(100);
     const [feedCountdown, setFeedCountdown] = useState('');
+    const debouncedSaveToServer = useDebouncedSave();
 
     useEffect(() => {
         setCharacter(loadCharacter());
         setInventory(loadInventory());
     }, []);
+
+    const [navResetKey, setNavResetKey] = useState(0);
+
+    useEffect(() => {
+        const handleNavReset = (e: Event) => {
+            if ((e as CustomEvent).detail === '/superpet/dungeon') {
+                setNavResetKey(k => k + 1);
+            }
+        };
+        window.addEventListener('nav-reset', handleNavReset);
+        return () => window.removeEventListener('nav-reset', handleNavReset);
+    }, []);
+
+    useEffect(() => {
+        if (navResetKey > 0) exitBattle();
+    }, [navResetKey]);
 
     useEffect(() => {
         const FEED_INTERVAL = 30 * 60 * 1000;
@@ -100,6 +117,7 @@ export default function Dungeon() {
                 ? `${result.itemName}을(를) 사용하여 HP ${result.hpRecovered} 회복했습니다!`
                 : `Used ${t(result.itemName!)} to recover ${result.hpRecovered} HP!`;
             showToast(msg, 'success');
+            debouncedSaveToServer();
         } else {
             showToast(t(result.message), 'error');
         }
@@ -223,7 +241,7 @@ export default function Dungeon() {
             }
             setBattleLog((prev) => [...prev, ...newLog]);
             setBattleState('won');
-            saveToServer();
+            debouncedSaveToServer();
             return;
         }
 
@@ -245,7 +263,7 @@ export default function Dungeon() {
                 setCharacter(dead);
                 setBattleLog((prev) => [...prev, ...newLog]);
                 setBattleState('lost');
-                saveToServer();
+                debouncedSaveToServer();
                 return;
             }
         }
@@ -312,6 +330,7 @@ export default function Dungeon() {
                     attackDistance={attackDistance}
                     battleFieldRef={battleFieldRef}
                     logRef={logRef}
+                    feedCountdown={feedCountdown}
                     onStartBattle={startBattle}
                     onExitBattle={exitBattle}
                     onUseFood={handleUseFood}

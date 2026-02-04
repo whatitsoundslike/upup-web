@@ -158,12 +158,8 @@ export const koToEn: Record<string, string> = {
     '용의 계곡': 'Dragon Valley',
 
     // === 던전 설명 ===
-    '도심 속 평화로운 강변. 초보 모험가들이 처음 발걸음을 내딛는 곳': 'A peaceful riverside in the city. Where beginner adventurers take their first steps.',
-    '서울의 진산. 울창한 숲과 험준한 바위가 모험가를 시험한다': 'Seoul\'s guardian mountain. Dense forests and rugged rocks test adventurers.',
-    '영남의 명산. 깊은 계곡과 높은 봉우리에 강력한 존재들이 깃들어 있다': 'A famous mountain. Powerful beings dwell in deep valleys and high peaks.',
-    '제주의 영봉. 신비로운 기운이 감도는 이곳엔 전설의 존재들이 살고 있다': 'The sacred peak of Jeju. Legendary beings inhabit this mystical place.',
-    '은빛으로 빛나는 소나무가 가득한 신비로운 숲. 다양한 숲속 생물들이 서식한다': 'A mystical forest full of silver-glowing pines. Home to various woodland creatures.',
-    '고대 정령들이 숨쉬는 깊은 숲길. 자연의 힘이 강하게 느껴진다': 'A deep forest trail where ancient spirits dwell. Nature\'s power is strongly felt.',
+    '신비로운 숲. 다양한 숲속 생물들이 서식한다': 'A mystical forest. Home to various woodland creatures.',
+    '고요한 호수. 물밑에서 강력한 힘이 느껴진다': 'A quiet lake. A powerful force is felt from the bottom of the water.',
     '대지가 갈라지며 드러난 지하 세계. 용암과 바위 사이로 강력한 존재들이 도사린다': 'An underground world revealed by a cracked earth. Powerful beings lurk between lava and rock.',
     '하늘 높이 솟은 화산 꼭대기의 둥지. 불사조의 화염이 모든 것을 태운다': 'A nest atop a towering volcano. The phoenix\'s flames burn everything.',
     '고대의 용들이 서식하는 위험한 계곡. 강력한 드래곤들이 도사리고 있다': 'A dangerous valley inhabited by ancient dragons. Powerful dragons lurk within.',
@@ -179,7 +175,7 @@ export const koToEn: Record<string, string> = {
     '틸라피아': 'Tilapia',
     '메기': 'Catfish',
     '물 뱀': 'Water Snake',
-    '사이렌': 'Siren',
+    '세이렌': 'Siren',
     '물 정령': 'Water Spirit',
     '레비아탄': 'Leviathan',
 
@@ -196,7 +192,7 @@ export const koToEn: Record<string, string> = {
     '화산 기사': 'Volcano Knight',
     '불의 정령': 'Fire Spirit',
     '피닉스': 'Phoenix',
-    
+
     '어린 비룡': 'Young Wyvern',
     '독룡': 'Poison Dragon',
     '화염 드레이크': 'Flame Drake',
