@@ -11,14 +11,18 @@ export default function FeedReward() {
     const [showModal, setShowModal] = useState(false);
     const [characterName, setCharacterName] = useState('');
 
-    const grantFeed = useCallback(() => {
+    const showFeedPopup = useCallback(() => {
         const character = loadCharacter();
         if (!character) return;
 
-        addItemToInventory('feed', 10);
-        setItem('last-feed-time', Date.now().toString());
         setCharacterName(character.name);
         setShowModal(true);
+    }, []);
+
+    const claimFeed = useCallback(() => {
+        addItemToInventory('feed', 10);
+        setItem('last-feed-time', Date.now().toString());
+        setShowModal(false);
     }, []);
 
     useEffect(() => {
@@ -30,13 +34,13 @@ export default function FeedReward() {
         const check = () => {
             const last = Number(getItem('last-feed-time') || Date.now());
             if (Date.now() - last >= FEED_INTERVAL) {
-                grantFeed();
+                showFeedPopup();
             }
         };
 
         const interval = setInterval(check, 1000);
         return () => clearInterval(interval);
-    }, [grantFeed]);
+    }, [showFeedPopup]);
 
     return (
         <AnimatePresence>
@@ -46,7 +50,6 @@ export default function FeedReward() {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-                    onClick={() => setShowModal(false)}
                 >
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -66,7 +69,7 @@ export default function FeedReward() {
                             </p>
                         </div>
                         <button
-                            onClick={() => setShowModal(false)}
+                            onClick={claimFeed}
                             className="w-full py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 transition-colors"
                         >
                             확인

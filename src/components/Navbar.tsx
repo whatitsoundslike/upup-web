@@ -12,6 +12,7 @@ import {
     LogIn,
     LogOut,
     LogInIcon,
+    UserCog,
     MoreVertical,
     Save,
     Check,
@@ -189,6 +190,15 @@ export function Navbar() {
                                             )}
                                             {!authLoading && (
                                                 user ? (
+                                                    <>
+                                                    <Link
+                                                        href="/profile"
+                                                        onClick={() => setMenuOpen(false)}
+                                                        className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-foreground/5 transition-colors"
+                                                    >
+                                                        <UserCog className="h-4 w-4" />
+                                                        <span>내 정보</span>
+                                                    </Link>
                                                     <button
                                                         onClick={() => { logout(); setMenuOpen(false); }}
                                                         className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-foreground/5 transition-colors"
@@ -196,6 +206,7 @@ export function Navbar() {
                                                         <LogOut className="h-4 w-4" />
                                                         <span>로그아웃</span>
                                                     </button>
+                                                    </>
                                                 ) : (
                                                     <Link
                                                         href={`/login?callbackUrl=${encodeURIComponent(pathname)}`}
@@ -222,9 +233,9 @@ export function Navbar() {
                         {mounted && !authLoading && (
                             user ? (
                                 <div className="hidden md:flex items-center">
-                                    <span className="text-sm text-foreground/70 font-bold ">
-                                        {user.name}
-                                    </span>
+                                    <Link href="/profile" className="text-sm text-foreground/70 font-bold hover:text-foreground transition-colors">
+                                        {lang === 'ko' ? '내정보' : 'Profile'}
+                                    </Link>
                                     <button
                                         onClick={logout}
                                         className="p-2 rounded-full hover:bg-foreground/5 transition-colors"
