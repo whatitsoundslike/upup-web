@@ -159,6 +159,7 @@ export const dungeons: DungeonData[] = [
                 attack: 40,
                 isBoss: false,
                 spawnChance: 25,
+                imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/Tilapia.jpg",
                 drops: [
                     { itemId: 'feed', chance: 20 },
                     { itemId: 'dubai_cookie', chance: 10 },
@@ -174,6 +175,7 @@ export const dungeons: DungeonData[] = [
                 attack: 42,
                 isBoss: false,
                 spawnChance: 22,
+                imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/Catfish.jpg",
                 drops: [
                     { itemId: 'feed', chance: 20 },
                     { itemId: 'dubai_cookie', chance: 10 },
@@ -189,6 +191,7 @@ export const dungeons: DungeonData[] = [
                 attack: 44,
                 isBoss: false,
                 spawnChance: 20,
+                imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/WaterSnake.jpg",
                 drops: [
                     { itemId: 'feed', chance: 20 },
                     { itemId: 'dubai_cookie', chance: 10 },
@@ -204,6 +207,7 @@ export const dungeons: DungeonData[] = [
                 attack: 50,
                 isBoss: false,
                 spawnChance: 17,
+                imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/Siren.jpg",
                 drops: [
                     { itemId: 'feed', chance: 20 },
                     { itemId: 'dubai_cookie', chance: 10 },
@@ -219,6 +223,7 @@ export const dungeons: DungeonData[] = [
                 attack: 55,
                 isBoss: false,
                 spawnChance: 13,
+                imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/WaterSpirit.jpg",
                 drops: [
                     { itemId: 'feed', chance: 20 },
                     { itemId: 'dubai_cookie', chance: 10 },
@@ -259,13 +264,14 @@ export const dungeons: DungeonData[] = [
         description: '대지가 갈라지며 드러난 지하 세계. 용암과 바위 사이로 강력한 존재들이 도사린다',
         monsters: [
             {
-                name: '용암 전갈',
+                name: '사막 전갈',
                 emoji: '🦂',
                 level: 22,
                 hp: 300,
                 attack: 65,
                 isBoss: false,
                 spawnChance: 25,
+                imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/DesertScorpion.jpg",
                 drops: [
                     { itemId: 'feed', chance: 40 },
                     { itemId: 'dubai_cookie', chance: 20 },
@@ -281,6 +287,7 @@ export const dungeons: DungeonData[] = [
                 attack: 70,
                 isBoss: false,
                 spawnChance: 22,
+                imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/RockGolem.jpg",
                 drops: [
                     { itemId: 'feed', chance: 40 },
                     { itemId: 'dubai_cookie', chance: 20 },
@@ -289,13 +296,14 @@ export const dungeons: DungeonData[] = [
                 ],
             },
             {
-                name: '지하 거미',
+                name: '땅굴 거미',
                 emoji: '🕷️',
                 level: 26,
                 hp: 370,
                 attack: 75,
                 isBoss: false,
                 spawnChance: 20,
+                imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/TunnelSpider.jpg",
                 drops: [
                     { itemId: 'feed', chance: 40 },
                     { itemId: 'dubai_cookie', chance: 20 },
@@ -304,13 +312,14 @@ export const dungeons: DungeonData[] = [
                 ],
             },
             {
-                name: '균열 도마뱀',
+                name: '대지 도마뱀',
                 emoji: '🦎',
                 level: 28,
                 hp: 400,
                 attack: 80,
                 isBoss: false,
                 spawnChance: 17,
+                imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/EarthLizard.jpg",
                 drops: [
                     { itemId: 'feed', chance: 40 },
                     { itemId: 'dubai_cookie', chance: 20 },
@@ -319,13 +328,14 @@ export const dungeons: DungeonData[] = [
                 ],
             },
             {
-                name: '마그마 뱀',
+                name: '거대 땅굴 벌레',
                 emoji: '🐉',
                 level: 29,
                 hp: 420,
                 attack: 85,
                 isBoss: false,
                 spawnChance: 13,
+                imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/GiantTunnelWorm.jpg",
                 drops: [
                     { itemId: 'feed', chance: 40 },
                     { itemId: 'dubai_cookie', chance: 20 },

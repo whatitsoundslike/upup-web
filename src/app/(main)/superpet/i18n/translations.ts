@@ -179,11 +179,11 @@ export const koToEn: Record<string, string> = {
     '물 정령': 'Water Spirit',
     '레비아탄': 'Leviathan',
 
-    '용암 전갈': 'Lava Scorpion',
+    '사막 전갈': 'Desert Scorpion',
     '바위 골렘': 'Rock Golem',
-    '지하 거미': 'Cave Spider',
-    '균열 도마뱀': 'Rift Lizard',
-    '마그마 뱀': 'Magma Serpent',
+    '땅굴 거미': 'Tunnel Spider',
+    '대지 도마뱀': 'Earth Lizard',
+    '거대 땅굴 벌레': 'Giant Tunnel Worm',
     '대지의 군주': 'Earth Lord',
 
     '화염 박쥐': 'Flame Bat',

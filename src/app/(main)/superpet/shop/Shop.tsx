@@ -14,6 +14,7 @@ import {
     addItemToInventory,
 } from '../types';
 import { useLanguage } from '../i18n/LanguageContext';
+import { fetchGemBalance, useGem } from '../gemApi';
 
 type ShopTab = 'gold' | 'gem';
 
@@ -31,8 +32,20 @@ export default function Shop() {
     const [activeTab, setActiveTab] = useState<ShopTab>('gold');
     const [activeToast, setActiveToast] = useState<{ message: string; tone: 'success' | 'error'; key: number } | null>(null);
 
+    // 서버 Gem 상태
+    const [gemBalance, setGemBalance] = useState<number | null>(null);
+    const [gemLoading, setGemLoading] = useState(false);
+
     useEffect(() => {
         setCharacter(loadCharacter());
+        // 서버에서 Gem 잔액 로드
+        const loadGem = async () => {
+            const data = await fetchGemBalance();
+            if (data) {
+                setGemBalance(data.balance);
+            }
+        };
+        loadGem();
     }, []);
 
     useEffect(() => {
@@ -41,33 +54,53 @@ export default function Shop() {
         return () => clearTimeout(timer);
     }, [activeToast]);
 
-    const handleBuy = (item: GameItem) => {
+    const handleBuy = async (item: GameItem) => {
         if (!character) return;
 
         if (activeTab === 'gold') {
+            // 골드 구매 (로컬)
             const price = item.shopGoldPrice!;
             if (character.gold < price) {
                 setActiveToast({ message: t('골드가 부족합니다!'), tone: 'error', key: Date.now() });
                 return;
             }
             character.gold -= price;
+            saveCharacter(character);
+            addItemToInventory(item.id, 1);
+            setCharacter({ ...character });
+            setActiveToast({
+                message: `${item.emoji} ${t(item.name)} ${t('구매 완료!')}`,
+                tone: 'success',
+                key: Date.now()
+            });
         } else {
+            // 젬 구매 (서버 API)
             const price = item.shopGemPrice!;
-            if (character.gem < price) {
+            if (gemBalance === null || gemBalance < price) {
                 setActiveToast({ message: t('젬이 부족합니다!'), tone: 'error', key: Date.now() });
                 return;
             }
-            character.gem -= price;
-        }
 
-        saveCharacter(character);
-        addItemToInventory(item.id, 1);
-        setCharacter({ ...character });
-        setActiveToast({
-            message: `${item.emoji} ${t(item.name)} ${t('구매 완료!')}`,
-            tone: 'success',
-            key: Date.now()
-        });
+            setGemLoading(true);
+            const result = await useGem(price, 'shop_item', item.name);
+            setGemLoading(false);
+
+            if (!result.success) {
+                setActiveToast({ message: result.error || t('구매 실패'), tone: 'error', key: Date.now() });
+                return;
+            }
+
+            // 성공 시 잔액 업데이트 및 아이템 지급
+            if (result.balance !== undefined) {
+                setGemBalance(result.balance);
+            }
+            addItemToInventory(item.id, 1);
+            setActiveToast({
+                message: `${item.emoji} ${t(item.name)} ${t('구매 완료!')}`,
+                tone: 'success',
+                key: Date.now()
+            });
+        }
     };
 
     if (!character) {
@@ -124,7 +157,7 @@ export default function Shop() {
                 </div>
                 <div className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-purple-500/10 text-sm">
                     <Gem className="h-4 w-4 text-purple-500" />
-                    <span className="font-bold text-purple-600">{character.gem.toLocaleString()}</span>
+                    <span className="font-bold text-purple-600">{gemBalance !== null ? gemBalance.toLocaleString() : '---'}</span>
                     <span className="text-foreground/40 text-xs">{t('젬')}</span>
                 </div>
             </motion.div>
@@ -172,7 +205,7 @@ export default function Shop() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                     {shopItems.map((item, idx) => {
                         const price = activeTab === 'gold' ? item.shopGoldPrice! : item.shopGemPrice!;
-                        const canAfford = activeTab === 'gold' ? character.gold >= price : character.gem >= price;
+                        const canAfford = activeTab === 'gold' ? character.gold >= price : (gemBalance !== null && gemBalance >= price);
                         return (
                             <motion.div
                                 key={item.id}
@@ -204,15 +237,15 @@ export default function Shop() {
                                 </div>
                                 <button
                                     onClick={() => handleBuy(item)}
-                                    disabled={!canAfford}
-                                    className={`w-full py-2 rounded-xl font-bold text-sm transition-colors ${canAfford
+                                    disabled={!canAfford || (activeTab === 'gem' && gemLoading)}
+                                    className={`w-full py-2 rounded-xl font-bold text-sm transition-colors ${canAfford && !(activeTab === 'gem' && gemLoading)
                                         ? activeTab === 'gold'
                                             ? 'bg-amber-500 text-white hover:bg-amber-600'
                                             : 'bg-purple-500 text-white hover:bg-purple-600'
                                         : 'bg-foreground/10 text-foreground/30 cursor-not-allowed'
                                         }`}
                                 >
-                                    {t('구매')}
+                                    {activeTab === 'gem' && gemLoading ? '...' : t('구매')}
                                 </button>
                             </motion.div>
                         );

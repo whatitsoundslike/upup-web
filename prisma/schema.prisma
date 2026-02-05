@@ -69,3 +69,17 @@ model GameSave {
   @@index([rankScore])
   @@index([rankScore, updatedAt])
 }
+
+// Gem 트랜잭션 테이블 - 획득/소모 내역 기록
+model GemTransaction {
+  id        BigInt   @id @default(autoincrement())
+  memberId  BigInt
+  type      String   @db.VarChar(10)  // "issue" 또는 "use"
+  amount    Int                        // 양수값 (issue: 획득량, use: 소모량)
+  source    String   @db.VarChar(50)  // 획득처/사용처 (예: "purchase", "reward", "delete_character")
+  memo      String?  @db.VarChar(200) // 추가 메모
+  createdAt DateTime @default(now())
+
+  @@index([memberId])
+  @@index([memberId, createdAt])
+}
