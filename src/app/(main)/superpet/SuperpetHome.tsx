@@ -34,7 +34,7 @@ export default function SuperpetHome() {
     const { t, lang } = useLanguage();
     const [petName, setPetName] = useState('');
     const [petType, setPetType] = useState<PetInfo['type']>('dog');
-    const [cardStyle, setCardStyle] = useState<'cute' | 'powerful' | null>(null);
+    const [cardStyle, setCardStyle] = useState<'cute' | 'powerful' | 'furry' | null>(null);
     const [traits, setTraits] = useState<string[]>([]);
     const [characters, setCharacters] = useState<Character[]>([]);
     const [showForm, setShowForm] = useState(false);
@@ -542,6 +542,15 @@ export default function SuperpetHome() {
                                             }`}
                                     >
                                         {t('강력한 일러스트')}
+                                    </button>
+                                    <button
+                                        onClick={() => setCardStyle('furry')}
+                                        className={`flex-1 py-3 rounded-xl font-semibold text-sm transition-all ${cardStyle === 'furry'
+                                            ? 'bg-amber-500 text-white shadow-lg border border-amber-500'
+                                            : 'bg-foreground/5 text-foreground/60 hover:bg-foreground/10 border border-foreground/20'
+                                            }`}
+                                    >
+                                        {t('퍼리')}
                                     </button>
                                 </div>
                             </div>
