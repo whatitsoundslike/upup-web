@@ -336,4 +336,11 @@ export const koToEn: Record<string, string> = {
     '랭킹 불러오는 중...': 'Loading rankings...',
     '랭킹 데이터가 없습니다.': 'No ranking data available.',
     '랭킹 TOP20': 'Ranking TOP20',
+
+    // === 파일 용량 제한 ===
+    '최대 750KB': 'Max 750KB',
+    '파일 용량 초과': 'File Size Exceeded',
+    '업로드 가능한 최대 파일 크기는 750KB입니다.': 'Maximum file size is 750KB.',
+    '더 작은 용량의 이미지를 선택해주세요.': 'Please select a smaller image.',
+    '현재 파일 크기': 'Current file size',
 };

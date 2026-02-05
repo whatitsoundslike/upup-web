@@ -46,6 +46,7 @@ export default function SuperpetHome() {
     const [isGenerating, setIsGenerating] = useState(false);
     const [progressMessage, setProgressMessage] = useState('');
     const [generateError, setGenerateError] = useState<string | null>(null);
+    const [fileSizeError, setFileSizeError] = useState<{ show: boolean; size: number }>({ show: false, size: 0 });
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isSharing, setIsSharing] = useState(false);
 
@@ -92,10 +93,20 @@ export default function SuperpetHome() {
         );
     };
 
+    const MAX_FILE_SIZE = 750 * 1024; // 750KB
+
     const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
         setGenerateError(null);
+
+        // 파일 크기 체크
+        if (file.size > MAX_FILE_SIZE) {
+            setFileSizeError({ show: true, size: file.size });
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            return;
+        }
+
         const reader = new FileReader();
         reader.onload = () => setPetPhoto(reader.result as string);
         reader.readAsDataURL(file);
@@ -579,6 +590,7 @@ export default function SuperpetHome() {
                                     >
                                         <Camera className="h-5 w-5" />
                                         {t('사진 첨부하기')}
+                                        <span className="text-xs text-foreground/30">({t('최대 750KB')})</span>
                                     </button>
                                 )}
                                 <input
@@ -666,6 +678,45 @@ export default function SuperpetHome() {
 
             {/* 프로그레스 모달 */}
             <ProgressModal isOpen={isGenerating} message={progressMessage} />
+
+            {/* 파일 용량 초과 모달 */}
+            <AnimatePresence>
+                {fileSizeError.show && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+                        onClick={() => setFileSizeError({ show: false, size: 0 })}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="relative w-full max-w-sm p-6 rounded-2xl shadow-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-amber-500"
+                        >
+                            <div className="text-center mb-6">
+                                <div className="text-5xl mb-4">📁</div>
+                                <h3 className="text-xl font-black mb-2">{t('파일 용량 초과')}</h3>
+                                <p className="text-sm text-foreground/60 mb-3">
+                                    {t('업로드 가능한 최대 파일 크기는 750KB입니다.')}<br />
+                                    {t('더 작은 용량의 이미지를 선택해주세요.')}
+                                </p>
+                                <p className="text-xs text-foreground/40">
+                                    {t('현재 파일 크기')}: {(fileSizeError.size / 1024).toFixed(1)}KB
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setFileSizeError({ show: false, size: 0 })}
+                                className="w-full py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 transition-colors"
+                            >
+                                {t('확인')}
+                            </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* 삭제 확인 모달 */}
             <AnimatePresence>
