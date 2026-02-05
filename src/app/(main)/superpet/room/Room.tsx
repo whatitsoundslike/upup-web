@@ -10,6 +10,8 @@ import {
     type GameItem,
     type EquipmentSlot,
     type EquippedItem,
+    type EnhanceResult,
+    type EnhanceScrollType,
     ITEM_RARITY_COLORS,
     ITEM_RARITY_BORDER,
     ITEM_RARITY_TEXT,
@@ -25,9 +27,14 @@ import {
     unequipItem,
     saveCharacter,
     calculateEquipmentStats,
+    getRequiredScrollType,
+    getEnhancedStats,
+    getEnhancementBonus,
+    MAX_ENHANCE_LEVEL,
 } from '../types';
+import EnhanceModal from '../components/EnhanceModal';
 import { useLanguage } from '../i18n/LanguageContext';
-import { useDebouncedSave } from '../gameSync';
+import { useDebouncedSave, saveToServer } from '../gameSync';
 
 const STAT_ICONS = {
     hp: { icon: Heart, color: 'text-red-500 fill-red-500' },
@@ -48,6 +55,16 @@ export default function Room() {
     const [searchName, setSearchName] = useState('');
     const [slotFilter, setSlotFilter] = useState<EquipmentSlot | 'all'>('all');
     const [isSharing, setIsSharing] = useState(false);
+    const [enhanceModal, setEnhanceModal] = useState<{
+        isOpen: boolean;
+        target: {
+            type: 'inventory' | 'equipped';
+            item: InventoryItem | null;
+            slot?: EquipmentSlot;
+            instanceId?: string;
+        } | null;
+        scrollId: string;
+    }>({ isOpen: false, target: null, scrollId: '' });
     const debouncedSaveToServer = useDebouncedSave();
 
     useEffect(() => {
@@ -162,6 +179,91 @@ export default function Room() {
         } else {
             showToast(result.message, 'error');
         }
+    };
+
+    // 강화 관련 함수
+    const getScrollIdForSlot = (slot: EquipmentSlot): string => {
+        const scrollType = getRequiredScrollType(slot);
+        const scrollMap: Record<EnhanceScrollType, string> = {
+            weapon: 'weapon_enhance_scroll',
+            armor: 'armor_enhance_scroll',
+            accessory: 'accessory_enhance_scroll',
+        };
+        return scrollMap[scrollType];
+    };
+
+    const getScrollCountForSlot = (slot: EquipmentSlot): number => {
+        const scrollId = getScrollIdForSlot(slot);
+        const scrollEntry = inventory.find((i) => i.item.id === scrollId);
+        return scrollEntry?.quantity ?? 0;
+    };
+
+    const handleStartEnhance = (item: InventoryItem, slot: EquipmentSlot, isEquipped: boolean) => {
+        const scrollId = getScrollIdForSlot(slot);
+        const scrollCount = getScrollCountForSlot(slot);
+
+        if (scrollCount <= 0) {
+            const scrollType = getRequiredScrollType(slot);
+            const scrollNames: Record<EnhanceScrollType, string> = {
+                weapon: '무기 강화 주문서',
+                armor: '방어구 강화 주문서',
+                accessory: '악세사리 강화 주문서',
+            };
+            showToast(lang === 'ko' ? `${scrollNames[scrollType]}가 필요합니다.` : `${scrollNames[scrollType]} required.`, 'error');
+            return;
+        }
+
+        setEnhanceModal({
+            isOpen: true,
+            target: {
+                type: isEquipped ? 'equipped' : 'inventory',
+                item,
+                slot,
+                instanceId: item.instanceId,
+            },
+            scrollId,
+        });
+    };
+
+    const handleEnhanceComplete = (result: EnhanceResult) => {
+        const updatedInventory = loadInventory();
+        const updatedCharacter = loadCharacter();
+        setInventory(updatedInventory);
+        setCharacter(updatedCharacter);
+
+        // 선택된 아이템 업데이트
+        if (selectedItem && selectedItem.instanceId) {
+            // 인벤토리에서 찾기
+            const updatedInInventory = updatedInventory.find((i) => i.instanceId === selectedItem.instanceId);
+            if (updatedInInventory) {
+                setSelectedItem(updatedInInventory);
+            } else if (updatedCharacter) {
+                // 장착된 장비에서 찾기
+                for (const slot of Object.keys(updatedCharacter.equipment) as EquipmentSlot[]) {
+                    const equipped = updatedCharacter.equipment[slot];
+                    if (equipped && equipped.instanceId === selectedItem.instanceId) {
+                        const enhanceLevel = equipped.enhanceLevel ?? 0;
+                        const inventoryFormat: InventoryItem = {
+                            item: equipped.item,
+                            instanceId: equipped.instanceId,
+                            enhanceLevel: equipped.enhanceLevel,
+                            quantity: 0,
+                            stats: enhanceLevel > 0 ? getEnhancedStats(equipped.item.stats, enhanceLevel, slot, equipped.item.rarity) : { ...equipped.item.stats },
+                            equipedItem: [equipped.item]
+                        };
+                        setSelectedItem(inventoryFormat);
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (result.success) {
+            showToast(result.message, 'success');
+        }
+
+        // 강화 후 즉시 서버 저장
+        saveToServer();
     };
 
     const handleShare = () => {
@@ -329,16 +431,18 @@ export default function Room() {
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {equippedEntries.map(([slot, equipped]) => {
                             const item = equipped?.item;
+                            const enhanceLevel = equipped?.enhanceLevel ?? 0;
                             return (
                                 <button
                                     key={slot}
                                     onClick={() => {
-                                        if (item) {
+                                        if (item && equipped) {
                                             const inventoryFormat: InventoryItem = {
                                                 item: item,
-                                                instanceId: equipped?.instanceId,
+                                                instanceId: equipped.instanceId,
+                                                enhanceLevel: equipped.enhanceLevel,
                                                 quantity: 0,
-                                                stats: { ...item.stats },
+                                                stats: enhanceLevel > 0 ? getEnhancedStats(item.stats, enhanceLevel, slot, item.rarity) : { ...item.stats },
                                                 equipedItem: [item]
                                             };
                                             setSelectedItem(inventoryFormat);
@@ -351,7 +455,12 @@ export default function Room() {
                                     <div className="text-2xl">{item?.emoji ?? '—'}</div>
                                     <div className="min-w-0 flex-1">
                                         <div className="text-xs text-foreground/50">{t(slot)}</div>
-                                        <div className="text-sm font-semibold truncate">{item ? t(item.name) : t('비어있음')}</div>
+                                        <div className="text-sm font-semibold truncate">
+                                            {item ? t(item.name) : t('비어있음')}
+                                            {item && enhanceLevel > 0 && (
+                                                <span className="text-amber-500 ml-1">+{enhanceLevel}</span>
+                                            )}
+                                        </div>
                                         {item && (
                                             <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] leading-tight text-foreground/60">
                                                 <span className={`rounded-full px-2 py-0.5 font-semibold bg-foreground/5 ring-1 ring-foreground/10 ${ITEM_RARITY_TEXT[item.rarity]}`}>
@@ -433,7 +542,12 @@ export default function Room() {
                                 }`}
                         >
                             <div className="text-4xl mb-3">{entry.item.emoji}</div>
-                            <h4 className="text-sm font-bold mb-1 truncate">{t(entry.item.name)}</h4>
+                            <h4 className="text-sm font-bold mb-1 truncate">
+                                {t(entry.item.name)}
+                                {entry.item.type === 'equipment' && (entry.enhanceLevel ?? 0) > 0 && (
+                                    <span className="text-amber-500 ml-1">+{entry.enhanceLevel}</span>
+                                )}
+                            </h4>
                             <span className={`text-xs font-semibold ${ITEM_RARITY_TEXT[entry.item.rarity]}`}>
                                 {t(entry.item.rarity)}
                             </span>
@@ -477,7 +591,12 @@ export default function Room() {
 
                                     <div className="text-center mb-4">
                                         <div className="text-6xl mb-3">{modalItem.emoji}</div>
-                                        <h3 className="text-xl font-black">{t(modalItem.name)}</h3>
+                                        <h3 className="text-xl font-black">
+                                            {t(modalItem.name)}
+                                            {modalItem.type === 'equipment' && (selectedItem.enhanceLevel ?? 0) > 0 && (
+                                                <span className="text-amber-500 ml-1">+{selectedItem.enhanceLevel}</span>
+                                            )}
+                                        </h3>
                                         <span className={`text-sm font-semibold ${ITEM_RARITY_TEXT[modalItem.rarity]}`}>
                                             {t(modalItem.rarity)}
                                         </span>
@@ -489,36 +608,66 @@ export default function Room() {
                                         )}
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-2 mb-6">
-                                        {selectedItem.stats.hp > 0 && (
-                                            <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-500/10 text-sm">
-                                                <Heart className="h-3.5 w-3.5 text-red-500" />
-                                                <span className="text-foreground/70">HP</span>
-                                                <span className="ml-auto font-bold text-red-500">+{selectedItem.stats.hp}</span>
+                                    {(() => {
+                                        const enhanceLevel = selectedItem.enhanceLevel ?? 0;
+                                        const enhanceBonus = modalItem.type === 'equipment' && modalItem.equipmentSlot && enhanceLevel > 0
+                                            ? getEnhancementBonus(modalItem.stats, enhanceLevel, modalItem.equipmentSlot, modalItem.rarity)
+                                            : { hp: 0, attack: 0, defense: 0, speed: 0 };
+                                        const baseStats = modalItem.stats;
+
+                                        return (
+                                            <div className="grid grid-cols-2 gap-2 mb-6">
+                                                {(baseStats.hp > 0 || enhanceBonus.hp > 0) && (
+                                                    <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-500/10 text-sm">
+                                                        <Heart className="h-3.5 w-3.5 text-red-500" />
+                                                        <span className="text-foreground/70">HP</span>
+                                                        <span className="ml-auto font-bold text-red-500">
+                                                            +{baseStats.hp}
+                                                            {enhanceBonus.hp > 0 && (
+                                                                <span className="text-amber-400 ml-1">(+{enhanceBonus.hp})</span>
+                                                            )}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {(baseStats.attack > 0 || enhanceBonus.attack > 0) && (
+                                                    <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-orange-500/10 text-sm">
+                                                        <Zap className="h-3.5 w-3.5 text-orange-500" />
+                                                        <span className="text-foreground/70">{t('공격')}</span>
+                                                        <span className="ml-auto font-bold text-orange-500">
+                                                            +{baseStats.attack}
+                                                            {enhanceBonus.attack > 0 && (
+                                                                <span className="text-amber-400 ml-1">(+{enhanceBonus.attack})</span>
+                                                            )}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {(baseStats.defense > 0 || enhanceBonus.defense > 0) && (
+                                                    <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-500/10 text-sm">
+                                                        <Shield className="h-3.5 w-3.5 text-blue-500" />
+                                                        <span className="text-foreground/70">{t('방어')}</span>
+                                                        <span className="ml-auto font-bold text-blue-500">
+                                                            +{baseStats.defense}
+                                                            {enhanceBonus.defense > 0 && (
+                                                                <span className="text-amber-400 ml-1">(+{enhanceBonus.defense})</span>
+                                                            )}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {(baseStats.speed > 0 || enhanceBonus.speed > 0) && (
+                                                    <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-green-500/10 text-sm">
+                                                        <Gauge className="h-3.5 w-3.5 text-green-500" />
+                                                        <span className="text-foreground/70">{t('속도')}</span>
+                                                        <span className="ml-auto font-bold text-green-500">
+                                                            +{baseStats.speed}
+                                                            {enhanceBonus.speed > 0 && (
+                                                                <span className="text-amber-400 ml-1">(+{enhanceBonus.speed})</span>
+                                                            )}
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </div>
-                                        )}
-                                        {selectedItem.stats.attack > 0 && (
-                                            <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-orange-500/10 text-sm">
-                                                <Zap className="h-3.5 w-3.5 text-orange-500" />
-                                                <span className="text-foreground/70">{t('공격')}</span>
-                                                <span className="ml-auto font-bold text-orange-500">+{selectedItem.stats.attack}</span>
-                                            </div>
-                                        )}
-                                        {selectedItem.stats.defense > 0 && (
-                                            <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-500/10 text-sm">
-                                                <Shield className="h-3.5 w-3.5 text-blue-500" />
-                                                <span className="text-foreground/70">{t('방어')}</span>
-                                                <span className="ml-auto font-bold text-blue-500">+{selectedItem.stats.defense}</span>
-                                            </div>
-                                        )}
-                                        {selectedItem.stats.speed > 0 && (
-                                            <div className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-green-500/10 text-sm">
-                                                <Gauge className="h-3.5 w-3.5 text-green-500" />
-                                                <span className="text-foreground/70">{t('속도')}</span>
-                                                <span className="ml-auto font-bold text-green-500">+{selectedItem.stats.speed}</span>
-                                            </div>
-                                        )}
-                                    </div>
+                                        );
+                                    })()}
 
                                     <div className="space-y-2 mb-4">
                                         {modalItem.type === 'food' && (
@@ -533,21 +682,55 @@ export default function Room() {
                                         {modalItem.type === 'equipment' && modalItem.equipmentSlot && (() => {
                                             const slot = modalItem.equipmentSlot;
                                             const isEquipped = character?.equipment[slot]?.item.id === selectedItem.item.id;
+                                            const enhanceLevel = selectedItem.enhanceLevel ?? 0;
+                                            const isMaxLevel = enhanceLevel >= MAX_ENHANCE_LEVEL;
+                                            const scrollCount = getScrollCountForSlot(slot);
+                                            const scrollType = getRequiredScrollType(slot);
+                                            const scrollNames: Record<EnhanceScrollType, string> = {
+                                                weapon: lang === 'ko' ? '무기 주문서' : 'Weapon Scroll',
+                                                armor: lang === 'ko' ? '방어구 주문서' : 'Armor Scroll',
+                                                accessory: lang === 'ko' ? '악세 주문서' : 'Accessory Scroll',
+                                            };
 
-                                            return isEquipped ? (
-                                                <button
-                                                    onClick={() => handleUnequip(slot)}
-                                                    className="w-full py-3 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
-                                                >
-                                                    <X className="h-4 w-4" /> {t('장비 해제')}
-                                                </button>
-                                            ) : (
-                                                <button
-                                                    onClick={() => handleEquip(selectedItem.item.id)}
-                                                    className="w-full py-3 rounded-xl bg-blue-500 text-white font-bold hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
-                                                >
-                                                    <Shield className="h-4 w-4" /> {t('장착하기')}
-                                                </button>
+                                            return (
+                                                <>
+                                                    {isEquipped ? (
+                                                        <button
+                                                            onClick={() => handleUnequip(slot)}
+                                                            className="w-full py-3 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
+                                                        >
+                                                            <X className="h-4 w-4" /> {t('장비 해제')}
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => handleEquip(selectedItem.item.id)}
+                                                            className="w-full py-3 rounded-xl bg-blue-500 text-white font-bold hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+                                                        >
+                                                            <Shield className="h-4 w-4" /> {t('장착하기')}
+                                                        </button>
+                                                    )}
+                                                    {scrollCount > 0 && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => handleStartEnhance(selectedItem, slot, isEquipped)}
+                                                                disabled={isMaxLevel}
+                                                                className="w-full py-3 rounded-xl bg-purple-500 text-white font-bold hover:bg-purple-600 disabled:bg-purple-500/40 disabled:text-white/60 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                                                            >
+                                                                <span className="text-lg">🔨</span>
+                                                                {isMaxLevel ? (
+                                                                    lang === 'ko' ? '최대 강화' : 'Max Level'
+                                                                ) : (
+                                                                    <>
+                                                                        {t('강화하기')} (+{enhanceLevel} → +{enhanceLevel + 1})
+                                                                    </>
+                                                                )}
+                                                            </button>
+                                                            <div className="text-xs text-foreground/50 text-center">
+                                                                {scrollNames[scrollType]}: {scrollCount}개 보유 | 성공률 30%
+                                                            </div>
+                                                        </>
+                                                    )}
+                                                </>
                                             );
                                         })()}
                                     </div>
@@ -660,6 +843,15 @@ export default function Room() {
                     );
                 })()}
             </AnimatePresence>
+
+            {/* 강화 모달 */}
+            <EnhanceModal
+                isOpen={enhanceModal.isOpen}
+                onClose={() => setEnhanceModal({ isOpen: false, target: null, scrollId: '' })}
+                target={enhanceModal.target}
+                scrollId={enhanceModal.scrollId}
+                onComplete={handleEnhanceComplete}
+            />
         </div>
     );
 }

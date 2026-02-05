@@ -3,10 +3,11 @@ import { getItem, setItem, removeItem } from './storage';
 // 장착 부위 타입
 export type EquipmentSlot = '투구' | '갑옷' | '장갑' | '부츠' | '망토' | '무기' | '방패' | '목걸이' | '반지';
 
-// 장착된 장비 (아이템 + instanceId)
+// 장착된 장비 (아이템 + instanceId + 강화레벨)
 export interface EquippedItem {
     item: GameItem;
     instanceId: string;
+    enhanceLevel?: number;    // 강화 레벨 (0~10)
 }
 
 // 장착중인 장비
@@ -251,7 +252,10 @@ export interface PetInfo {
 export type ItemRarity = '일반' | '고급' | '희귀' | '에픽' | '전설';
 
 // 아이템 타입
-export type ItemType = 'equipment' | 'food';
+export type ItemType = 'equipment' | 'food' | 'scroll' | 'currency';
+
+// 강화 주문서 타입
+export type EnhanceScrollType = 'weapon' | 'armor' | 'accessory';
 
 export interface ItemStats {
     hp: number;
@@ -268,13 +272,16 @@ export interface GameItem {
     stats: ItemStats;
     type: ItemType;
     equipmentSlot?: EquipmentSlot; // equipment 타입일 경우 장착 부위
+    enhanceScrollType?: EnhanceScrollType; // scroll 타입일 경우 강화 대상
     shopGoldPrice?: number; // 골드 상점 구매가
     shopGemPrice?: number; // 젬 상점 구매가
+    goldAmount?: number; // currency 타입일 경우 획득 골드량
 }
 
 export interface InventoryItem {
     item: GameItem;
     instanceId?: string;      // 장비 아이템의 고유 ID (거래용)
+    enhanceLevel?: number;    // 강화 레벨 (0~10)
     equipedItem: GameItem[];
     quantity: number;
     stats: ItemStats;
@@ -787,6 +794,50 @@ export const GAME_ITEMS: Record<string, GameItem> = {
         type: 'equipment',
         equipmentSlot: '반지',
     },
+
+    // === 강화 주문서 ===
+    weapon_enhance_scroll: {
+        id: 'weapon_enhance_scroll',
+        name: '무기 강화 주문서',
+        emoji: '📜',
+        rarity: '희귀',
+        stats: { hp: 0, attack: 0, defense: 0, speed: 0 },
+        type: 'scroll',
+        enhanceScrollType: 'weapon',
+        shopGoldPrice: 6000,
+    },
+    armor_enhance_scroll: {
+        id: 'armor_enhance_scroll',
+        name: '방어구 강화 주문서',
+        emoji: '📜',
+        rarity: '고급',
+        stats: { hp: 0, attack: 0, defense: 0, speed: 0 },
+        type: 'scroll',
+        enhanceScrollType: 'armor',
+        shopGoldPrice: 3000,
+    },
+    accessory_enhance_scroll: {
+        id: 'accessory_enhance_scroll',
+        name: '악세사리 강화 주문서',
+        emoji: '📜',
+        rarity: '에픽',
+        stats: { hp: 0, attack: 0, defense: 0, speed: 0 },
+        type: 'scroll',
+        enhanceScrollType: 'accessory',
+        shopGoldPrice: 10000,
+    },
+
+    // === 재화 아이템 ===
+    gold_pack: {
+        id: 'gold_pack',
+        name: '골드 주머니',
+        emoji: '💰',
+        rarity: '에픽',
+        stats: { hp: 0, attack: 0, defense: 0, speed: 0 },
+        type: 'currency',
+        shopGemPrice: 50,
+        goldAmount: 20000,
+    },
 };
 
 export function loadInventory(): InventoryItem[] {
@@ -998,21 +1049,25 @@ export function equipItem(itemId: string): { success: boolean; message: string }
     const slot = item.equipmentSlot;
     const currentEquipped = character.equipment[slot];
 
-    // 기존 장비가 있으면 인벤토리로 반환 (기존 instanceId 유지)
+    // 기존 장비가 있으면 인벤토리로 반환 (기존 instanceId, enhanceLevel 유지)
     if (currentEquipped) {
+        const enhanceLevel = currentEquipped.enhanceLevel ?? 0;
+        const currentSlot = currentEquipped.item.equipmentSlot;
         inventory.push({
             item: currentEquipped.item,
             instanceId: currentEquipped.instanceId,
+            enhanceLevel: enhanceLevel > 0 ? enhanceLevel : undefined,
             quantity: 1,
-            stats: { ...currentEquipped.item.stats },
+            stats: enhanceLevel > 0 ? getEnhancedStats(currentEquipped.item.stats, enhanceLevel, currentSlot, currentEquipped.item.rarity) : { ...currentEquipped.item.stats },
             equipedItem: []
         });
     }
 
-    // 새 장비 장착 (인벤토리 아이템의 instanceId 유지)
+    // 새 장비 장착 (인벤토리 아이템의 instanceId, enhanceLevel 유지)
     character.equipment[slot] = {
         item: inventoryItem.item,
         instanceId: inventoryItem.instanceId || generateItemInstanceId(item.id),
+        enhanceLevel: inventoryItem.enhanceLevel,
     };
 
     // 인벤토리에서 제거 (equipment는 quantity가 항상 1이므로 엔트리 자체를 제거)
@@ -1036,12 +1091,14 @@ export function unequipItem(slot: EquipmentSlot): { success: boolean; message: s
 
     const inventory = loadInventory();
 
-    // 인벤토리에 추가 (기존 instanceId 유지)
+    // 인벤토리에 추가 (기존 instanceId, enhanceLevel 유지)
+    const enhanceLevel = equipped.enhanceLevel ?? 0;
     inventory.push({
         item: equipped.item,
         instanceId: equipped.instanceId,
+        enhanceLevel: enhanceLevel > 0 ? enhanceLevel : undefined,
         quantity: 1,
-        stats: { ...equipped.item.stats },
+        stats: enhanceLevel > 0 ? getEnhancedStats(equipped.item.stats, enhanceLevel, slot, equipped.item.rarity) : { ...equipped.item.stats },
         equipedItem: []
     });
 
@@ -1063,10 +1120,16 @@ export function calculateEquipmentStats(character: Character): ItemStats {
     for (const slot of Object.keys(character.equipment) as EquipmentSlot[]) {
         const equipped = character.equipment[slot];
         if (equipped) {
-            totalStats.hp += equipped.item.stats.hp;
-            totalStats.attack += equipped.item.stats.attack;
-            totalStats.defense += equipped.item.stats.defense;
-            totalStats.speed += equipped.item.stats.speed;
+            // 강화 보너스 포함 스탯 계산
+            const enhanceLevel = equipped.enhanceLevel ?? 0;
+            const enhancedStats = enhanceLevel > 0
+                ? getEnhancedStats(equipped.item.stats, enhanceLevel, slot, equipped.item.rarity)
+                : equipped.item.stats;
+
+            totalStats.hp += enhancedStats.hp;
+            totalStats.attack += enhancedStats.attack;
+            totalStats.defense += enhancedStats.defense;
+            totalStats.speed += enhancedStats.speed;
         }
     }
 
@@ -1139,4 +1202,254 @@ export function useFood(itemId: string): { success: boolean; message: string; it
     };
 }
 
+// === 강화 시스템 ===
 
+// 장비 부위별 필요한 강화 주문서 타입
+export function getRequiredScrollType(slot: EquipmentSlot): EnhanceScrollType {
+    switch (slot) {
+        case '무기':
+            return 'weapon';
+        case '투구':
+        case '갑옷':
+        case '장갑':
+        case '부츠':
+        case '망토':
+        case '방패':
+            return 'armor';
+        case '목걸이':
+        case '반지':
+            return 'accessory';
+    }
+}
+
+// 등급별 무기 강화 공격력 보너스 (강화 1당)
+const WEAPON_ENHANCE_ATTACK: Record<ItemRarity, number> = {
+    '일반': 1,
+    '고급': 2,
+    '희귀': 3,
+    '에픽': 4,
+    '전설': 5,
+};
+
+// 강화 레벨별 스탯 보너스 계산
+// - 무기: 등급별 공격력 차등 상승
+// - 방어구: 방어력 +1 (등급 무관)
+// - 악세사리: 체력 +30, 속도 +1 (등급 무관)
+export function getEnhancementBonus(baseStats: ItemStats, enhanceLevel: number, slot?: EquipmentSlot, rarity?: ItemRarity): ItemStats {
+    if (!slot || !rarity || enhanceLevel <= 0) {
+        return { hp: 0, attack: 0, defense: 0, speed: 0 };
+    }
+
+    const scrollType = getRequiredScrollType(slot);
+
+    switch (scrollType) {
+        case 'weapon':
+            // 무기: 등급별 공격력 차등
+            return {
+                hp: 0,
+                attack: WEAPON_ENHANCE_ATTACK[rarity] * enhanceLevel,
+                defense: 0,
+                speed: 0,
+            };
+        case 'armor':
+            // 방어구: 방어력 +1 per level
+            return {
+                hp: 0,
+                attack: 0,
+                defense: 1 * enhanceLevel,
+                speed: 0,
+            };
+        case 'accessory':
+            // 악세사리: 체력 +30, 속도 +1 per level
+            return {
+                hp: 30 * enhanceLevel,
+                attack: 0,
+                defense: 0,
+                speed: 1 * enhanceLevel,
+            };
+    }
+}
+
+// 강화된 총 스탯 계산
+export function getEnhancedStats(baseStats: ItemStats, enhanceLevel: number, slot?: EquipmentSlot, rarity?: ItemRarity): ItemStats {
+    const bonus = getEnhancementBonus(baseStats, enhanceLevel, slot, rarity);
+    return {
+        hp: baseStats.hp + bonus.hp,
+        attack: baseStats.attack + bonus.attack,
+        defense: baseStats.defense + bonus.defense,
+        speed: baseStats.speed + bonus.speed,
+    };
+}
+
+// 강화 성공 확률 (30%)
+const ENHANCE_SUCCESS_RATE = 0.3;
+
+// 최대 강화 레벨
+export const MAX_ENHANCE_LEVEL = 30;
+
+// 강화 시도 결과 타입
+export interface EnhanceResult {
+    success: boolean;
+    message: string;
+    newLevel?: number;
+    isMaxLevel?: boolean;
+}
+
+/**
+ * 장비 강화를 시도합니다
+ * @param instanceId 강화할 장비의 instanceId
+ * @param scrollId 사용할 강화 주문서의 아이템 ID
+ */
+export function enhanceEquipment(instanceId: string, scrollId: string): EnhanceResult {
+    const scroll = GAME_ITEMS[scrollId];
+    if (!scroll || scroll.type !== 'scroll') {
+        return { success: false, message: '유효한 강화 주문서가 아닙니다.' };
+    }
+
+    const inventory = loadInventory();
+
+    // 주문서 보유 확인
+    const scrollEntry = inventory.find((i) => i.item.id === scrollId && i.quantity > 0);
+    if (!scrollEntry) {
+        return { success: false, message: '강화 주문서가 부족합니다.' };
+    }
+
+    // 강화할 장비 찾기
+    const equipmentIndex = inventory.findIndex((i) => i.instanceId === instanceId);
+    if (equipmentIndex < 0) {
+        return { success: false, message: '장비를 찾을 수 없습니다.' };
+    }
+    const equipment = inventory[equipmentIndex];
+
+    if (equipment.item.type !== 'equipment' || !equipment.item.equipmentSlot) {
+        return { success: false, message: '강화할 수 없는 아이템입니다.' };
+    }
+
+    // 주문서 타입 검증
+    const requiredScrollType = getRequiredScrollType(equipment.item.equipmentSlot);
+    if (scroll.enhanceScrollType !== requiredScrollType) {
+        const scrollNames: Record<EnhanceScrollType, string> = {
+            weapon: '무기 강화 주문서',
+            armor: '방어구 강화 주문서',
+            accessory: '악세사리 강화 주문서',
+        };
+        return { success: false, message: `이 장비에는 ${scrollNames[requiredScrollType]}가 필요합니다.` };
+    }
+
+    // 최대 레벨 검사
+    const currentLevel = equipment.enhanceLevel ?? 0;
+    if (currentLevel >= MAX_ENHANCE_LEVEL) {
+        return { success: false, message: '이미 최대 강화 레벨입니다.', isMaxLevel: true };
+    }
+
+    // 주문서 소모
+    scrollEntry.quantity -= 1;
+    if (scrollEntry.quantity <= 0) {
+        const scrollIndex = inventory.indexOf(scrollEntry);
+        inventory.splice(scrollIndex, 1);
+    }
+
+    // 강화 확률 판정
+    const isSuccess = Math.random() < ENHANCE_SUCCESS_RATE;
+
+    if (isSuccess) {
+        // 강화 성공: 레벨 증가 및 스탯 갱신
+        const newLevel = currentLevel + 1;
+        equipment.enhanceLevel = newLevel;
+        equipment.stats = getEnhancedStats(equipment.item.stats, newLevel, equipment.item.equipmentSlot, equipment.item.rarity);
+
+        saveInventory(inventory);
+        return {
+            success: true,
+            message: `강화 성공! +${newLevel}`,
+            newLevel,
+            isMaxLevel: newLevel >= MAX_ENHANCE_LEVEL,
+        };
+    } else {
+        // 강화 실패
+        saveInventory(inventory);
+        return {
+            success: false,
+            message: '강화에 실패했습니다...',
+            newLevel: currentLevel,
+        };
+    }
+}
+
+/**
+ * 장착중인 장비를 강화합니다
+ */
+export function enhanceEquippedItem(slot: EquipmentSlot, scrollId: string): EnhanceResult {
+    const scroll = GAME_ITEMS[scrollId];
+    if (!scroll || scroll.type !== 'scroll') {
+        return { success: false, message: '유효한 강화 주문서가 아닙니다.' };
+    }
+
+    const character = loadCharacter();
+    if (!character) {
+        return { success: false, message: '캐릭터를 찾을 수 없습니다.' };
+    }
+
+    const equipped = character.equipment[slot];
+    if (!equipped) {
+        return { success: false, message: '장착된 장비가 없습니다.' };
+    }
+
+    const inventory = loadInventory();
+
+    // 주문서 보유 확인
+    const scrollEntry = inventory.find((i) => i.item.id === scrollId && i.quantity > 0);
+    if (!scrollEntry) {
+        return { success: false, message: '강화 주문서가 부족합니다.' };
+    }
+
+    // 주문서 타입 검증
+    const requiredScrollType = getRequiredScrollType(slot);
+    if (scroll.enhanceScrollType !== requiredScrollType) {
+        const scrollNames: Record<EnhanceScrollType, string> = {
+            weapon: '무기 강화 주문서',
+            armor: '방어구 강화 주문서',
+            accessory: '악세사리 강화 주문서',
+        };
+        return { success: false, message: `이 장비에는 ${scrollNames[requiredScrollType]}가 필요합니다.` };
+    }
+
+    // 최대 레벨 검사
+    const currentLevel = equipped.enhanceLevel ?? 0;
+    if (currentLevel >= MAX_ENHANCE_LEVEL) {
+        return { success: false, message: '이미 최대 강화 레벨입니다.', isMaxLevel: true };
+    }
+
+    // 주문서 소모
+    scrollEntry.quantity -= 1;
+    if (scrollEntry.quantity <= 0) {
+        const scrollIndex = inventory.indexOf(scrollEntry);
+        inventory.splice(scrollIndex, 1);
+    }
+
+    // 강화 확률 판정
+    const isSuccess = Math.random() < ENHANCE_SUCCESS_RATE;
+
+    if (isSuccess) {
+        // 강화 성공
+        const newLevel = currentLevel + 1;
+        equipped.enhanceLevel = newLevel;
+
+        saveInventory(inventory);
+        saveCharacter(character);
+        return {
+            success: true,
+            message: `강화 성공! +${newLevel}`,
+            newLevel,
+            isMaxLevel: newLevel >= MAX_ENHANCE_LEVEL,
+        };
+    } else {
+        // 강화 실패
+        saveInventory(inventory);
+        return {
+            success: false,
+            message: '강화에 실패했습니다...',
+            newLevel: currentLevel,
+        };
+    }
+}

@@ -15,6 +15,7 @@ import {
 } from '../types';
 import { useLanguage } from '../i18n/LanguageContext';
 import { fetchGemBalance, useGem } from '../gemApi';
+import { useDebouncedSave, saveToServer } from '../gameSync';
 
 type ShopTab = 'gold' | 'gem';
 
@@ -35,6 +36,11 @@ export default function Shop() {
     // 서버 Gem 상태
     const [gemBalance, setGemBalance] = useState<number | null>(null);
     const [gemLoading, setGemLoading] = useState(false);
+
+    // 젬 구매 확인 모달
+    const [gemConfirm, setGemConfirm] = useState<GameItem | null>(null);
+
+    const debouncedSaveToServer = useDebouncedSave();
 
     useEffect(() => {
         setCharacter(loadCharacter());
@@ -73,27 +79,50 @@ export default function Shop() {
                 tone: 'success',
                 key: Date.now()
             });
+            debouncedSaveToServer();
         } else {
-            // 젬 구매 (서버 API)
+            // 젬 구매 확인 모달 표시
             const price = item.shopGemPrice!;
             if (gemBalance === null || gemBalance < price) {
                 setActiveToast({ message: t('젬이 부족합니다!'), tone: 'error', key: Date.now() });
                 return;
             }
+            setGemConfirm(item);
+        }
+    };
 
-            setGemLoading(true);
-            const result = await useGem(price, 'shop_item', item.name);
-            setGemLoading(false);
+    const handleGemPurchaseConfirm = async () => {
+        if (!character || !gemConfirm) return;
 
-            if (!result.success) {
-                setActiveToast({ message: result.error || t('구매 실패'), tone: 'error', key: Date.now() });
-                return;
-            }
+        const item = gemConfirm;
+        const price = item.shopGemPrice!;
 
-            // 성공 시 잔액 업데이트 및 아이템 지급
-            if (result.balance !== undefined) {
-                setGemBalance(result.balance);
-            }
+        setGemConfirm(null);
+        setGemLoading(true);
+        const result = await useGem(price, 'shop_item', item.name);
+        setGemLoading(false);
+
+        if (!result.success) {
+            setActiveToast({ message: result.error || t('구매 실패'), tone: 'error', key: Date.now() });
+            return;
+        }
+
+        // 성공 시 잔액 업데이트 및 아이템 지급
+        if (result.balance !== undefined) {
+            setGemBalance(result.balance);
+        }
+
+        // 재화 타입은 골드로 지급, 그 외는 인벤토리에 추가
+        if (item.type === 'currency' && item.goldAmount) {
+            character.gold += item.goldAmount;
+            saveCharacter(character);
+            setCharacter({ ...character });
+            setActiveToast({
+                message: `${item.emoji} ${item.goldAmount.toLocaleString()}G ${t('획득!')}`,
+                tone: 'success',
+                key: Date.now()
+            });
+        } else {
             addItemToInventory(item.id, 1);
             setActiveToast({
                 message: `${item.emoji} ${t(item.name)} ${t('구매 완료!')}`,
@@ -101,6 +130,9 @@ export default function Shop() {
                 key: Date.now()
             });
         }
+
+        // 젬 구매 후 즉시 서버 저장
+        saveToServer();
     };
 
     if (!character) {
@@ -216,12 +248,18 @@ export default function Shop() {
                             >
                                 <div className="text-4xl mb-3">{item.emoji}</div>
                                 <h3 className="font-bold text-sm mb-1">{t(item.name)}</h3>
-                                {/* 스탯 미리보기 */}
+                                {/* 스탯 미리보기 또는 골드 액수 */}
                                 <div className="flex flex-wrap justify-center gap-1 text-[11px] text-foreground/50 mb-3">
-                                    {item.stats.hp > 0 && <span>HP+{item.stats.hp}</span>}
-                                    {item.stats.attack > 0 && <span>{t('공')}+{item.stats.attack}</span>}
-                                    {item.stats.defense > 0 && <span>{t('방')}+{item.stats.defense}</span>}
-                                    {item.stats.speed > 0 && <span>{t('속')}+{item.stats.speed}</span>}
+                                    {item.type === 'currency' && item.goldAmount ? (
+                                        <span className="text-amber-500 font-bold text-sm">{item.goldAmount.toLocaleString()}G</span>
+                                    ) : (
+                                        <>
+                                            {item.stats.hp > 0 && <span>HP+{item.stats.hp}</span>}
+                                            {item.stats.attack > 0 && <span>{t('공')}+{item.stats.attack}</span>}
+                                            {item.stats.defense > 0 && <span>{t('방')}+{item.stats.defense}</span>}
+                                            {item.stats.speed > 0 && <span>{t('속')}+{item.stats.speed}</span>}
+                                        </>
+                                    )}
                                 </div>
 
                                 {/* 가격 & 구매 */}
@@ -271,6 +309,63 @@ export default function Shop() {
                         >
                             {activeToast.message}
                         </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* 젬 구매 확인 모달 */}
+            <AnimatePresence>
+                {gemConfirm && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+                        onClick={() => setGemConfirm(null)}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="w-full max-w-sm p-6 rounded-2xl shadow-2xl bg-zinc-50 dark:bg-zinc-900"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="text-center mb-6">
+                                <div className="text-5xl mb-3">{gemConfirm.emoji}</div>
+                                <h3 className="text-lg font-bold mb-2">{t(gemConfirm.name)}</h3>
+                                {gemConfirm.type === 'currency' && gemConfirm.goldAmount && (
+                                    <p className="text-amber-500 font-bold text-lg mb-2">
+                                        {gemConfirm.goldAmount.toLocaleString()}G
+                                    </p>
+                                )}
+                                <div className="flex items-center justify-center gap-1.5 text-purple-500">
+                                    <Gem className="h-5 w-5" />
+                                    <span className="font-bold text-lg">{gemConfirm.shopGemPrice?.toLocaleString()}</span>
+                                    <span className="text-sm text-foreground/50">{t('젬')}</span>
+                                </div>
+                            </div>
+
+                            <p className="text-center text-foreground/60 mb-6">
+                                {t('정말 구매하시겠습니까?')}
+                            </p>
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setGemConfirm(null)}
+                                    className="flex-1 py-3 rounded-xl bg-foreground/10 text-foreground/70 font-bold hover:bg-foreground/15 transition-colors"
+                                >
+                                    {t('취소')}
+                                </button>
+                                <button
+                                    onClick={handleGemPurchaseConfirm}
+                                    disabled={gemLoading}
+                                    className="flex-1 py-3 rounded-xl bg-purple-500 text-white font-bold hover:bg-purple-600 disabled:bg-purple-500/50 transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <Gem className="h-4 w-4" />
+                                    {gemLoading ? '...' : t('구매')}
+                                </button>
+                            </div>
+                        </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>
