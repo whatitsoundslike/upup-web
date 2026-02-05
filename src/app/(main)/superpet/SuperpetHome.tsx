@@ -384,14 +384,6 @@ export default function SuperpetHome() {
                                             : 'bg-white/5 border border-foreground/20'
                                             }`}
                                     >
-                                        {/* 삭제 버튼 */}
-                                        <button
-                                            onClick={() => setDeleteConfirm(char.id)}
-                                            className="absolute top-3 right-3 p-1.5 rounded-lg bg-red-500/10 text-red-500 md:opacity-0 md:group-hover:opacity-100 transition-opacity hover:bg-red-500/20"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </button>
-
                                         {char.image && (
                                             <div className="mb-3">
                                                 <img src={char.image} alt={char.name} className="w-full h-full object-cover rounded-xl" />
@@ -440,16 +432,32 @@ export default function SuperpetHome() {
                                                     <Swords className="h-4 w-4" />
                                                     {t('던전 가기')}
                                                 </Link>
+                                                <button
+                                                    onClick={() => setDeleteConfirm(char.id)}
+                                                    className="w-full py-2.5 rounded-lg bg-red-500/10 text-red-400 text-sm font-bold text-center hover:bg-red-500/20 hover:text-red-500 transition-colors flex items-center justify-center gap-2"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                    {t('삭제')}
+                                                </button>
                                             </div>
                                         ) : (
-                                            <Link
-                                                href="/superpet/dungeon"
-                                                onClick={() => handleSelectCharacter(char.id)}
-                                                className="w-full py-2.5 rounded-lg bg-amber-500 text-white text-sm font-bold text-center hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
-                                            >
-                                                <PawPrint className="h-4 w-4" />
-                                                {t('선택')}
-                                            </Link>
+                                            <div className="flex flex-col gap-2">
+                                                <Link
+                                                    href="/superpet/dungeon"
+                                                    onClick={() => handleSelectCharacter(char.id)}
+                                                    className="w-full py-2.5 rounded-lg bg-amber-500 text-white text-sm font-bold text-center hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
+                                                >
+                                                    <PawPrint className="h-4 w-4" />
+                                                    {t('선택')}
+                                                </Link>
+                                                <button
+                                                    onClick={() => setDeleteConfirm(char.id)}
+                                                    className="w-full py-2.5 rounded-lg bg-red-500/10 text-red-400 text-sm font-bold text-center hover:bg-red-500/20 hover:text-red-500 transition-colors flex items-center justify-center gap-2"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                    {t('삭제')}
+                                                </button>
+                                            </div>
                                         )}
                                     </motion.div>
                                 ))}

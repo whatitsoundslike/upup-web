@@ -21,7 +21,7 @@ This project uses a custom Vercel build command that applies Prisma migrations a
 
 npx prisma studio
 
-npx prisma generate 2>&1
+npx prisma generate
 
 npx prisma migrate dev --name init
 
