@@ -54,10 +54,10 @@ export default function Ranking() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50/70 via-white to-white px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-b from-amber-50/70 via-white to-white dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-900 px-4 py-8">
       <div className="mx-auto w-full max-w-md">
         <div className="flex items-start gap-4 mb-6">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 shadow-sm">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 shadow-sm">
             <Crown className="h-6 w-6" />
           </div>
           <div>
@@ -72,11 +72,11 @@ export default function Ranking() {
         </div>
 
         {loading ? (
-          <div className="rounded-2xl border border-amber-100 bg-white/80 px-4 py-6 text-center text-sm font-semibold text-foreground/60">
+          <div className="rounded-2xl border border-amber-100 dark:border-zinc-700 bg-white/80 dark:bg-zinc-800/80 px-4 py-6 text-center text-sm font-semibold text-foreground/60">
             {t('랭킹 불러오는 중...')}
           </div>
         ) : ranked.length === 0 ? (
-          <div className="rounded-2xl border border-amber-100 bg-white/80 px-4 py-6 text-center text-sm font-semibold text-foreground/60">
+          <div className="rounded-2xl border border-amber-100 dark:border-zinc-700 bg-white/80 dark:bg-zinc-800/80 px-4 py-6 text-center text-sm font-semibold text-foreground/60">
             {t('랭킹 데이터가 없습니다.')}
           </div>
         ) : (
@@ -86,10 +86,10 @@ export default function Ranking() {
               return (
                 <div
                   key={entry.characterId}
-                  className={`rounded-2xl border ${isTop3 ? 'border-amber-300/60 bg-amber-50/70' : 'border-zinc-200/70 bg-white/90'} p-3 shadow-sm`}
+                  className={`rounded-2xl border ${isTop3 ? 'border-amber-300/60 dark:border-amber-600/40 bg-amber-50/70 dark:bg-amber-900/20' : 'border-zinc-200/70 dark:border-zinc-700 bg-white/90 dark:bg-zinc-800/90'} p-3 shadow-sm`}
                 >
                   <div className="flex gap-3">
-                    <div className="flex h-25 w-20 items-center justify-center rounded-xl bg-zinc-100 overflow-hidden">
+                    <div className="flex h-25 w-20 items-center justify-center rounded-xl bg-zinc-100 dark:bg-zinc-700 overflow-hidden">
                       {entry.image ? (
                         <img src={entry.image} alt={entry.name} className="h-full w-full object-cover" />
                       ) : (
@@ -98,7 +98,7 @@ export default function Ranking() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className={`text-lg font-black ${isTop3 ? 'text-amber-600' : 'text-foreground'}`}>
+                        <span className={`text-lg font-black ${isTop3 ? 'text-amber-600 dark:text-amber-400' : 'text-foreground'}`}>
                           #{entry.rank}
                         </span>
                         <h3 className="truncate text-base font-bold text-foreground">{entry.name}</h3>
@@ -128,7 +128,7 @@ export default function Ranking() {
                       </div>
                     </div>
                     <div className="flex flex-col items-end justify-between">
-                      <div className={`rounded-full px-2 py-0.5 text-xs font-bold ${isTop3 ? 'bg-amber-200 text-amber-700' : 'bg-zinc-100 text-zinc-500'}`}>
+                      <div className={`rounded-full px-2 py-0.5 text-xs font-bold ${isTop3 ? 'bg-amber-200 dark:bg-amber-700/50 text-amber-700 dark:text-amber-300' : 'bg-zinc-100 dark:bg-zinc-700 text-zinc-500 dark:text-zinc-300'}`}>
                         {entry.rankScore}
                       </div>
                     </div>

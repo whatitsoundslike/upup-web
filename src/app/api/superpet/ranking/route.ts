@@ -2,6 +2,30 @@ import { NextResponse } from 'next/server';
 import { unstable_cache } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 
+type ItemRarity = '일반' | '고급' | '희귀' | '에픽' | '전설';
+type EquipmentSlot = '무기' | '갑옷' | '방패' | '목걸이' | '반지';
+
+type EquippedItem = {
+  item?: {
+    stats?: {
+      hp?: number;
+      attack?: number;
+      defense?: number;
+      speed?: number;
+    };
+    equipmentSlot?: EquipmentSlot;
+    rarity?: ItemRarity;
+  };
+  enhanceLevel?: number;
+  // 레거시: 이전 버전 호환
+  stats?: {
+    hp?: number;
+    attack?: number;
+    defense?: number;
+    speed?: number;
+  };
+};
+
 type SavedCharacter = {
   id?: string;
   name?: string;
@@ -13,18 +37,7 @@ type SavedCharacter = {
   level?: number;
   className?: string;
   element?: string;
-  equipment?: Record<
-    string,
-    | {
-        stats?: {
-            hp?: number;
-            attack?: number;
-            defense?: number;
-            speed?: number;
-        };
-      }
-    | null
-  >;
+  equipment?: Record<string, EquippedItem | null>;
 };
 
 type RankingEntry = {
@@ -55,17 +68,100 @@ function parseCharacters(data: unknown): SavedCharacter[] {
   }
 }
 
+// 등급별 무기 강화 공격력 보너스 (강화 1당)
+const WEAPON_ENHANCE_ATTACK: Record<ItemRarity, number> = {
+  '일반': 1,
+  '고급': 2,
+  '희귀': 3,
+  '에픽': 4,
+  '전설': 5,
+};
+
+function getRequiredScrollType(slot: EquipmentSlot): 'weapon' | 'armor' | 'accessory' {
+  switch (slot) {
+    case '무기':
+      return 'weapon';
+    case '갑옷':
+    case '방패':
+      return 'armor';
+    case '목걸이':
+    case '반지':
+      return 'accessory';
+  }
+}
+
+// 강화 보너스 계산
+function getEnhancementBonus(
+  enhanceLevel: number,
+  slot?: EquipmentSlot,
+  rarity?: ItemRarity
+): { hp: number; attack: number; defense: number; speed: number } {
+  if (!slot || !rarity || enhanceLevel <= 0) {
+    return { hp: 0, attack: 0, defense: 0, speed: 0 };
+  }
+
+  const scrollType = getRequiredScrollType(slot);
+
+  switch (scrollType) {
+    case 'weapon':
+      return {
+        hp: 0,
+        attack: WEAPON_ENHANCE_ATTACK[rarity] * enhanceLevel,
+        defense: 0,
+        speed: 0,
+      };
+    case 'armor':
+      return {
+        hp: 0,
+        attack: 0,
+        defense: 1 * enhanceLevel,
+        speed: 0,
+      };
+    case 'accessory':
+      return {
+        hp: 30 * enhanceLevel,
+        attack: 0,
+        defense: 0,
+        speed: 1 * enhanceLevel,
+      };
+  }
+}
+
+// 장비 스탯 계산 (기본 스탯 + 강화 보너스)
+function getEquipmentStats(equipped: EquippedItem, slot: string): { hp: number; attack: number; defense: number; speed: number } {
+  // 기본 스탯 가져오기 (item.stats 또는 레거시 stats)
+  const baseStats = equipped.item?.stats ?? equipped.stats ?? { hp: 0, attack: 0, defense: 0, speed: 0 };
+  const hp = Number(baseStats.hp ?? 0);
+  const attack = Number(baseStats.attack ?? 0);
+  const defense = Number(baseStats.defense ?? 0);
+  const speed = Number(baseStats.speed ?? 0);
+
+  // 강화 보너스 계산
+  const enhanceLevel = Number(equipped.enhanceLevel ?? 0);
+  const equipSlot = (equipped.item?.equipmentSlot ?? slot) as EquipmentSlot;
+  const rarity = equipped.item?.rarity;
+  const bonus = getEnhancementBonus(enhanceLevel, equipSlot, rarity);
+
+  return {
+    hp: hp + bonus.hp,
+    attack: attack + bonus.attack,
+    defense: defense + bonus.defense,
+    speed: speed + bonus.speed,
+  };
+}
+
 function getScore(character: SavedCharacter): number {
   const equipment = character.equipment && typeof character.equipment === 'object'
-    ? Object.values(character.equipment)
+    ? Object.entries(character.equipment)
     : [];
   const equipTotals = equipment.reduce(
-    (acc, item) => {
-      if (!item?.stats) return acc;
-      acc.hp += Number(item.stats.hp ?? 0);
-      acc.attack += Number(item.stats.attack ?? 0);
-      acc.defense += Number(item.stats.defense ?? 0);
-      acc.speed += Number(item.stats.speed ?? 0);
+    (acc, [slot, item]) => {
+      if (!item) return acc;
+      const stats = getEquipmentStats(item, slot);
+      acc.hp += stats.hp;
+      acc.attack += stats.attack;
+      acc.defense += stats.defense;
+      acc.speed += stats.speed;
       return acc;
     },
     { hp: 0, attack: 0, defense: 0, speed: 0 }
@@ -123,15 +219,16 @@ const getCachedRankings = unstable_cache(
       if (!best || !best.character?.id || !best.character?.name) continue;
 
       const equipment = best.character.equipment && typeof best.character.equipment === 'object'
-        ? Object.values(best.character.equipment)
+        ? Object.entries(best.character.equipment)
         : [];
       const equipTotals = equipment.reduce(
-        (acc, item) => {
-          if (!item?.stats) return acc;
-          acc.hp += Number(item.stats.hp ?? 0);
-          acc.attack += Number(item.stats.attack ?? 0);
-          acc.defense += Number(item.stats.defense ?? 0);
-          acc.speed += Number(item.stats.speed ?? 0);
+        (acc, [slot, item]) => {
+          if (!item) return acc;
+          const stats = getEquipmentStats(item, slot);
+          acc.hp += stats.hp;
+          acc.attack += stats.attack;
+          acc.defense += stats.defense;
+          acc.speed += stats.speed;
           return acc;
         },
         { hp: 0, attack: 0, defense: 0, speed: 0 }
