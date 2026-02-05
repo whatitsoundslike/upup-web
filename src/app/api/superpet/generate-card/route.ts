@@ -147,7 +147,7 @@ Do not include any other text or numbers.`;
         // Step 3: Sharp로 이미지 리사이즈 (세로 300px)
         const imageBuffer = Buffer.from(imagePart.inlineData.data, 'base64');
         const resizedImageBuffer = await sharp(imageBuffer)
-            .resize({ height: 300, withoutEnlargement: true })
+            .resize({ height: 600, withoutEnlargement: true })
             .webp({ quality: 100 })
             .toBuffer();
 
