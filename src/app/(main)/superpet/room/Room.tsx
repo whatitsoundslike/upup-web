@@ -9,6 +9,7 @@ import {
     type Character,
     type GameItem,
     type EquipmentSlot,
+    type EquippedItem,
     ITEM_RARITY_COLORS,
     ITEM_RARITY_BORDER,
     ITEM_RARITY_TEXT,
@@ -182,7 +183,7 @@ export default function Room() {
 
     const totalItems = inventory.reduce((sum, e) => sum + e.quantity, 0);
     const equippedEntries = character
-        ? (Object.entries(character.equipment) as [EquipmentSlot, GameItem | null][])
+        ? (Object.entries(character.equipment) as [EquipmentSlot, EquippedItem | null][])
         : [];
 
     const filteredInventory = inventory.filter((entry) => {
@@ -326,38 +327,42 @@ export default function Room() {
                         <h3 className="font-bold">{t('장착 장비')}</h3>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        {equippedEntries.map(([slot, item]) => (
-                            <button
-                                key={slot}
-                                onClick={() => {
-                                    if (item) {
-                                        const inventoryFormat: InventoryItem = {
-                                            item: item,
-                                            quantity: 0,
-                                            stats: { ...item.stats },
-                                            equipedItem: [item]
-                                        };
-                                        setSelectedItem(inventoryFormat);
-                                    }
-                                }}
-                                disabled={!item}
-                                className={`flex items-center gap-3 rounded-xl border-1 px-3 py-2 text-left transition-all ${item?.rarity ? ITEM_RARITY_COLORS[item.rarity] : 'border-foreground/10 bg-white/5'
-                                    } ${item ? 'hover:scale-[1.02] cursor-pointer' : 'cursor-default'}`}
-                            >
-                                <div className="text-2xl">{item?.emoji ?? '—'}</div>
-                                <div className="min-w-0 flex-1">
-                                    <div className="text-xs text-foreground/50">{t(slot)}</div>
-                                    <div className="text-sm font-semibold truncate">{item ? t(item.name) : t('비어있음')}</div>
-                                    {item && (
-                                        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] leading-tight text-foreground/60">
-                                            <span className={`rounded-full px-2 py-0.5 font-semibold bg-foreground/5 ring-1 ring-foreground/10 ${ITEM_RARITY_TEXT[item.rarity]}`}>
-                                                {t(item.rarity)}
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
-                            </button>
-                        ))}
+                        {equippedEntries.map(([slot, equipped]) => {
+                            const item = equipped?.item;
+                            return (
+                                <button
+                                    key={slot}
+                                    onClick={() => {
+                                        if (item) {
+                                            const inventoryFormat: InventoryItem = {
+                                                item: item,
+                                                instanceId: equipped?.instanceId,
+                                                quantity: 0,
+                                                stats: { ...item.stats },
+                                                equipedItem: [item]
+                                            };
+                                            setSelectedItem(inventoryFormat);
+                                        }
+                                    }}
+                                    disabled={!item}
+                                    className={`flex items-center gap-3 rounded-xl border-1 px-3 py-2 text-left transition-all ${item?.rarity ? ITEM_RARITY_COLORS[item.rarity] : 'border-foreground/10 bg-white/5'
+                                        } ${item ? 'hover:scale-[1.02] cursor-pointer' : 'cursor-default'}`}
+                                >
+                                    <div className="text-2xl">{item?.emoji ?? '—'}</div>
+                                    <div className="min-w-0 flex-1">
+                                        <div className="text-xs text-foreground/50">{t(slot)}</div>
+                                        <div className="text-sm font-semibold truncate">{item ? t(item.name) : t('비어있음')}</div>
+                                        {item && (
+                                            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] leading-tight text-foreground/60">
+                                                <span className={`rounded-full px-2 py-0.5 font-semibold bg-foreground/5 ring-1 ring-foreground/10 ${ITEM_RARITY_TEXT[item.rarity]}`}>
+                                                    {t(item.rarity)}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </button>
+                            );
+                        })}
                     </div>
                 </motion.div>
             )}
@@ -432,9 +437,12 @@ export default function Room() {
                             <span className={`text-xs font-semibold ${ITEM_RARITY_TEXT[entry.item.rarity]}`}>
                                 {t(entry.item.rarity)}
                             </span>
-                            <span className="absolute top-2 right-2 min-w-[24px] h-6 flex items-center justify-center px-1.5 rounded-full bg-foreground/80 text-background text-xs font-bold">
-                                {entry.quantity}
-                            </span>
+                            {/* 장비 아이템은 수량 표시 안함 (항상 1개) */}
+                            {entry.item.type !== 'equipment' && (
+                                <span className="absolute top-2 right-2 min-w-[24px] h-6 flex items-center justify-center px-1.5 rounded-full bg-foreground/80 text-background text-xs font-bold">
+                                    {entry.quantity}
+                                </span>
+                            )}
                         </motion.button>
                     ))}
                 </div>
@@ -473,9 +481,12 @@ export default function Room() {
                                         <span className={`text-sm font-semibold ${ITEM_RARITY_TEXT[modalItem.rarity]}`}>
                                             {t(modalItem.rarity)}
                                         </span>
-                                        <span className="text-sm text-foreground/50 ml-2">
-                                            {selectedItem.quantity > 0 ? `x${selectedItem.quantity}` : t('장착중')}
-                                        </span>
+                                        {/* 장비 아이템은 수량 표시 안함 */}
+                                        {modalItem.type !== 'equipment' && (
+                                            <span className="text-sm text-foreground/50 ml-2">
+                                                x{selectedItem.quantity}
+                                            </span>
+                                        )}
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-2 mb-6">
@@ -521,7 +532,7 @@ export default function Room() {
                                         )}
                                         {modalItem.type === 'equipment' && modalItem.equipmentSlot && (() => {
                                             const slot = modalItem.equipmentSlot;
-                                            const isEquipped = character?.equipment[slot]?.id === selectedItem.item.id;
+                                            const isEquipped = character?.equipment[slot]?.item.id === selectedItem.item.id;
 
                                             return isEquipped ? (
                                                 <button

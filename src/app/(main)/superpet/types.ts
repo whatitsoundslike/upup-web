@@ -3,17 +3,23 @@ import { getItem, setItem, removeItem } from './storage';
 // 장착 부위 타입
 export type EquipmentSlot = '투구' | '갑옷' | '장갑' | '부츠' | '망토' | '무기' | '방패' | '목걸이' | '반지';
 
+// 장착된 장비 (아이템 + instanceId)
+export interface EquippedItem {
+    item: GameItem;
+    instanceId: string;
+}
+
 // 장착중인 장비
 export interface EquippedItems {
-    투구: GameItem | null;
-    갑옷: GameItem | null;
-    망토: GameItem | null;
-    무기: GameItem | null;
-    방패: GameItem | null;
-    장갑: GameItem | null;
-    부츠: GameItem | null;
-    목걸이: GameItem | null;
-    반지: GameItem | null;
+    투구: EquippedItem | null;
+    갑옷: EquippedItem | null;
+    망토: EquippedItem | null;
+    무기: EquippedItem | null;
+    방패: EquippedItem | null;
+    장갑: EquippedItem | null;
+    부츠: EquippedItem | null;
+    목걸이: EquippedItem | null;
+    반지: EquippedItem | null;
 }
 
 export interface Character {
@@ -115,11 +121,48 @@ export function saveCharacter(character: Character) {
     }
 }
 
+// 장비 데이터 마이그레이션 (구버전: GameItem | null → 신버전: EquippedItem | null)
+function migrateEquipmentData(char: Character): Character {
+    const slots: EquipmentSlot[] = ['투구', '갑옷', '망토', '무기', '방패', '장갑', '부츠', '목걸이', '반지'];
+    for (const slot of slots) {
+        const equipped = char.equipment[slot];
+        if (equipped && !('instanceId' in equipped)) {
+            // 구버전 데이터: GameItem만 저장되어 있음 → EquippedItem으로 변환
+            const oldItem = equipped as unknown as GameItem;
+            char.equipment[slot] = {
+                item: oldItem,
+                instanceId: generateItemInstanceId(oldItem.id),
+            };
+        }
+    }
+    return char;
+}
+
 // 모든 캐릭터 로드
 export function loadAllCharacters(): Character[] {
     try {
         const data = getItem('characters');
-        return data ? JSON.parse(data) : [];
+        if (!data) return [];
+        const chars: Character[] = JSON.parse(data);
+        // 장비 데이터 마이그레이션 적용
+        let needsSave = false;
+        for (const char of chars) {
+            if (char.equipment) {
+                const slots: EquipmentSlot[] = ['투구', '갑옷', '망토', '무기', '방패', '장갑', '부츠', '목걸이', '반지'];
+                for (const slot of slots) {
+                    const equipped = char.equipment[slot];
+                    if (equipped && !('instanceId' in equipped)) {
+                        needsSave = true;
+                        migrateEquipmentData(char);
+                        break;
+                    }
+                }
+            }
+        }
+        if (needsSave) {
+            saveAllCharacters(chars);
+        }
+        return chars;
     } catch {
         return [];
     }
@@ -231,9 +274,23 @@ export interface GameItem {
 
 export interface InventoryItem {
     item: GameItem;
+    instanceId?: string;      // 장비 아이템의 고유 ID (거래용)
     equipedItem: GameItem[];
     quantity: number;
     stats: ItemStats;
+}
+
+// 장비 아이템의 고유 인스턴스 ID 생성 (UUID v4 기반)
+export function generateItemInstanceId(itemId: string): string {
+    // crypto.randomUUID() 사용 (브라우저/Node.js 모두 지원)
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return `${itemId}-${crypto.randomUUID()}`;
+    }
+    // 폴백: timestamp + 강화된 랜덤
+    const timestamp = Date.now().toString(36);
+    const random1 = Math.random().toString(36).substring(2, 10);
+    const random2 = Math.random().toString(36).substring(2, 10);
+    return `${itemId}-${timestamp}-${random1}${random2}`;
 }
 
 export const ITEM_RARITY_COLORS: Record<ItemRarity, string> = {
@@ -757,18 +814,56 @@ export function saveInventory(inventory: InventoryItem[]) {
     setItem('inventory', JSON.stringify(inventory));
 }
 
+// instanceId로 인벤토리 아이템 찾기 (거래용)
+export function findInventoryItemByInstanceId(instanceId: string): InventoryItem | null {
+    const inventory = loadInventory();
+    return inventory.find((i) => i.instanceId === instanceId) || null;
+}
+
+// instanceId로 인벤토리에서 아이템 제거 (거래용)
+export function removeInventoryItemByInstanceId(instanceId: string): InventoryItem | null {
+    const inventory = loadInventory();
+    const index = inventory.findIndex((i) => i.instanceId === instanceId);
+    if (index < 0) return null;
+    const [removed] = inventory.splice(index, 1);
+    saveInventory(inventory);
+    return removed;
+}
+
+// 특정 InventoryItem을 그대로 인벤토리에 추가 (거래용 - instanceId 유지)
+export function addInventoryItemDirect(invItem: InventoryItem) {
+    const inventory = loadInventory();
+    inventory.push(invItem);
+    saveInventory(inventory);
+}
+
 export function addItemToInventory(itemId: string, quantity: number) {
     const item = GAME_ITEMS[itemId];
     if (!item) return;
     const inventory = loadInventory();
-    const existing = inventory.find((i) => i.item.id === itemId);
-    if (existing) {
-        existing.quantity += quantity;
-        if (!existing.equipedItem) {
-            existing.equipedItem = [];
+
+    // equipment 타입은 각각 별도 엔트리로 저장 (스택 안함) + 고유 instanceId 부여
+    if (item.type === 'equipment') {
+        for (let i = 0; i < quantity; i++) {
+            inventory.push({
+                item,
+                instanceId: generateItemInstanceId(itemId),
+                quantity: 1,
+                stats: { ...item.stats },
+                equipedItem: []
+            });
         }
     } else {
-        inventory.push({ item, quantity, stats: { ...item.stats }, equipedItem: [] });
+        // 일반 아이템은 스택
+        const existing = inventory.find((i) => i.item.id === itemId);
+        if (existing) {
+            existing.quantity += quantity;
+            if (!existing.equipedItem) {
+                existing.equipedItem = [];
+            }
+        } else {
+            inventory.push({ item, quantity, stats: { ...item.stats }, equipedItem: [] });
+        }
     }
     saveInventory(inventory);
 }
@@ -894,50 +989,34 @@ export function equipItem(itemId: string): { success: boolean; message: string }
     if (!character) return { success: false, message: '캐릭터를 찾을 수 없습니다.' };
 
     const inventory = loadInventory();
-    const inventoryItem = inventory.find((i) => i.item.id === itemId);
-    if (!inventoryItem || inventoryItem.quantity <= 0) {
+    const inventoryIndex = inventory.findIndex((i) => i.item.id === itemId && i.quantity > 0);
+    if (inventoryIndex < 0) {
         return { success: false, message: '인벤토리에 해당 아이템이 없습니다.' };
     }
-
-    const alreadyEquipped = Object.values(character.equipment).some((equipped) => equipped?.id === itemId);
-    if (alreadyEquipped) {
-        return { success: false, message: '이미 장착한 아이템입니다.' };
-    }
+    const inventoryItem = inventory[inventoryIndex];
 
     const slot = item.equipmentSlot;
     const currentEquipped = character.equipment[slot];
 
-    // 기존 장비가 있으면 인벤토리로 반환
+    // 기존 장비가 있으면 인벤토리로 반환 (기존 instanceId 유지)
     if (currentEquipped) {
-        let currentEntry = inventory.find((i) => i.item.id === currentEquipped.id);
-        if (!currentEntry) {
-            currentEntry = { item: currentEquipped, quantity: 0, stats: { ...currentEquipped.stats }, equipedItem: [] };
-            inventory.push(currentEntry);
-        }
-        if (!currentEntry.equipedItem) {
-            currentEntry.equipedItem = [];
-        }
-        const equippedIndex = currentEntry.equipedItem.findIndex((eq) => eq.id === currentEquipped.id);
-        if (equippedIndex >= 0) {
-            currentEntry.equipedItem.splice(equippedIndex, 1);
-        }
-        currentEntry.quantity += 1;
+        inventory.push({
+            item: currentEquipped.item,
+            instanceId: currentEquipped.instanceId,
+            quantity: 1,
+            stats: { ...currentEquipped.item.stats },
+            equipedItem: []
+        });
     }
 
-    // 새 장비 장착
-    character.equipment[slot] = item;
+    // 새 장비 장착 (인벤토리 아이템의 instanceId 유지)
+    character.equipment[slot] = {
+        item: inventoryItem.item,
+        instanceId: inventoryItem.instanceId || generateItemInstanceId(item.id),
+    };
 
-    // 인벤토리에서 제거 후 장착 목록에 추가
-    if (!inventoryItem.equipedItem) {
-        inventoryItem.equipedItem = [];
-    }
-    inventoryItem.equipedItem.push(item);
-    inventoryItem.quantity -= 1;
-    // 수량이 0이 되면 items에서 제거
-    if (inventoryItem.quantity <= 0) {
-        const index = inventory.indexOf(inventoryItem);
-        inventory.splice(index, 1);
-    }
+    // 인벤토리에서 제거 (equipment는 quantity가 항상 1이므로 엔트리 자체를 제거)
+    inventory.splice(inventoryIndex, 1);
 
     saveInventory(inventory);
     saveCharacter(character);
@@ -952,24 +1031,19 @@ export function unequipItem(slot: EquipmentSlot): { success: boolean; message: s
     const character = loadCharacter();
     if (!character) return { success: false, message: '캐릭터를 찾을 수 없습니다.' };
 
-    const equippedItem = character.equipment[slot];
-    if (!equippedItem) return { success: false, message: '장착된 장비가 없습니다.' };
+    const equipped = character.equipment[slot];
+    if (!equipped) return { success: false, message: '장착된 장비가 없습니다.' };
 
     const inventory = loadInventory();
-    let inventoryItem = inventory.find((i) => i.item.id === equippedItem.id);
-    if (!inventoryItem) {
-        // 인벤토리에 없으면 새로 추가
-        inventoryItem = { item: equippedItem, quantity: 0, stats: { ...equippedItem.stats }, equipedItem: [] };
-        inventory.push(inventoryItem);
-    }
-    if (!inventoryItem.equipedItem) {
-        inventoryItem.equipedItem = [];
-    }
-    const equippedIndex = inventoryItem.equipedItem.findIndex((eq) => eq.id === equippedItem.id);
-    if (equippedIndex >= 0) {
-        inventoryItem.equipedItem.splice(equippedIndex, 1);
-    }
-    inventoryItem.quantity += 1;
+
+    // 인벤토리에 추가 (기존 instanceId 유지)
+    inventory.push({
+        item: equipped.item,
+        instanceId: equipped.instanceId,
+        quantity: 1,
+        stats: { ...equipped.item.stats },
+        equipedItem: []
+    });
 
     // 장비 해제
     character.equipment[slot] = null;
@@ -977,7 +1051,7 @@ export function unequipItem(slot: EquipmentSlot): { success: boolean; message: s
     saveInventory(inventory);
     saveCharacter(character);
 
-    return { success: true, message: `${equippedItem.name}을(를) 해제했습니다.` };
+    return { success: true, message: `${equipped.item.name}을(를) 해제했습니다.` };
 }
 
 /**
@@ -987,12 +1061,12 @@ export function calculateEquipmentStats(character: Character): ItemStats {
     const totalStats: ItemStats = { hp: 0, attack: 0, defense: 0, speed: 0 };
 
     for (const slot of Object.keys(character.equipment) as EquipmentSlot[]) {
-        const item = character.equipment[slot];
-        if (item) {
-            totalStats.hp += item.stats.hp;
-            totalStats.attack += item.stats.attack;
-            totalStats.defense += item.stats.defense;
-            totalStats.speed += item.stats.speed;
+        const equipped = character.equipment[slot];
+        if (equipped) {
+            totalStats.hp += equipped.item.stats.hp;
+            totalStats.attack += equipped.item.stats.attack;
+            totalStats.defense += equipped.item.stats.defense;
+            totalStats.speed += equipped.item.stats.speed;
         }
     }
 
