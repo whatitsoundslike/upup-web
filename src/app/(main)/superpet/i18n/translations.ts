@@ -321,6 +321,7 @@ export const koToEn: Record<string, string> = {
     '랭킹 기능이 추가되었습니다!': 'Ranking function has been added!',
     '무료 사료 배달 기능이 추가되었습니다! 웹 접속시 10분 마다 사료가 지급됩니다.': 'Free feed delivery function has been added! You will receive feed every 10 minutes when you access the web.',
     '캐릭터 생성시 성별을 선택할 수 있습니다.': 'You can select gender when creating a character.',
+    '강화 시스템이 추가되었습니다!': 'Enhancement system has been added!',
 
     // === 프로필 ===
     '내 정보 수정': 'Edit Profile',
