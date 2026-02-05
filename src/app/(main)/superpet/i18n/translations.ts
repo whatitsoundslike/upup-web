@@ -299,6 +299,10 @@ export const koToEn: Record<string, string> = {
     '귀여운 카툰': 'Cute Cartoon',
     '강력한 일러스트': 'Powerful Illustration',
     '퍼리': 'Furry',
+    '성별': 'Gender',
+    '성별을 선택해주세요': 'Please select a gender',
+    '남': 'Male',
+    '여': 'Female',
     '반려동물 사진 (선택)': 'Pet Photo (Optional)',
     '반려동물 사진': 'Pet Photo',
     '사진을 첨부하면 AI가 카드로 변환합니다': 'Upload a photo and AI will create a card',
@@ -316,6 +320,7 @@ export const koToEn: Record<string, string> = {
     '캐릭터 저장 기능이 추가되었습니다!': 'Character save function has been added!',
     '랭킹 기능이 추가되었습니다!': 'Ranking function has been added!',
     '무료 사료 배달 기능이 추가되었습니다! 웹 접속시 10분 마다 사료가 지급됩니다.': 'Free feed delivery function has been added! You will receive feed every 10 minutes when you access the web.',
+    '캐릭터 생성시 성별을 선택할 수 있습니다.': 'You can select gender when creating a character.',
 
     // === 프로필 ===
     '내 정보 수정': 'Edit Profile',

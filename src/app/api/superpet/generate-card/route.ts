@@ -7,9 +7,9 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export async function POST(request: Request) {
     try {
-        const { image, name, className, element, style, characterId } = await request.json();
+        const { image, name, className, element, style, gender, characterId } = await request.json();
 
-        console.log(name, className, element, style, characterId);
+        console.log(name, className, element, style, gender, characterId);
 
         if (!image) {
             return NextResponse.json(
@@ -112,13 +112,17 @@ export async function POST(request: Request) {
         };
         const stylePrompt = getStylePrompt();
 
+        const genderEn = gender === 'male' ? 'Male' : 'Female';
+
         const fullPrompt = `
 Transform this animal into a fantasy RPG card game character portrait.
 Character info:
 - Name: "${name || 'Hero'}"
+- Gender: ${genderEn}
 - Class: ${classEn}
 - Element: ${elementEn}
 ${stylePrompt}
+- The character should have clear ${genderEn.toLowerCase()} characteristics (${gender === 'male' ? 'masculine features, broader build' : 'feminine features, graceful build'})
 - Include ornate card frame/border design
 - It must maintain a human-like bipedal form (standing on two legs)
 - Portrait orientation, centered composition

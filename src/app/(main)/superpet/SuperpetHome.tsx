@@ -1,7 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { Camera, Feather, Heart, Loader2, PawPrint, Plus, Shield, Sparkles, Sword, Swords, Trash2, X } from 'lucide-react';
+import { Camera, Feather, Heart, Loader2, Mars, PawPrint, Plus, Shield, Sparkles, Sword, Swords, Trash2, Venus, X } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from './i18n/LanguageContext';
@@ -35,6 +35,7 @@ export default function SuperpetHome() {
     const [petName, setPetName] = useState('');
     const [petType, setPetType] = useState<PetInfo['type']>('dog');
     const [cardStyle, setCardStyle] = useState<'cute' | 'powerful' | 'furry' | null>(null);
+    const [gender, setGender] = useState<'male' | 'female' | null>(null);
     const [traits, setTraits] = useState<string[]>([]);
     const [characters, setCharacters] = useState<Character[]>([]);
     const [showForm, setShowForm] = useState(false);
@@ -139,6 +140,7 @@ export default function SuperpetHome() {
                         className: char.className,
                         element: char.element,
                         style: cardStyle,
+                        gender: gender,
                         characterId: char.id,
                     }),
                 });
@@ -164,6 +166,7 @@ export default function SuperpetHome() {
         setPetName('');
         setTraits([]);
         setCardStyle(null);
+        setGender(null);
         setShowForm(false);
         setCreatedCharacter(char);
     };
@@ -240,9 +243,11 @@ export default function SuperpetHome() {
 
                     <button
                         onClick={() => setShowAnnouncement(true)}
-                        className="w-[200px] mx-auto bg-amber-500 rounded-full p-2  text-center mb-4 text-lg text-foreground/60 hover:text-foreground transition-colors"
+                        className="group relative w-[220px] mx-auto py-3 px-6 rounded-lg bg-gradient-to-b from-amber-400 via-amber-500 to-amber-700 text-white font-black text-base border-2transition-all mb-6 flex items-center justify-center gap-2 overflow-hidden"
                     >
-                        📢 {t('공지사항')}
+                        <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                        <span className="text-xl animate-bounce">📢</span>
+                        <span className="drop-shadow-[0_0_4px_rgba(0,0,0,0.3)]">{t('공지사항')}</span>
                     </button>
 
 
@@ -473,41 +478,41 @@ export default function SuperpetHome() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 }}
-                            className="glass p-8 rounded-2xl shadow-lg bg-white/5 mb-8"
+                            className="p-6 rounded-xl shadow-2xl bg-gradient-to-b from-zinc-800/90 to-zinc-900/90 mb-8 border-2 border-amber-500/30 backdrop-blur-sm"
                         >
-                            <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-                                <PawPrint className="h-5 w-5 text-amber-500" />
+                            <h2 className="text-2xl font-black mb-6 flex items-center gap-3 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]">
+                                <PawPrint className="h-7 w-7 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
                                 {t('캐릭터 생성')}
                             </h2>
 
                             {/* 펫 이름 */}
                             <div className="mb-6">
-                                <label className="block text-sm font-semibold mb-2 text-foreground/80">
-                                    {t('펫 이름')}
+                                <label className="block text-sm font-semibold mb-2 text-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.5)]">
+                                    📝 {t('펫 이름')}
                                 </label>
                                 <input
                                     type="text"
                                     value={petName}
                                     onChange={(e) => setPetName(e.target.value)}
                                     placeholder={t('반려동물 이름을 입력하세요')}
-                                    className="w-full px-4 py-3 rounded-xl bg-foreground/5 border border-foreground/10 focus:border-amber-500 focus:outline-none transition-colors"
+                                    className="w-full px-4 py-3 rounded-lg bg-zinc-800 border-2 border-zinc-600 focus:border-amber-500 focus:shadow-[0_0_12px_rgba(251,191,36,0.4)] focus:outline-none transition-all text-white placeholder:text-zinc-500 font-semibold"
                                     maxLength={20}
                                 />
                             </div>
 
                             {/* 종류 선택 */}
                             <div className="mb-6">
-                                <label className="block text-sm font-semibold mb-2 text-foreground/80">
-                                    {t('종류')}
+                                <label className="block text-sm font-semibold mb-2 text-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.5)]">
+                                    ⚔️ {t('종류')}
                                 </label>
-                                <div className="flex gap-3">
+                                <div className="flex gap-2">
                                     {PET_TYPES.map((pt) => (
                                         <button
                                             key={pt.key}
                                             onClick={() => setPetType(pt.key)}
-                                            className={`flex-1 py-3 rounded-xl font-semibold text-sm transition-all ${petType === pt.key
-                                                ? 'bg-amber-500 text-white shadow-lg border border-amber-500'
-                                                : 'bg-foreground/5 text-foreground/60 hover:bg-foreground/10 border border-foreground/20'
+                                            className={`flex-1 py-3 rounded-lg font-bold text-sm transition-all duration-200 border-2 ${petType === pt.key
+                                                ? 'bg-gradient-to-b from-amber-400 to-amber-600 text-white border-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.6),inset_0_1px_0_rgba(255,255,255,0.3)] scale-105'
+                                                : 'bg-gradient-to-b from-zinc-700 to-zinc-800 text-zinc-300 border-zinc-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)] hover:from-zinc-600 hover:to-zinc-700 hover:border-zinc-500 hover:text-white'
                                                 }`}
                                         >
                                             {t(pt.label)}
@@ -518,56 +523,86 @@ export default function SuperpetHome() {
 
                             {/* 카드 스타일 선택 */}
                             <div className="mb-6">
-                                <label className="block text-sm font-semibold mb-2 text-foreground/80">
-                                    {t('카드 스타일')} <span className="text-red-500">*</span>
+                                <label className="block text-sm font-semibold mb-2 text-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.5)]">
+                                    🎨 {t('카드 스타일')} <span className="text-red-400">*</span>
                                 </label>
                                 {cardStyle === null && (
-                                    <p className="text-xs text-foreground/40 mt-1 text-red-500">{t('카드 스타일을 선택해주세요')}</p>
+                                    <p className="text-xs text-red-400 mt-1 drop-shadow-[0_0_4px_rgba(248,113,113,0.5)]">{t('카드 스타일을 선택해주세요')}</p>
                                 )}
-                                <div className="flex gap-3">
+                                <div className="flex gap-2">
                                     <button
                                         onClick={() => setCardStyle('cute')}
-                                        className={`flex-1 py-3 rounded-xl font-semibold text-sm transition-all ${cardStyle === 'cute'
-                                            ? 'bg-amber-500 text-white shadow-lg border border-amber-500'
-                                            : 'bg-foreground/5 text-foreground/60 hover:bg-foreground/10 border border-foreground/20'
+                                        className={`flex-1 py-3 rounded-lg font-bold text-sm transition-all duration-200 border-2 ${cardStyle === 'cute'
+                                            ? 'bg-gradient-to-b from-pink-400 to-pink-600 text-white border-pink-300 shadow-[0_0_12px_rgba(236,72,153,0.6),inset_0_1px_0_rgba(255,255,255,0.3)] scale-105'
+                                            : 'bg-gradient-to-b from-zinc-700 to-zinc-800 text-zinc-300 border-zinc-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)] hover:from-zinc-600 hover:to-zinc-700 hover:border-zinc-500 hover:text-white'
                                             }`}
                                     >
-                                        {t('귀여운 카툰')}
+                                        ♥️ {t('귀여운 카툰')}
                                     </button>
                                     <button
                                         onClick={() => setCardStyle('powerful')}
-                                        className={`flex-1 py-3 rounded-xl font-semibold text-sm transition-all ${cardStyle === 'powerful'
-                                            ? 'bg-amber-500 text-white shadow-lg border border-amber-500'
-                                            : 'bg-foreground/5 text-foreground/60 hover:bg-foreground/10 border border-foreground/20'
+                                        className={`flex-1 py-3 rounded-lg font-bold text-sm transition-all duration-200 border-2 ${cardStyle === 'powerful'
+                                            ? 'bg-gradient-to-b from-red-500 to-red-700 text-white border-red-400 shadow-[0_0_12px_rgba(239,68,68,0.6),inset_0_1px_0_rgba(255,255,255,0.3)] scale-105'
+                                            : 'bg-gradient-to-b from-zinc-700 to-zinc-800 text-zinc-300 border-zinc-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)] hover:from-zinc-600 hover:to-zinc-700 hover:border-zinc-500 hover:text-white'
                                             }`}
                                     >
-                                        {t('강력한 일러스트')}
+                                        🔥 {t('강력한 일러스트')}
                                     </button>
                                     <button
                                         onClick={() => setCardStyle('furry')}
-                                        className={`flex-1 py-3 rounded-xl font-semibold text-sm transition-all ${cardStyle === 'furry'
-                                            ? 'bg-amber-500 text-white shadow-lg border border-amber-500'
-                                            : 'bg-foreground/5 text-foreground/60 hover:bg-foreground/10 border border-foreground/20'
+                                        className={`flex-1 py-3 rounded-lg font-bold text-sm transition-all duration-200 border-2 ${cardStyle === 'furry'
+                                            ? 'bg-gradient-to-b from-purple-500 to-purple-700 text-white border-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.6),inset_0_1px_0_rgba(255,255,255,0.3)] scale-105'
+                                            : 'bg-gradient-to-b from-zinc-700 to-zinc-800 text-zinc-300 border-zinc-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)] hover:from-zinc-600 hover:to-zinc-700 hover:border-zinc-500 hover:text-white'
                                             }`}
                                     >
-                                        {t('퍼리')}
+                                        🐶 {t('퍼리')}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* 성별 선택 */}
+                            <div className="mb-6">
+                                <label className="block text-sm font-semibold mb-2 text-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.5)]">
+                                    👤 {t('성별')} <span className="text-red-400">*</span>
+                                </label>
+                                {gender === null && (
+                                    <p className="text-xs text-red-400 mt-1 drop-shadow-[0_0_4px_rgba(248,113,113,0.5)]">{t('성별을 선택해주세요')}</p>
+                                )}
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setGender('male')}
+                                        className={`flex-1 py-4 rounded-lg font-bold text-lg transition-all duration-200 flex items-center justify-center gap-2 border-2 ${gender === 'male'
+                                            ? 'bg-gradient-to-b from-blue-400 to-blue-600 text-white border-blue-300 shadow-[0_0_12px_rgba(59,130,246,0.6),inset_0_1px_0_rgba(255,255,255,0.3)] scale-105'
+                                            : 'bg-gradient-to-b from-zinc-700 to-zinc-800 text-zinc-300 border-zinc-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)] hover:from-zinc-600 hover:to-zinc-700 hover:border-zinc-500 hover:text-white'
+                                            }`}
+                                    >
+                                        <Mars className="h-6 w-6 drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
+                                    </button>
+                                    <button
+                                        onClick={() => setGender('female')}
+                                        className={`flex-1 py-4 rounded-lg font-bold text-lg transition-all duration-200 flex items-center justify-center gap-2 border-2 ${gender === 'female'
+                                            ? 'bg-gradient-to-b from-pink-400 to-pink-600 text-white border-pink-300 shadow-[0_0_12px_rgba(236,72,153,0.6),inset_0_1px_0_rgba(255,255,255,0.3)] scale-105'
+                                            : 'bg-gradient-to-b from-zinc-700 to-zinc-800 text-zinc-300 border-zinc-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)] hover:from-zinc-600 hover:to-zinc-700 hover:border-zinc-500 hover:text-white'
+                                            }`}
+                                    >
+                                        <Venus className="h-6 w-6 drop-shadow-[0_0_8px_rgba(236,72,153,0.8)]" />
                                     </button>
                                 </div>
                             </div>
 
                             {/* 특성 선택 */}
                             <div className="mb-8">
-                                <label className="block text-sm font-semibold mb-2 text-foreground/80">
-                                    {t('특성 선택')} <span className="text-red-500">*</span> <span className="text-foreground/40 font-normal">({traits.length}/3)</span>
+                                <label className="block text-sm font-semibold mb-2 text-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.5)]">
+                                    ✨ {t('특성 선택')} <span className="text-red-400">*</span> <span className="text-emerald-400 font-normal">({traits.length}/3)</span>
                                 </label>
                                 <div className="flex flex-wrap gap-2">
                                     {PET_TRAITS.map((trait) => (
                                         <button
                                             key={trait}
                                             onClick={() => toggleTrait(trait)}
-                                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${traits.includes(trait)
-                                                ? 'bg-amber-500 text-white shadow-md border border-amber-500'
-                                                : 'bg-foreground/5 text-foreground/60 hover:bg-foreground/10 border border-foreground/20'
+                                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 border-2 ${traits.includes(trait)
+                                                ? 'bg-gradient-to-b from-emerald-400 to-emerald-600 text-white border-emerald-300 shadow-[0_0_10px_rgba(52,211,153,0.5),inset_0_1px_0_rgba(255,255,255,0.3)] scale-105'
+                                                : 'bg-gradient-to-b from-zinc-700 to-zinc-800 text-zinc-300 border-zinc-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)] hover:from-zinc-600 hover:to-zinc-700 hover:border-zinc-500 hover:text-white'
                                                 }`}
                                         >
                                             {t(trait)}
@@ -578,16 +613,16 @@ export default function SuperpetHome() {
 
                             {/* 사진 업로드 (필수) */}
                             <div className="mb-8">
-                                <label className="block text-sm font-semibold mb-2 text-foreground/80">
-                                    {t('반려동물 사진')} <span className="text-red-500">*</span>
+                                <label className="block text-sm font-semibold mb-2 text-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.5)]">
+                                    📷 {t('반려동물 사진')} <span className="text-red-400">*</span>
                                 </label>
-                                <p className="text-xs text-foreground/40 mb-3">{t('사진을 첨부하면 AI가 카드로 변환합니다')}</p>
+                                <p className="text-xs text-zinc-400 mb-3">{t('사진을 첨부하면 AI가 카드로 변환합니다')}</p>
                                 {petPhoto ? (
                                     <div className="relative inline-block">
-                                        <img src={petPhoto} alt="pet" className="w-32 h-32 object-cover rounded-xl border border-foreground/10" />
+                                        <img src={petPhoto} alt="pet" className="w-32 h-32 object-cover rounded-lg border-2 border-amber-500 shadow-[0_0_12px_rgba(251,191,36,0.4)]" />
                                         <button
                                             onClick={() => { setPetPhoto(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
-                                            className="absolute -top-2 -right-2 p-1 rounded-full bg-red-500 text-white shadow-md hover:bg-red-600 transition-colors"
+                                            className="absolute -top-2 -right-2 p-1.5 rounded-full bg-gradient-to-b from-red-500 to-red-700 text-white shadow-[0_0_8px_rgba(239,68,68,0.6)] hover:from-red-400 hover:to-red-600 transition-all border border-red-400"
                                         >
                                             <X className="h-3 w-3" />
                                         </button>
@@ -595,11 +630,11 @@ export default function SuperpetHome() {
                                 ) : (
                                     <button
                                         onClick={() => fileInputRef.current?.click()}
-                                        className="flex items-center gap-2 px-4 py-3 rounded-xl bg-foreground/5 border border-dashed border-foreground/20 hover:bg-foreground/10 transition-colors text-foreground/50 text-sm"
+                                        className="flex items-center gap-3 px-5 py-4 rounded-lg bg-gradient-to-b from-zinc-700 to-zinc-800 border-2 border-dashed border-zinc-500 hover:border-amber-500 hover:from-zinc-600 hover:to-zinc-700 transition-all text-zinc-300 hover:text-amber-400 text-sm font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)]"
                                     >
                                         <Camera className="h-5 w-5" />
                                         {t('사진 첨부하기')}
-                                        <span className="text-xs text-foreground/30">({t('최대 750KB')})</span>
+                                        <span className="text-xs text-zinc-500">({t('최대 750KB')})</span>
                                     </button>
                                 )}
                                 <input
@@ -613,20 +648,20 @@ export default function SuperpetHome() {
 
                             {/* 에러 메시지 */}
                             {generateError && (
-                                <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm text-center">
-                                    {generateError}
+                                <div className="mb-4 p-3 rounded-lg bg-gradient-to-b from-red-900/50 to-red-950/50 border-2 border-red-500/50 text-red-400 text-sm text-center font-bold shadow-[0_0_12px_rgba(239,68,68,0.3)]">
+                                    ⚠️ {generateError}
                                 </div>
                             )}
 
                             {/* 생성 버튼 */}
                             <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
+                                whileHover={{ scale: 1.03 }}
+                                whileTap={{ scale: 0.97 }}
                                 onClick={handleGenerate}
-                                disabled={!petName.trim() || traits.length < 3 || !petPhoto || !cardStyle || isGenerating}
-                                className="w-full py-4 rounded-xl bg-amber-500 text-white font-bold text-lg shadow-lg hover:bg-amber-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                disabled={!petName.trim() || traits.length < 3 || !petPhoto || !cardStyle || !gender || isGenerating}
+                                className="w-full py-4 rounded-lg bg-gradient-to-b from-amber-400 via-amber-500 to-amber-700 text-white font-black text-lg border-2 border-amber-300 shadow-[0_0_20px_rgba(251,191,36,0.5),inset_0_1px_0_rgba(255,255,255,0.3),0_4px_0_#b45309] hover:shadow-[0_0_30px_rgba(251,191,36,0.7),inset_0_1px_0_rgba(255,255,255,0.3),0_4px_0_#b45309] active:shadow-[0_0_15px_rgba(251,191,36,0.4),inset_0_1px_0_rgba(255,255,255,0.3),0_2px_0_#b45309] active:translate-y-[2px] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2 tracking-wide"
                             >
-                                <Sparkles className="h-5 w-5" />
+                                <Sparkles className="h-6 w-6 drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
                                 {t('캐릭터 생성')}
                             </motion.button>
 
@@ -634,7 +669,7 @@ export default function SuperpetHome() {
                             {characters.length > 0 && (
                                 <button
                                     onClick={() => setShowForm(false)}
-                                    className="mt-3 w-full py-2 text-sm text-foreground/60 hover:text-foreground/80 transition-colors"
+                                    className="mt-3 w-full py-3 rounded-lg text-sm font-bold bg-gradient-to-b from-zinc-700 to-zinc-800 text-zinc-400 border-2 border-zinc-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)] hover:from-zinc-600 hover:to-zinc-700 hover:text-zinc-300 hover:border-zinc-500 transition-all"
                                 >
                                     {t('취소')}
                                 </button>
@@ -671,6 +706,7 @@ export default function SuperpetHome() {
                                     - {t('캐릭터 저장 기능이 추가되었습니다!')} (2026.02.03)<br />
                                     - {t('랭킹 기능이 추가되었습니다!')} (2026.02.03)
                                     - {t('무료 사료 배달 기능이 추가되었습니다! 웹 접속시 10분 마다 사료가 지급됩니다.')} (2026.02.03)<br />
+                                    - {t('캐릭터 생성시 성별을 선택할 수 있습니다.')} (2026.02.06)<br />
 
                                 </p>
                             </div>
