@@ -16,6 +16,8 @@ export const koToEn: Record<string, string> = {
     '판매': 'Sell',
     '골드': 'Gold',
     '젬': 'Gem',
+    '골드 부족': 'Not enough gold',
+    '젬 부족': 'Not enough gems',
     '공격': 'ATK',
     '방어': 'DEF',
     '속도': 'SPD',
@@ -34,6 +36,9 @@ export const koToEn: Record<string, string> = {
     '캐릭터 삭제': 'Delete Character',
     '정말로 이 캐릭터를 삭제하시겠습니까?': 'Are you sure you want to delete this character?',
     '이 작업은 되돌릴 수 없습니다.': 'This action cannot be undone.',
+    '추가 캐릭터 생성에는': 'Creating additional characters requires',
+    '이 필요합니다.': '.',
+    '현재 보유': 'Current balance',
     '모험 시작하기': 'Start Adventure',
     '던전 가기': 'Go to Dungeon',
 
@@ -187,10 +192,10 @@ export const koToEn: Record<string, string> = {
     '대지의 군주': 'Earth Lord',
 
     '화염 박쥐': 'Flame Bat',
-    '용암 거북': 'Lava Turtle',
+    '용암 정령': 'Lava Spirit',
     '불꽃 하피': 'Flame Harpy',
     '화산 기사': 'Volcano Knight',
-    '불의 정령': 'Fire Spirit',
+    '불의 요정': 'Fire Fairy',
     '피닉스': 'Phoenix',
 
     '어린 비룡': 'Young Wyvern',

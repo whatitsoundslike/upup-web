@@ -18,7 +18,7 @@ export const GEM_ISSUE_SOURCE_LIST = Object.values(GEM_ISSUE_SOURCES);
 
 // ===== 사용처 (Use Sources) =====
 export const GEM_USE_SOURCES = {
-  delete_character: 'delete_character',   // 캐릭터 삭제
+  create_character: 'create_character',   // 캐릭터 생성 (2번째부터)
   revive: 'revive',                       // 부활
   shop_item: 'shop_item',                 // 상점 아이템 구매
   gacha: 'gacha',                         // 가챠

@@ -383,6 +383,7 @@ export const dungeons: DungeonData[] = [
                 attack: 100,
                 isBoss: false,
                 spawnChance: 25,
+                imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/ACT_4_FlameBat.jpg",
                 drops: [
                     { itemId: 'feed', chance: 40 },
                     { itemId: 'dubai_cookie', chance: 20 },
@@ -391,13 +392,14 @@ export const dungeons: DungeonData[] = [
                 ],
             },
             {
-                name: '용암 거북',
+                name: '용암 정령',
                 emoji: '🐢',
                 level: 34,
                 hp: 620,
                 attack: 105,
                 isBoss: false,
                 spawnChance: 22,
+                imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/ACT_4_LavaSpirit.jpg",
                 drops: [
                     { itemId: 'feed', chance: 40 },
                     { itemId: 'dubai_cookie', chance: 20 },
@@ -413,6 +415,7 @@ export const dungeons: DungeonData[] = [
                 attack: 110,
                 isBoss: false,
                 spawnChance: 20,
+                imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/ACT_4_FlameHarpy.jpg",
                 drops: [
                     { itemId: 'feed', chance: 40 },
                     { itemId: 'dubai_cookie', chance: 20 },
@@ -428,6 +431,7 @@ export const dungeons: DungeonData[] = [
                 attack: 115,
                 isBoss: false,
                 spawnChance: 17,
+                imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/ACT_4_VolcanoKnight.jpg",
                 drops: [
                     { itemId: 'feed', chance: 40 },
                     { itemId: 'dubai_cookie', chance: 20 },
@@ -436,13 +440,14 @@ export const dungeons: DungeonData[] = [
                 ],
             },
             {
-                name: '불의 정령',
+                name: '불의 요정',
                 emoji: '🔥',
                 level: 39,
                 hp: 700,
                 attack: 120,
                 isBoss: false,
                 spawnChance: 13,
+                imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/ACT_4_FireFairy.jpg",
                 drops: [
                     { itemId: 'feed', chance: 40 },
                     { itemId: 'dubai_cookie', chance: 20 },

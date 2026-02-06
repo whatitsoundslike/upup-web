@@ -1,7 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { Camera, Copy, Feather, Heart, Loader2, LogIn, Mars, PawPrint, Plus, Rocket, Shield, Sparkles, Sword, Swords, Trash2, UserPlus, Venus, X } from 'lucide-react';
+import { Camera, Copy, Feather, Gem, Heart, Loader2, LogIn, Mars, PawPrint, Plus, Rocket, Shield, Sparkles, Sword, Swords, Trash2, UserPlus, Venus, X } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from './i18n/LanguageContext';
@@ -22,6 +22,7 @@ import {
     type CharacterClass
 } from './types';
 import { saveToServer } from './gameSync';
+import { fetchGemBalance, useGem } from './gemApi';
 import ProgressModal from './components/ProgressModal';
 import { shareToTwitter } from './utils/shareUtils';
 import { useAuth } from '@/components/AuthProvider';
@@ -32,6 +33,8 @@ const ELEMENT_COLORS: Record<string, string> = {
     '풍': 'bg-emerald-500',
     '땅': 'bg-amber-600',
 };
+
+const CREATE_GEM_COST = 100; // 2번째 캐릭터부터 필요한 젬
 
 export default function SuperpetHome() {
     const { t, lang } = useLanguage();
@@ -68,6 +71,10 @@ export default function SuperpetHome() {
     // 링크 복사 완료 모달
     const [showLinkCopiedModal, setShowLinkCopiedModal] = useState(false);
 
+    // Gem 상태
+    const [gemBalance, setGemBalance] = useState<number | null>(null);
+    const [showInsufficientGem, setShowInsufficientGem] = useState(false);
+
     // 페이지 로드 시 기존 캐릭터 불러오기
     useEffect(() => {
         migrateCharacterData(); // 기존 데이터 마이그레이션
@@ -102,6 +109,17 @@ export default function SuperpetHome() {
         }
     }, [createdCharacter]);
 
+    // Gem 잔액 로드
+    useEffect(() => {
+        const loadGem = async () => {
+            const data = await fetchGemBalance();
+            if (data) {
+                setGemBalance(data.balance);
+            }
+        };
+        loadGem();
+    }, []);
+
     const toggleTrait = (trait: string) => {
         setTraits((prev) =>
             prev.includes(trait)
@@ -134,6 +152,24 @@ export default function SuperpetHome() {
         setGenerateError(null);
 
         const charName = petName.trim();
+
+        // 2번째 캐릭터부터 젬 소모
+        const isNotFirstCharacter = characters.length >= 1;
+        if (isNotFirstCharacter) {
+            // 젬 잔액 확인
+            if (gemBalance === null || gemBalance < CREATE_GEM_COST) {
+                setShowInsufficientGem(true);
+                return;
+            }
+
+            // 젬 사용
+            const gemResult = await useGem(CREATE_GEM_COST, 'create_character', `캐릭터 생성: ${charName}`);
+            if (!gemResult.success) {
+                setShowInsufficientGem(true);
+                return;
+            }
+            setGemBalance(gemResult.balance ?? null);
+        }
 
         // 프로그레스 모달 표시
         setProgressMessage(t('멋진 캐릭터 카드를 생성 중입니다...'));
@@ -255,6 +291,18 @@ export default function SuperpetHome() {
             setActiveCharacterId(null);
             setShowForm(true);
         }
+    };
+
+    const handleNewCharacterClick = () => {
+        // 2번째 캐릭터부터 젬 체크
+        if (characters.length >= 1) {
+            if (gemBalance === null || gemBalance < CREATE_GEM_COST) {
+                setShowInsufficientGem(true);
+                return;
+            }
+        }
+        setShowForm(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     return (
@@ -579,12 +627,18 @@ export default function SuperpetHome() {
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: characters.length * 0.1 }}
-                                        onClick={() => { setShowForm(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                        onClick={handleNewCharacterClick}
                                         className="glass p-6 rounded-2xl shadow-lg bg-white/5 hover:bg-white/10 transition-colors flex flex-col items-center justify-center min-h-[200px] border-2 border-dashed border-foreground/20"
                                     >
                                         <Plus className="h-12 w-12 text-amber-500 mb-3" />
                                         <span className="text-sm font-bold text-foreground/60">{t('새 캐릭터 만들기')}</span>
                                         <span className="text-xs text-foreground/40 mt-1">({characters.length}/3)</span>
+                                        {characters.length >= 1 && (
+                                            <span className="inline-flex items-center gap-1 mt-2 px-2 py-1 rounded-full bg-purple-500/10 text-purple-500 text-xs font-bold">
+                                                <Gem className="h-3 w-3" />
+                                                {CREATE_GEM_COST}
+                                            </span>
+                                        )}
                                     </motion.button>
                                 )}
                             </div>
@@ -1031,6 +1085,42 @@ export default function SuperpetHome() {
                                     {t('삭제')}
                                 </button>
                             </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* 젬 부족 모달 */}
+            <AnimatePresence>
+                {showInsufficientGem && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+                        onClick={() => setShowInsufficientGem(false)}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="relative w-full max-w-sm p-6 rounded-2xl shadow-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-purple-500"
+                        >
+                            <div className="text-center mb-6">
+                                <Gem className="h-16 w-16 text-purple-500 mx-auto mb-3" />
+                                <h3 className="text-xl font-black mb-2">{t('젬 부족')}</h3>
+                                <p className="text-sm text-foreground/60 mb-3">
+                                    {t('추가 캐릭터 생성에는')} <span className="font-bold text-purple-500">{CREATE_GEM_COST} {t('젬')}</span>{t('이 필요합니다.')}<br />
+                                    {t('현재 보유')}: <span className="font-bold text-purple-500">{gemBalance ?? 0} {t('젬')}</span>
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setShowInsufficientGem(false)}
+                                className="w-full py-3 rounded-xl bg-purple-500 text-white font-bold hover:bg-purple-600 transition-colors"
+                            >
+                                {t('확인')}
+                            </button>
                         </motion.div>
                     </motion.div>
                 )}

@@ -285,6 +285,11 @@ export default function Shop() {
                                 >
                                     {activeTab === 'gem' && gemLoading ? '...' : t('구매')}
                                 </button>
+                                {!canAfford && (
+                                    <p className={`text-[10px] mt-1 font-semibold ${activeTab === 'gold' ? 'text-amber-500' : 'text-purple-500'}`}>
+                                        {activeTab === 'gold' ? t('골드 부족') : t('젬 부족')}
+                                    </p>
+                                )}
                             </motion.div>
                         );
                     })}
