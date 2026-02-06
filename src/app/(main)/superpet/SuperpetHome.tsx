@@ -1,7 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { Camera, Feather, Gem, Heart, Loader2, Mars, PawPrint, Plus, Shield, Sparkles, Sword, Swords, Trash2, Venus, X } from 'lucide-react';
+import { Camera, Feather, Gem, Heart, Loader2, LogIn, Mars, PawPrint, Plus, Rocket, Shield, Sparkles, Sword, Swords, Trash2, Venus, X } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from './i18n/LanguageContext';
@@ -61,6 +61,9 @@ export default function SuperpetHome() {
     // 카드 생성 실패 모달
     const [cardGenerateFailModal, setCardGenerateFailModal] = useState<{ show: boolean; petName: string }>({ show: false, petName: '' });
 
+    // 시작 선택 화면 (로그인/새로 시작)
+    const [showStartChoice, setShowStartChoice] = useState(false);
+
     // 페이지 로드 시 기존 캐릭터 불러오기
     useEffect(() => {
         migrateCharacterData(); // 기존 데이터 마이그레이션
@@ -72,7 +75,7 @@ export default function SuperpetHome() {
         setActiveCharacterId(activeId);
 
         if (allChars.length === 0) {
-            setShowForm(true); // 캐릭터가 없으면 폼 표시
+            setShowStartChoice(true); // 캐릭터가 없으면 시작 선택 화면 표시
         }
 
         // 하루 1회 안내 모달
@@ -275,16 +278,9 @@ export default function SuperpetHome() {
                 <div className="max-w-2xl mx-auto px-4 w-full">
 
                     {/* 홈 로고 영역 */}
-                    {!createdCharacter && characters.length === 0 && (
+                    {!createdCharacter && characters.length === 0 && !showForm && (
                         <div className="flex flex-col items-center">
                             <div className="text-center mb-4">
-                                <motion.h1
-                                    initial={{ opacity: 0, y: -20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="text-5xl font-black tracking-tighter mb-4 uppercase"
-                                >
-                                    SUPER <span className="text-amber-500">PET</span> <span className="text-blue-500 text-[20px] font-thin">[Beta]</span>
-                                </motion.h1>
                                 <motion.p
                                     initial={{ opacity: 0, y: -20 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -421,6 +417,40 @@ export default function SuperpetHome() {
                                     {t('트위터에 슈퍼펫 알려주기')}
                                 </button>
                             </motion.div>
+                        </motion.div>
+                    )}
+
+                    {/* 시작 선택 화면 */}
+                    {showStartChoice && !showForm && !createdCharacter && characters.length === 0 && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="p-8 rounded-2xl shadow-2xl bg-gradient-to-b from-zinc-800/90 to-zinc-900/90 border-2 border-amber-500/30 backdrop-blur-sm text-center"
+                        >
+                            <div className="text-6xl mb-6">🐾</div>
+                            <h2 className="text-2xl font-black mb-3 text-amber-400">
+                                {t('슈퍼펫에 오신 것을 환영합니다!')}
+                            </h2>
+
+                            <div className="flex flex-col gap-3">
+                                <Link
+                                    href="/login?callbackUrl=/superpet"
+                                    className="w-full py-4 rounded-xl bg-blue-500 text-white font-bold text-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <LogIn className="h-5 w-5" />
+                                    {t('로그인하기')}
+                                </Link>
+                                <button
+                                    onClick={() => {
+                                        setShowStartChoice(false);
+                                        setShowForm(true);
+                                    }}
+                                    className="w-full py-4 rounded-xl bg-amber-500 text-white font-bold text-lg hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <Rocket className="h-5 w-5" />
+                                    {t('새로 시작하기')}
+                                </button>
+                            </div>
                         </motion.div>
                     )}
 
