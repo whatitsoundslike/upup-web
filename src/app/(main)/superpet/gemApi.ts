@@ -21,10 +21,20 @@ export type GemApiResult = {
   error?: string;
 };
 
+// ===== 로그인 체크 =====
+const AUTH_COOKIE_NAME = 'auth-token';
+
+function isLoggedIn(): boolean {
+  if (typeof document === 'undefined') return false;
+  return document.cookie.split(';').some(c => c.trim().startsWith(`${AUTH_COOKIE_NAME}=`));
+}
+
 // ===== API 함수 =====
 
 // Gem 잔액 조회
 export async function fetchGemBalance(): Promise<GemBalance | null> {
+  if (!isLoggedIn()) return null;
+
   try {
     const res = await fetch('/api/superpet/gem');
     if (!res.ok) return null;
@@ -40,6 +50,10 @@ export async function issueGem(
   source: GemIssueSource,
   memo?: string
 ): Promise<GemApiResult> {
+  if (!isLoggedIn()) {
+    return { success: false, error: '로그인이 필요합니다' };
+  }
+
   try {
     const res = await fetch('/api/superpet/gem/issue', {
       method: 'POST',
@@ -62,6 +76,10 @@ export async function useGem(
   source: GemUseSource,
   memo?: string
 ): Promise<GemApiResult> {
+  if (!isLoggedIn()) {
+    return { success: false, error: '로그인이 필요합니다' };
+  }
+
   try {
     const res = await fetch('/api/superpet/gem/use', {
       method: 'POST',
