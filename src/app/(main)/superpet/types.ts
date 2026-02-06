@@ -818,7 +818,7 @@ export const GAME_ITEMS: Record<string, GameItem> = {
     },
     accessory_enhance_scroll: {
         id: 'accessory_enhance_scroll',
-        name: '악세사리 강화 주문서',
+        name: '장신구 강화 주문서',
         emoji: '📜',
         rarity: '에픽',
         stats: { hp: 0, attack: 0, defense: 0, speed: 0 },

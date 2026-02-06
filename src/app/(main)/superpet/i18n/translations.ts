@@ -214,6 +214,7 @@ export const koToEn: Record<string, string> = {
     '자동 전투': 'Auto Battle',
     '자동 전투 진행 중...': 'Auto Battling...',
     '도망치기': 'Flee',
+    '무료 사료': 'Free Feed',
 
     // === 전투 결과 ===
     '승리!': 'Victory!',
@@ -221,7 +222,7 @@ export const koToEn: Record<string, string> = {
     '드롭된 아이템이 없습니다': 'No items dropped',
     '다시 도전': 'Try Again',
     '전투 포기': 'Give Up',
-    '모험 계속하기': 'Continue',
+    '다음 전투': 'Continue',
     '다른 던전 선택': 'Select Another',
     '패배...': 'Defeat...',
     '다음에는 더 강해져서 돌아오자!': 'Come back stronger next time!',
@@ -283,6 +284,9 @@ export const koToEn: Record<string, string> = {
     '구매 완료!': 'Purchase complete!',
     '판매 중인 상품이 없습니다': 'No items for sale',
     '상점을 이용하려면 먼저 캐릭터를 생성하세요!': 'Create a character first to use the shop!',
+    '무기 강화 주문서': 'Weapon Enhancement Scroll',
+    '방어구 강화 주문서': 'Armor Enhancement Scroll',
+    '장신구 강화 주문서': 'Accessory Enhancement Scroll',
 
     // === 스탯 약어 (상점) ===
     '공': 'ATK',

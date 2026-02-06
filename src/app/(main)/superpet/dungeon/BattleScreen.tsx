@@ -209,7 +209,7 @@ export default function BattleScreen({
             </motion.div>
 
             {/* 배틀 로그 */}
-            <div ref={logRef} className="glass p-4 rounded-xl bg-white/5 mb-6 h-30 overflow-y-auto">
+            <div ref={logRef} className="glass p-4 rounded-xl bg-white/5 mb-2 h-30 overflow-y-auto">
                 {battleLog.map((log, i) => (
                     <motion.p
                         key={i}
@@ -253,7 +253,7 @@ export default function BattleScreen({
                                 onClick={() => onStartBattle(selectedDungeon)}
                                 className="px-3 py-1.5 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors flex items-center gap-2"
                             >
-                                <Swords className="h-4 w-4" /> {t('모험 계속하기')}
+                                <Swords className="h-4 w-4" /> {t('다음 전투')}
                             </button>
                             <div className="px-3 py-1.5 rounded-xl bg-foreground/5 text-foreground/50 text-sm font-bold flex items-center gap-1.5">
                                 🍖 {t('무료 사료')} {feedCountdown}
