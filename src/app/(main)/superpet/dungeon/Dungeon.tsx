@@ -168,18 +168,50 @@ export default function Dungeon() {
         const totalStats = getTotalStats(character);
         const maxHp = totalStats.hp;
 
-        const hp = Math.min(
+        let hp = Math.min(
             character.currentHp > 0 && !isNaN(character.currentHp) ? character.currentHp : maxHp,
             maxHp
         );
 
+        const battleLogEntries: string[] = [
+            `${t(monster.name)}${monster.isBoss ? ` (${t('보스')})` : ''}${t('이(가) 나타났다!')}`,
+            `LV.${monster.level} | HP ${monster.hp} | ${t('공격력')} ${monster.attack}`
+        ];
+
+        // 선제 공격 판정: 속도에 따라 캐릭터가 선제 공격할 확률 (최대 60%)
+        const firstStrikeChance = Math.min(totalStats.speed / 300, 0.6);
+        const playerGoesFirst = Math.random() < firstStrikeChance;
+
+        if (playerGoesFirst) {
+            battleLogEntries.push(`⚡ ${character.name}${lang === 'ko' ? '이(가) 빠르게 선제 공격 태세!' : ' strikes first!'}`);
+        } else {
+            // 몬스터 선제 공격
+            const monsterDmg = Math.max(
+                Math.floor((monster.attack - totalStats.defense) * (0.8 + Math.random() * 0.4)),
+                5
+            );
+            hp = Math.max(hp - monsterDmg, 0);
+            battleLogEntries.push(`👊 ${t(monster.name)}${lang === 'ko' ? '의 선제 공격!' : "'s first strike!"} ${monsterDmg} ${t('데미지!')}`);
+
+            if (hp <= 0) {
+                battleLogEntries.push(`${character.name}${t('이(가) 쓰러졌다...')}`);
+                const dead = { ...character, currentHp: 0 };
+                saveCharacter(dead);
+                setCharacter(dead);
+                setPlayerHp(0);
+                setMonsterHp(monster.hp);
+                setBattleState('lost');
+                setBattleLog(battleLogEntries);
+                setDroppedItems([]);
+                debouncedSaveToServer();
+                return;
+            }
+        }
+
         setPlayerHp(hp);
         setMonsterHp(monster.hp);
         setBattleState('fighting');
-        setBattleLog([
-            `${t(monster.name)}${monster.isBoss ? ` (${t('보스')})` : ''}${t('이(가) 나타났다!')}`,
-            `LV.${monster.level} | HP ${monster.hp} | ${t('공격력')} ${monster.attack}`
-        ]);
+        setBattleLog(battleLogEntries);
         setDroppedItems([]);
     };
 
