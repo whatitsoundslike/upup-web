@@ -1281,8 +1281,18 @@ export function getEnhancedStats(baseStats: ItemStats, enhanceLevel: number, slo
     };
 }
 
-// 강화 성공 확률 (30%)
-const ENHANCE_SUCCESS_RATE = 0.3;
+// 강화 성공 확률 (레벨별 차등)
+// 1~6: 100%, 7~10: 70%, 11~20: 65%, 21~30: 40%
+export function getEnhanceSuccessRate(currentLevel: number): number {
+    const targetLevel = currentLevel + 1;
+    if (targetLevel <= 6) return 1.0;
+    if (targetLevel <= 10) return 0.7;
+    if (targetLevel <= 20) return 0.65;
+    return 0.4;
+}
+
+// 천장 레벨 (실패해도 강화수치 하락 없음)
+export const CEILING_LEVELS = [10, 15, 20, 25];
 
 // 최대 강화 레벨
 export const MAX_ENHANCE_LEVEL = 30;
@@ -1349,8 +1359,9 @@ export function enhanceEquipment(instanceId: string, scrollId: string): EnhanceR
         inventory.splice(scrollIndex, 1);
     }
 
-    // 강화 확률 판정
-    const isSuccess = Math.random() < ENHANCE_SUCCESS_RATE;
+    // 강화 확률 판정 (레벨별 차등)
+    const successRate = getEnhanceSuccessRate(currentLevel);
+    const isSuccess = Math.random() < successRate;
 
     if (isSuccess) {
         // 강화 성공: 레벨 증가 및 스탯 갱신
@@ -1366,12 +1377,17 @@ export function enhanceEquipment(instanceId: string, scrollId: string): EnhanceR
             isMaxLevel: newLevel >= MAX_ENHANCE_LEVEL,
         };
     } else {
-        // 강화 실패
+        // 강화 실패: 천장 레벨이 아니면 -1
+        const isCeilingLevel = CEILING_LEVELS.includes(currentLevel);
+        const newLevel = isCeilingLevel ? currentLevel : Math.max(0, currentLevel - 1);
+        equipment.enhanceLevel = newLevel;
+        equipment.stats = getEnhancedStats(equipment.item.stats, newLevel, equipment.item.equipmentSlot, equipment.item.rarity);
+
         saveInventory(inventory);
         return {
             success: false,
-            message: '강화에 실패했습니다...',
-            newLevel: currentLevel,
+            message: isCeilingLevel ? '강화에 실패했습니다... (천장 보호)' : `강화에 실패했습니다... (+${currentLevel} → +${newLevel})`,
+            newLevel,
         };
     }
 }
@@ -1427,8 +1443,9 @@ export function enhanceEquippedItem(slot: EquipmentSlot, scrollId: string): Enha
         inventory.splice(scrollIndex, 1);
     }
 
-    // 강화 확률 판정
-    const isSuccess = Math.random() < ENHANCE_SUCCESS_RATE;
+    // 강화 확률 판정 (레벨별 차등)
+    const successRate = getEnhanceSuccessRate(currentLevel);
+    const isSuccess = Math.random() < successRate;
 
     if (isSuccess) {
         // 강화 성공
@@ -1444,12 +1461,17 @@ export function enhanceEquippedItem(slot: EquipmentSlot, scrollId: string): Enha
             isMaxLevel: newLevel >= MAX_ENHANCE_LEVEL,
         };
     } else {
-        // 강화 실패
+        // 강화 실패: 천장 레벨이 아니면 -1
+        const isCeilingLevel = CEILING_LEVELS.includes(currentLevel);
+        const newLevel = isCeilingLevel ? currentLevel : Math.max(0, currentLevel - 1);
+        equipped.enhanceLevel = newLevel;
+
         saveInventory(inventory);
+        saveCharacter(character);
         return {
             success: false,
-            message: '강화에 실패했습니다...',
-            newLevel: currentLevel,
+            message: isCeilingLevel ? '강화에 실패했습니다... (천장 보호)' : `강화에 실패했습니다... (+${currentLevel} → +${newLevel})`,
+            newLevel,
         };
     }
 }

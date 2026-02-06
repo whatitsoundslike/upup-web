@@ -31,6 +31,8 @@ import {
     getEnhancedStats,
     getEnhancementBonus,
     MAX_ENHANCE_LEVEL,
+    getEnhanceSuccessRate,
+    CEILING_LEVELS,
 } from '../types';
 import EnhanceModal from '../components/EnhanceModal';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -743,7 +745,10 @@ export default function Room() {
                                                                 )}
                                                             </button>
                                                             <div className="text-xs text-foreground/50 text-center">
-                                                                {scrollNames[scrollType]}: {scrollCount}개 보유 | 성공률 30%
+                                                                {scrollNames[scrollType]}: {scrollCount}개 보유 | 성공률 {Math.round(getEnhanceSuccessRate(enhanceLevel) * 100)}%
+                                                                {CEILING_LEVELS.includes(enhanceLevel) && (
+                                                                    <span className="text-amber-500 ml-1">🛡️</span>
+                                                                )}
                                                             </div>
                                                         </>
                                                     )}

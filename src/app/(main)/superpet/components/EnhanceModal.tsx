@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { EnhanceResult, EquipmentSlot, InventoryItem } from '../types';
-import { enhanceEquipment, enhanceEquippedItem, getRequiredScrollType, saveCharacter, loadCharacter } from '../types';
+import { enhanceEquipment, enhanceEquippedItem, getRequiredScrollType, saveCharacter, loadCharacter, getEnhanceSuccessRate, CEILING_LEVELS } from '../types';
 
 interface EnhanceModalProps {
     isOpen: boolean;
@@ -209,7 +209,10 @@ export default function EnhanceModal({ isOpen, onClose, target, scrollId, onComp
                                 </div>
 
                                 <p className="text-sm text-zinc-400 text-center">
-                                    강화 성공률: 30%
+                                    강화 성공률: {Math.round(getEnhanceSuccessRate(currentLevel) * 100)}%
+                                    {CEILING_LEVELS.includes(currentLevel) && (
+                                        <span className="text-amber-400 ml-2">🛡️ 천장 보호</span>
+                                    )}
                                 </p>
                             </div>
                         )}
@@ -258,7 +261,11 @@ export default function EnhanceModal({ isOpen, onClose, target, scrollId, onComp
                                             {itemName} +{result.newLevel}
                                         </p>
                                         <p className="text-sm text-zinc-400 mb-4">
-                                            강화 수치가 유지됩니다.
+                                            {result.newLevel === currentLevel ? (
+                                                <span className="text-amber-400">🛡️ 천장 보호로 강화 수치가 유지됩니다.</span>
+                                            ) : (
+                                                <span>강화 수치가 1 하락했습니다.</span>
+                                            )}
                                         </p>
                                     </>
                                 )}
