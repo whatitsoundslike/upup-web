@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Swords, Coins, Gem, X, Heart, Shield, Zap, Gauge, Search, Sword, Feather, Loader2, UserPlus } from 'lucide-react';
+import { Package, Swords, Coins, Gem, X, Heart, Shield, Zap, Gauge, Search, Sword, Feather, Loader2, UserPlus, Copy } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import {
@@ -63,6 +63,7 @@ export default function Room() {
     const [slotFilter, setSlotFilter] = useState<EquipmentSlot | 'all'>('all');
     const [isSharing, setIsSharing] = useState(false);
     const [showShareLoginModal, setShowShareLoginModal] = useState(false);
+    const [showLinkCopiedModal, setShowLinkCopiedModal] = useState(false);
     const [enhanceModal, setEnhanceModal] = useState<{
         isOpen: boolean;
         target: {
@@ -288,15 +289,32 @@ export default function Room() {
     const handleShare = () => {
         if (!character || isSharing) return;
 
-        // 로그인 상태 확인
-        if (!user) {
-            setShowShareLoginModal(true);
-            return;
-        }
-
         setIsSharing(true);
         shareToTwitter({ character, lang });
         setIsSharing(false);
+    };
+
+    const handleCopyLink = async () => {
+        if (!character) return;
+
+        // 로그인 사용자: 캐릭터 공유 페이지, 비로그인: 홈페이지
+        const shareUrl = user
+            ? `https://zroom.io/superpet/share/${character.id}`
+            : `https://zroom.io/superpet`;
+
+        try {
+            await navigator.clipboard.writeText(shareUrl);
+            setShowLinkCopiedModal(true);
+        } catch {
+            // 클립보드 복사 실패 시 폴백
+            const textArea = document.createElement('textarea');
+            textArea.value = shareUrl;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            setShowLinkCopiedModal(true);
+        }
     };
 
     const totalItems = inventory.reduce((sum, e) => sum + e.quantity, 0);
@@ -314,25 +332,6 @@ export default function Room() {
 
     return (
         <div className="max-w-4xl mx-auto px-4 py-2 lg:p-12">
-            {/* 헤더 */}
-            <div className="text-center mb-4">
-                <motion.h1
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-4xl font-black tracking-tighter mb-3"
-                >
-                    {t('마이펫')} <span className="text-amber-500">Room</span>
-                </motion.h1>
-                <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.1 }}
-                    className="text-foreground/60 lg:mb-12"
-                >
-                    {t('던전에서 획득한 아이템을 확인하세요')}
-                </motion.p>
-            </div>
-
             {/* 캐릭터 프로필 카드 */}
             {character && (() => {
                 const nextExp = getExpForNextLevel(character.level);
@@ -343,49 +342,52 @@ export default function Room() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.15 }}
-                        className="p-5 rounded-xl bg-white/5 shadow-lg border border-foreground/10"
+                        className="p-5 rounded-xl bg-white/5 shadow-xl border border-foreground/10"
                     >
-                        <div className="flex items-center gap-4 mb-3">
-                            {character.image ? (
-                                <img src={character.image} alt={character.name} className="w-23 h-40 object-cover rounded-xl border border-amber-500" />
-                            ) : (
-                                <div className="text-3xl">🐾</div>
-                            )}
-                            <div className="flex-1 min-w-0">
+                        <div className="flex items-center  gap-4 mb-3">
+                            <div className="flex items-center flex-col gap-2">
+                                {character.image ? (
+                                    <img src={character.image} alt={character.name} className="w-23 h-40 object-cover rounded-xl border border-amber-500" />
+                                ) : (
+                                    <div className="text-3xl">🐾</div>
+                                )}
+                                <p className="text-xs text-foreground/50">{t(character.className)} / {t(character.element)}</p>
+                            </div>
+
+                            <div className="flex flex-col">
                                 <div className="flex items-center gap-2">
-                                    <h3 className="font-bold truncate">{character.name}</h3>
+                                    <h3 className="font-bold">{character.name}</h3>
                                     <span className="px-2 py-0.5 rounded-full bg-amber-500 text-white text-xs font-bold shrink-0">
                                         Lv.{character.level}
                                     </span>
                                 </div>
-                                <p className="text-xs text-foreground/50">{t(character.className)} / {t(character.element)}</p>
-                            </div>
-                            <div className="flex flex-col gap-1 text-[11px] sm:flex-row sm:flex-wrap sm:gap-x-3 sm:gap-y-1 sm:text-xs text-foreground/60">
-                                {(Object.entries(STAT_ICONS) as [keyof typeof STAT_ICONS, (typeof STAT_ICONS)[keyof typeof STAT_ICONS]][]).map(([key, { icon: Icon, color }]) => {
-                                    const bonus = equipmentStats[key];
-                                    const baseValue = character[key];
-                                    if (key === 'hp') {
-                                        const totalHp = character.hp + bonus;
+                                <div>
+                                    {(Object.entries(STAT_ICONS) as [keyof typeof STAT_ICONS, (typeof STAT_ICONS)[keyof typeof STAT_ICONS]][]).map(([key, { icon: Icon, color }]) => {
+                                        const bonus = equipmentStats[key];
+                                        const baseValue = character[key];
+                                        if (key === 'hp') {
+                                            const totalHp = character.hp + bonus;
+                                            return (
+                                                <span key={key} className="flex items-center gap-0.5">
+                                                    <Icon className={`h-3 w-3 ${color}`} />
+                                                    {character.currentHp}/{totalHp}{' '}
+                                                    <span className={bonus > 0 ? 'text-emerald-500' : 'text-foreground/40'}>
+                                                        {`(+${bonus})`}
+                                                    </span>
+                                                </span>
+                                            );
+                                        }
                                         return (
                                             <span key={key} className="flex items-center gap-0.5">
                                                 <Icon className={`h-3 w-3 ${color}`} />
-                                                {character.currentHp}/{totalHp}{' '}
+                                                {baseValue}{' '}
                                                 <span className={bonus > 0 ? 'text-emerald-500' : 'text-foreground/40'}>
                                                     {`(+${bonus})`}
                                                 </span>
                                             </span>
                                         );
-                                    }
-                                    return (
-                                        <span key={key} className="flex items-center gap-0.5">
-                                            <Icon className={`h-3 w-3 ${color}`} />
-                                            {baseValue}{' '}
-                                            <span className={bonus > 0 ? 'text-emerald-500' : 'text-foreground/40'}>
-                                                {`(+${bonus})`}
-                                            </span>
-                                        </span>
-                                    );
-                                })}
+                                    })}
+                                </div>
                             </div>
                         </div>
                         {/* 재화 표시 */}
@@ -409,7 +411,7 @@ export default function Room() {
                                 <span className="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 font-bold text-[10px]">EXP</span>
                                 <span className="text-foreground/60 font-medium">{character.exp} / {nextExp}</span>
                             </div>
-                            <div className="h-2.5 rounded-full bg-foreground/10 overflow-hidden">
+                            <div className="h-2.5 rounded-full bg-foreground/10 overflow-hidden border border-amber-500">
                                 <motion.div
                                     initial={{ width: 0 }}
                                     animate={{ width: `${expPct}%` }}
@@ -418,19 +420,28 @@ export default function Room() {
                                 />
                             </div>
                         </div>
-                        {/* 트위터 공유 버튼 */}
-                        <button
-                            onClick={handleShare}
-                            disabled={isSharing}
-                            className="mt-3 w-full py-3 rounded-xl bg-black text-white font-bold text-sm hover:bg-zinc-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-40"
-                        >
-                            {isSharing ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
-                            )}
-                            {t('트위터에 슈퍼펫 알려주기')}
-                        </button>
+                        {/* 공유 버튼 */}
+                        <div className="mt-3 flex gap-2">
+                            <button
+                                onClick={handleShare}
+                                disabled={isSharing}
+                                className="flex-1 py-3 rounded-xl bg-black text-white font-bold text-sm hover:bg-zinc-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-40 border border-transparent dark:border-white/30"
+                            >
+                                {isSharing ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+                                )}
+                                {t('트위터')}
+                            </button>
+                            <button
+                                onClick={handleCopyLink}
+                                className="flex-1 py-3 rounded-xl bg-zinc-700 text-white font-bold text-sm hover:bg-zinc-600 transition-colors flex items-center justify-center gap-2 border border-transparent dark:border-white/30"
+                            >
+                                <Copy className="h-4 w-4" />
+                                {t('카드 공유')}
+                            </button>
+                        </div>
                     </motion.div>
                 );
             })()}
@@ -914,6 +925,45 @@ export default function Room() {
                                     <UserPlus className="h-4 w-4" /> {t('회원가입')}
                                 </Link>
                             </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* 링크 복사 완료 모달 */}
+            <AnimatePresence>
+                {showLinkCopiedModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+                        onClick={() => setShowLinkCopiedModal(false)}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="relative w-full max-w-sm p-6 rounded-2xl shadow-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-emerald-500"
+                        >
+                            <div className="text-center mb-6">
+                                <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-3">
+                                    <Copy className="h-8 w-8 text-emerald-500" />
+                                </div>
+                                <h3 className="text-xl font-black mb-2">{t('링크가 복사되었습니다!')}</h3>
+                                <p className="text-sm text-foreground/60">
+                                    {lang === 'ko'
+                                        ? '복사된 링크를 원하는 곳에 붙여넣기 하세요!'
+                                        : 'Paste the copied link wherever you want!'}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setShowLinkCopiedModal(false)}
+                                className="w-full py-3 rounded-xl bg-emerald-500 text-white font-bold hover:bg-emerald-600 transition-colors"
+                            >
+                                {t('확인')}
+                            </button>
                         </motion.div>
                     </motion.div>
                 )}

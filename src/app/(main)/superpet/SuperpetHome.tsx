@@ -1,7 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { Camera, Feather, Gem, Heart, Loader2, LogIn, Mars, PawPrint, Plus, Rocket, Shield, Sparkles, Sword, Swords, Trash2, UserPlus, Venus, X } from 'lucide-react';
+import { Camera, Copy, Feather, Heart, Loader2, LogIn, Mars, PawPrint, Plus, Rocket, Shield, Sparkles, Sword, Swords, Trash2, UserPlus, Venus, X } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from './i18n/LanguageContext';
@@ -14,18 +14,17 @@ import {
     migrateCharacterData,
     PET_TRAITS,
     PET_TYPES,
+    CHARACTER_CLASSES,
     setActiveCharacter,
     getTotalStats,
     type Character,
-    type PetInfo
+    type PetInfo,
+    type CharacterClass
 } from './types';
 import { saveToServer } from './gameSync';
-import { fetchGemBalance, useGem } from './gemApi';
 import ProgressModal from './components/ProgressModal';
 import { shareToTwitter } from './utils/shareUtils';
 import { useAuth } from '@/components/AuthProvider';
-
-const DELETE_GEM_COST = 100;
 
 const ELEMENT_COLORS: Record<string, string> = {
     '불': 'bg-red-500',
@@ -41,6 +40,7 @@ export default function SuperpetHome() {
     const [petType, setPetType] = useState<PetInfo['type'] | null>(null);
     const [cardStyle, setCardStyle] = useState<'cute' | 'powerful' | 'furry' | null>(null);
     const [gender, setGender] = useState<'male' | 'female' | null>(null);
+    const [characterClass, setCharacterClass] = useState<CharacterClass | null>(null);
     const [traits, setTraits] = useState<string[]>([]);
     const [characters, setCharacters] = useState<Character[]>([]);
     const [showForm, setShowForm] = useState(false);
@@ -56,11 +56,6 @@ export default function SuperpetHome() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isSharing, setIsSharing] = useState(false);
 
-    // Gem 상태
-    const [gemBalance, setGemBalance] = useState<number | null>(null);
-    const [gemLoading, setGemLoading] = useState(false);
-    const [showInsufficientGem, setShowInsufficientGem] = useState(false);
-
     // 카드 생성 실패 모달
     const [cardGenerateFailModal, setCardGenerateFailModal] = useState<{ show: boolean; petName: string }>({ show: false, petName: '' });
 
@@ -69,6 +64,9 @@ export default function SuperpetHome() {
 
     // 공유 시 로그인 필요 모달
     const [showShareLoginModal, setShowShareLoginModal] = useState(false);
+
+    // 링크 복사 완료 모달
+    const [showLinkCopiedModal, setShowLinkCopiedModal] = useState(false);
 
     // 페이지 로드 시 기존 캐릭터 불러오기
     useEffect(() => {
@@ -104,17 +102,6 @@ export default function SuperpetHome() {
         }
     }, [createdCharacter]);
 
-    // Gem 잔액 로드
-    useEffect(() => {
-        const loadGem = async () => {
-            const data = await fetchGemBalance();
-            if (data) {
-                setGemBalance(data.balance);
-            }
-        };
-        loadGem();
-    }, []);
-
     const toggleTrait = (trait: string) => {
         setTraits((prev) =>
             prev.includes(trait)
@@ -143,7 +130,7 @@ export default function SuperpetHome() {
     };
 
     const handleGenerate = async () => {
-        if (!petName.trim() || !petType || traits.length < 3 || !petPhoto || !cardStyle || !gender) return;
+        if (!petName.trim() || !petType || traits.length < 3 || !petPhoto || !cardStyle || !gender || !characterClass) return;
         setGenerateError(null);
 
         const charName = petName.trim();
@@ -154,7 +141,7 @@ export default function SuperpetHome() {
 
         // 1단계: 카드 이미지 생성 먼저
         let cardImage: string | null = null;
-        const char = generateCharacter(charName, petType, traits);
+        const char = generateCharacter(charName, petType, traits, characterClass);
 
         try {
             const res = await fetch('/api/superpet/generate-card', {
@@ -208,6 +195,7 @@ export default function SuperpetHome() {
         setTraits([]);
         setCardStyle(null);
         setGender(null);
+        setCharacterClass(null);
         setShowForm(false);
         setCreatedCharacter(char);
     };
@@ -227,41 +215,36 @@ export default function SuperpetHome() {
         const activeCharacter = createdCharacter || characters.find(c => c.id === activeCharacterId);
         if (!activeCharacter || isSharing) return;
 
-        // 로그인 상태 확인
-        if (!user) {
-            setShowShareLoginModal(true);
-            return;
-        }
-
         setIsSharing(true);
         shareToTwitter({ character: activeCharacter, lang });
         setIsSharing(false);
     };
 
-    const handleDeleteCharacter = async (characterId: string) => {
-        // Gem 잔액 확인
-        if (gemBalance === null || gemBalance < DELETE_GEM_COST) {
-            setDeleteConfirm(null);
-            setShowInsufficientGem(true);
-            return;
+    const handleCopyLink = async () => {
+        const activeCharacter = createdCharacter || characters.find(c => c.id === activeCharacterId);
+        if (!activeCharacter) return;
+
+        // 로그인 사용자: 캐릭터 공유 페이지, 비로그인: 홈페이지
+        const shareUrl = user
+            ? `https://zroom.io/superpet/share/${activeCharacter.id}`
+            : `https://zroom.io/superpet`;
+
+        try {
+            await navigator.clipboard.writeText(shareUrl);
+            setShowLinkCopiedModal(true);
+        } catch {
+            // 클립보드 복사 실패 시 폴백
+            const textArea = document.createElement('textarea');
+            textArea.value = shareUrl;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            setShowLinkCopiedModal(true);
         }
+    };
 
-        // Gem 소모 API 호출
-        setGemLoading(true);
-        const result = await useGem(DELETE_GEM_COST, 'delete_character', `캐릭터 삭제: ${characterId}`);
-        setGemLoading(false);
-
-        if (!result.success) {
-            setDeleteConfirm(null);
-            setShowInsufficientGem(true);
-            return;
-        }
-
-        // Gem 잔액 업데이트
-        if (result.balance !== undefined) {
-            setGemBalance(result.balance);
-        }
-
+    const handleDeleteCharacter = (characterId: string) => {
         // 캐릭터 삭제 진행
         deleteCharacter(characterId);
         const remaining = loadAllCharacters();
@@ -308,22 +291,31 @@ export default function SuperpetHome() {
                                 <span className="drop-shadow-[0_0_4px_rgba(0,0,0,0.3)]">{t('공지사항')}</span>
                             </button>
 
-                            {/* 트위터 공유 버튼 (로그인 + 캐릭터 있을 때) */}
-                            {user && characters.find(c => c.id === activeCharacterId) && (
-                                <button
-                                    onClick={handleShare}
-                                    disabled={isSharing}
-                                    className="group relative w-[220px] mx-auto py-3 px-6 rounded-lg bg-black text-white font-bold text-base transition-all mb-6 flex items-center justify-center gap-2 overflow-hidden hover:bg-zinc-800 disabled:opacity-50"
-                                >
-                                    {isSharing ? (
-                                        <Loader2 className="h-5 w-5 animate-spin" />
-                                    ) : (
-                                        <>
-                                            <span className="text-lg">𝕏</span>
-                                            <span>{t('내 동물카드 공유하기')}</span>
-                                        </>
-                                    )}
-                                </button>
+                            {/* 공유 버튼 (캐릭터 있을 때) */}
+                            {characters.find(c => c.id === activeCharacterId) && (
+                                <div className="flex gap-2 w-[280px] mx-auto mb-6">
+                                    <button
+                                        onClick={handleShare}
+                                        disabled={isSharing}
+                                        className="flex-1 py-3 px-4 rounded-lg bg-black text-white font-bold text-sm transition-all flex items-center justify-center gap-2 hover:bg-zinc-800 disabled:opacity-50 border border-transparent dark:border-white/30"
+                                    >
+                                        {isSharing ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : (
+                                            <>
+                                                <span className="text-base">𝕏</span>
+                                                <span>{t('트위터')}</span>
+                                            </>
+                                        )}
+                                    </button>
+                                    <button
+                                        onClick={handleCopyLink}
+                                        className="flex-1 py-3 px-4 rounded-lg bg-zinc-700 text-white font-bold text-sm transition-all flex items-center justify-center gap-2 hover:bg-zinc-600 border border-transparent dark:border-white/30"
+                                    >
+                                        <Copy className="h-4 w-4" />
+                                        <span>{t('카드 공유')}</span>
+                                    </button>
+                                </div>
                             )}
                         </>
                     )}
@@ -430,18 +422,27 @@ export default function SuperpetHome() {
                                     <Swords className="h-5 w-5" />
                                     {t('모험 시작하기')}
                                 </Link>
-                                <button
-                                    onClick={handleShare}
-                                    disabled={isSharing}
-                                    className="w-full py-3 rounded-xl bg-black text-white font-bold text-sm hover:bg-zinc-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-40"
-                                >
-                                    {isSharing ? (
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
-                                    )}
-                                    {t('트위터에 슈퍼펫 알려주기')}
-                                </button>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={handleShare}
+                                        disabled={isSharing}
+                                        className="flex-1 py-3 rounded-xl bg-black text-white font-bold text-sm hover:bg-zinc-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-40 border border-transparent dark:border-white/30"
+                                    >
+                                        {isSharing ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : (
+                                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+                                        )}
+                                        {t('트위터')}
+                                    </button>
+                                    <button
+                                        onClick={handleCopyLink}
+                                        className="flex-1 py-3 rounded-xl bg-zinc-700 text-white font-bold text-sm hover:bg-zinc-600 transition-colors flex items-center justify-center gap-2 border border-transparent dark:border-white/30"
+                                    >
+                                        <Copy className="h-4 w-4" />
+                                        {t('카드 공유')}
+                                    </button>
+                                </div>
                             </motion.div>
                         </motion.div>
                     )}
@@ -720,9 +721,41 @@ export default function SuperpetHome() {
                                 )}
                             </AnimatePresence>
 
-                            {/* 특성 선택 - 성별 선택 후 표시 */}
+                            {/* 직업 선택 - 성별 선택 후 표시 */}
                             <AnimatePresence>
                                 {gender && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="mb-6 overflow-hidden"
+                                    >
+                                        <label className="block text-sm font-semibold mb-2 text-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.5)]">
+                                            ⚔️ {t('직업')}
+                                        </label>
+                                        <div className="flex gap-2">
+                                            {CHARACTER_CLASSES.map((cls) => (
+                                                <button
+                                                    key={cls.key}
+                                                    onClick={() => setCharacterClass(cls.key)}
+                                                    className={`flex-1 py-3 rounded-lg font-bold text-sm transition-all duration-200 flex flex-col items-center justify-center gap-1 border-2 ${characterClass === cls.key
+                                                        ? 'bg-gradient-to-b from-red-500 to-red-700 text-white border-red-400 shadow-[0_0_12px_rgba(239,68,68,0.6),inset_0_1px_0_rgba(255,255,255,0.3)] scale-105'
+                                                        : 'bg-gradient-to-b from-zinc-700 to-zinc-800 text-zinc-300 border-zinc-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)] hover:from-zinc-600 hover:to-zinc-700 hover:border-zinc-500 hover:text-white'
+                                                        }`}
+                                                >
+                                                    <span className="text-xl">{cls.icon}</span>
+                                                    <span>{t(cls.label)}</span>
+                                                    <span className="text-[10px] opacity-70">{t(cls.description)}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            {/* 특성 선택 - 직업 선택 후 표시 */}
+                            <AnimatePresence>
+                                {characterClass && (
                                     <motion.div
                                         initial={{ opacity: 0, height: 0 }}
                                         animate={{ opacity: 1, height: 'auto' }}
@@ -803,7 +836,7 @@ export default function SuperpetHome() {
 
                             {/* 생성 버튼 - 모든 옵션 선택 완료 시 표시 */}
                             <AnimatePresence>
-                                {petName.trim() && petType && cardStyle && gender && traits.length >= 3 && petPhoto && (
+                                {petName.trim() && petType && cardStyle && gender && characterClass && traits.length >= 3 && petPhoto && (
                                     <motion.div
                                         initial={{ opacity: 0, height: 0 }}
                                         animate={{ opacity: 1, height: 'auto' }}
@@ -860,14 +893,12 @@ export default function SuperpetHome() {
                                 <div className="text-5xl mb-4">🏆</div>
                                 <h3 className="text-xl font-black mb-3">{t('시즌 안내')}</h3>
                                 <p className="text-sm text-foreground/70 leading-relaxed text-left">
-                                    - {t('이 게임은 시즌제로 운영되며 시즌 종료시의 게임 데이터는 명예의 전당에 기록됩니다.')}<br />
-                                    - {t('매주 새로운 시즌이 시작됩니다.')}<br />
-                                    - {t('캐릭터 저장 기능이 추가되었습니다!')} (2026.02.03)<br />
-                                    - {t('랭킹 기능이 추가되었습니다!')} (2026.02.03)
-                                    - {t('무료 사료 배달 기능이 추가되었습니다! 웹 접속시 30분 마다 사료가 지급됩니다.')} (2026.02.03)<br />
-                                    - {t('캐릭터 생성시 성별을 선택할 수 있습니다.')} (2026.02.06)<br />
-                                    - {t('강화 시스템이 추가되었습니다!')} (2026.02.06)<br />
-
+                                    - {t('캐릭터 저장 기능이 추가되었습니다!')} <br />
+                                    - {t('랭킹 기능이 추가되었습니다!')} <br />
+                                    - {t('무료 사료 배달 기능이 추가되었습니다! 웹 접속시 30분 마다 사료가 지급됩니다.')} <br />
+                                    - {t('캐릭터 생성시 성별을 선택할 수 있습니다.')} <br />
+                                    - {t('강화 시스템이 추가되었습니다!')} <br />
+                                    - {t('상점에 주문서가 추가되었습니다!')} <br />
                                 </p>
                             </div>
                             <button
@@ -980,15 +1011,10 @@ export default function SuperpetHome() {
                             <div className="text-center mb-6">
                                 <Trash2 className="h-16 w-16 text-red-500 mx-auto mb-3" />
                                 <h3 className="text-xl font-black mb-2">{t('캐릭터 삭제')}</h3>
-                                <p className="text-sm text-foreground/60 mb-3">
+                                <p className="text-sm text-foreground/60">
                                     {t('정말로 이 캐릭터를 삭제하시겠습니까?')}<br />
                                     {t('이 작업은 되돌릴 수 없습니다.')}
                                 </p>
-                                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/10 text-purple-500">
-                                    <Gem className="h-4 w-4" />
-                                    <span className="font-bold">{DELETE_GEM_COST}</span>
-                                    <span className="text-xs text-purple-400">{t('젬 필요')}</span>
-                                </div>
                             </div>
 
                             <div className="flex gap-3">
@@ -1000,49 +1026,11 @@ export default function SuperpetHome() {
                                 </button>
                                 <button
                                     onClick={() => handleDeleteCharacter(deleteConfirm)}
-                                    disabled={gemLoading}
-                                    className="flex-1 py-3 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                    className="flex-1 py-3 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
                                 >
-                                    {gemLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                                     {t('삭제')}
                                 </button>
                             </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* 젬 부족 모달 */}
-            <AnimatePresence>
-                {showInsufficientGem && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-                        onClick={() => setShowInsufficientGem(false)}
-                    >
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            onClick={(e) => e.stopPropagation()}
-                            className="relative w-full max-w-sm p-6 rounded-2xl shadow-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-purple-500"
-                        >
-                            <div className="text-center mb-6">
-                                <Gem className="h-16 w-16 text-purple-500 mx-auto mb-3" />
-                                <h3 className="text-xl font-black mb-2">{t('젬 부족')}</h3>
-                                <p className="text-sm text-foreground/60 mb-3">
-                                    {t('캐릭터 삭제에는')} <span className="font-bold text-purple-500">{DELETE_GEM_COST} {t('젬')}</span>{t('이 필요합니다.')}<br />
-                                    {t('현재 보유')}: <span className="font-bold text-purple-500">{gemBalance ?? 0} {t('젬')}</span>
-                                </p>
-                            </div>
-                            <button
-                                onClick={() => setShowInsufficientGem(false)}
-                                className="w-full py-3 rounded-xl bg-purple-500 text-white font-bold hover:bg-purple-600 transition-colors"
-                            >
-                                {t('확인')}
-                            </button>
                         </motion.div>
                     </motion.div>
                 )}
@@ -1088,6 +1076,45 @@ export default function SuperpetHome() {
                                     <UserPlus className="h-4 w-4" /> {t('회원가입')}
                                 </Link>
                             </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* 링크 복사 완료 모달 */}
+            <AnimatePresence>
+                {showLinkCopiedModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+                        onClick={() => setShowLinkCopiedModal(false)}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="relative w-full max-w-sm p-6 rounded-2xl shadow-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-emerald-500"
+                        >
+                            <div className="text-center mb-6">
+                                <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-3">
+                                    <Copy className="h-8 w-8 text-emerald-500" />
+                                </div>
+                                <h3 className="text-xl font-black mb-2">{t('링크가 복사되었습니다!')}</h3>
+                                <p className="text-sm text-foreground/60">
+                                    {lang === 'ko'
+                                        ? '복사된 링크를 원하는 곳에 붙여넣기 하세요!'
+                                        : 'Paste the copied link wherever you want!'}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setShowLinkCopiedModal(false)}
+                                className="w-full py-3 rounded-xl bg-emerald-500 text-white font-bold hover:bg-emerald-600 transition-colors"
+                            >
+                                {t('확인')}
+                            </button>
                         </motion.div>
                     </motion.div>
                 )}

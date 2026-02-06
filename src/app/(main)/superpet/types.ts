@@ -230,11 +230,30 @@ export function addExpToCharacter(exp: number): { character: Character; leveledU
         levelsGained += 1;
         leveledUp = true;
 
-        // 레벨업 시 스탯 증가
-        character.hp += 10;
-        character.attack += 1;
-        character.defense += 1;
-        character.speed += 1;
+        // 레벨업 시 스탯 증가 (클래스별 차등)
+        character.hp += 10; // 공통
+
+        switch (character.className) {
+            case '워리어':
+                character.attack += 2;
+                character.defense += 1;
+                character.speed += 1;
+                break;
+            case '팔라딘':
+                character.attack += 1;
+                character.defense += 2;
+                character.speed += 1;
+                break;
+            case '어쌔신':
+                character.attack += 1;
+                character.defense += 1;
+                character.speed += 2;
+                break;
+            default:
+                character.attack += 1;
+                character.defense += 1;
+                character.speed += 1;
+        }
 
         needed = getExpForNextLevel(character.level);
     }
@@ -934,12 +953,6 @@ export const PET_TRAITS = [
 
 const ELEMENTS = ['불', '물', '풍', '땅'] as const;
 
-const CLASS_MAP: Record<string, string> = {
-    attack: '워리어',
-    defense: '팔라딘',
-    speed: '어쌔신',
-};
-
 const BASE_STATS: Record<PetInfo['type'], { hp: number; attack: number; defense: number; speed: number }> = {
     dog: { hp: 120, attack: 10, defense: 5, speed: 5 },
     cat: { hp: 100, attack: 10, defense: 0, speed: 10 },
@@ -963,7 +976,17 @@ const TRAIT_MODIFIERS: Record<string, Partial<Record<'hp' | 'attack' | 'defense'
     '수줍은': { defense: 3, speed: 2 },
 };
 
-export function generateCharacter(name: string, type: PetInfo['type'], traits: string[], image?: string): Character {
+// 직업 타입
+export type CharacterClass = '워리어' | '팔라딘' | '어쌔신';
+
+// 직업 목록
+export const CHARACTER_CLASSES: { key: CharacterClass; label: string; description: string; icon: string }[] = [
+    { key: '워리어', label: '워리어', description: '공격력 특화', icon: '⚔️' },
+    { key: '팔라딘', label: '팔라딘', description: '방어력 특화', icon: '🛡️' },
+    { key: '어쌔신', label: '어쌔신', description: '속도 특화', icon: '🗡️' },
+];
+
+export function generateCharacter(name: string, type: PetInfo['type'], traits: string[], className: CharacterClass, image?: string): Character {
     const nameHash = name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
     const base = BASE_STATS[type];
 
@@ -989,12 +1012,6 @@ export function generateCharacter(name: string, type: PetInfo['type'], traits: s
     speed += (nameHash % 5);
 
     const element = ELEMENTS[Math.floor(Math.random() * ELEMENTS.length)];
-
-    // 가장 높은 스탯으로 직업 결정
-    const statEntries = { attack, defense, speed };
-    const topStat = (Object.entries(statEntries) as [string, number][])
-        .sort((a, b) => b[1] - a[1])[0][0];
-    const className = CLASS_MAP[topStat];
 
     return {
         id: 'char-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),

@@ -48,7 +48,7 @@ export const navConfigs: NavConfig = {
         { name: '던전', nameEn: 'Dungeon', href: '/superpet/dungeon', icon: Swords },
         { name: '랭킹', nameEn: 'Ranking', href: '/superpet/ranking', icon: Star },
         { name: '상점', nameEn: 'Shop', href: '/superpet/shop', icon: ShoppingCart },
-        { name: '룸', nameEn: 'Room', href: '/superpet/room', icon: Warehouse },
+        { name: '인벤토리', nameEn: 'Inventory', href: '/superpet/room', icon: Warehouse },
     ],
 };
 

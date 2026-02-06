@@ -275,6 +275,8 @@ export const koToEn: Record<string, string> = {
     '인벤토리에 해당 아이템이 없습니다.': 'Item not found in inventory.',
     'HP가 이미 최대치입니다.': 'HP is already at maximum.',
     '데이터를 저장하고 있습니다...': 'Saving data...',
+    '카드 공유': 'Copy Link',
+    '트위터': 'Twitter',
 
     // === Shop ===
     '골드 상점': 'Gold Shop',
