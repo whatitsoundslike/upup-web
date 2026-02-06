@@ -16,6 +16,9 @@ import {
     MoreVertical,
     Save,
     Check,
+    User,
+    Settings,
+    MoreHorizontal,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -152,7 +155,40 @@ export function Navbar() {
                                 {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
                             </button>
                         )}
+                        {mounted && (
+                            <button
+                                onClick={() => location.href = `/profile`}
+                                className="hidden md:block p-2 rounded-full hover:bg-foreground/5 transition-colors"
+                                aria-label="Toggle theme"
+                            >
+                                <UserCog className="h-5 w-5" />
+                            </button>
+                        )}
 
+                        {mounted && !authLoading && (
+                            user ? (
+                                <div className="flex items-center">
+                                    <button
+                                        onClick={logout}
+                                        className="p-2 rounded-full hover:bg-foreground/5 transition-colors"
+                                        aria-label="로그아웃"
+                                    >
+                                        <LogOut className="h-4 w-4" />
+                                    </button>
+                                </div>
+                            ) : (
+                                <Link
+                                    href={`/login?callbackUrl=${encodeURIComponent(pathname)}`}
+                                    className="p-2 rounded-full hover:bg-foreground/5 transition-colors"
+                                    aria-label="로그인"
+                                >
+                                    <div className="flex items-center gap-1">
+                                        <span className="inline">{lang === 'ko' ? '로그인' : 'LogIn'}</span>
+                                        <LogIn className="h-4 w-4" />
+                                    </div>
+                                </Link>
+                            )
+                        )}
                         {/* Mobile: dropdown menu */}
                         {mounted && (
                             <div className="relative md:hidden" ref={menuRef}>
@@ -161,7 +197,7 @@ export function Navbar() {
                                     className="p-2 rounded-full hover:bg-foreground/5 transition-colors"
                                     aria-label="메뉴"
                                 >
-                                    <MoreVertical className="h-5 w-5" />
+                                    <Settings className="h-5 w-5" />
                                 </button>
                                 <AnimatePresence>
                                     {menuOpen && (
@@ -170,38 +206,18 @@ export function Navbar() {
                                             animate={{ opacity: 1, scale: 1 }}
                                             exit={{ opacity: 0, scale: 0.95 }}
                                             transition={{ duration: 0.15 }}
-                                            className="absolute right-0 top-full mt-2 w-48 rounded-lg border dark:border-white/10 shadow-lg py-1 z-50"
+                                            className="absolute right-0 top-full mt-1 w-48 rounded-lg border dark:border-white/10 shadow-lg py-1 z-50 mr-2"
                                             style={{ backgroundColor: 'var(--background-hex)' }}
                                         >
-                                            {!authLoading && (
-                                                user ? (
-                                                    <>
-                                                        <Link
-                                                            href="/profile"
-                                                            onClick={() => setMenuOpen(false)}
-                                                            className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-foreground/5 transition-colors"
-                                                        >
-                                                            <UserCog className="h-4 w-4" />
-                                                            <span>내 정보</span>
-                                                        </Link>
-                                                        <button
-                                                            onClick={() => { logout(); setMenuOpen(false); }}
-                                                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-foreground/5 transition-colors"
-                                                        >
-                                                            <LogOut className="h-4 w-4" />
-                                                            <span>로그아웃</span>
-                                                        </button>
-                                                    </>
-                                                ) : (
-                                                    <Link
-                                                        href={`/login?callbackUrl=${encodeURIComponent(pathname)}`}
-                                                        onClick={() => setMenuOpen(false)}
-                                                        className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-foreground/5 transition-colors"
-                                                    >
-                                                        <LogIn className="h-4 w-4" />
-                                                        <span>로그인</span>
-                                                    </Link>
-                                                )
+                                            {!authLoading && user && (
+                                                <Link
+                                                    href="/profile"
+                                                    onClick={() => setMenuOpen(false)}
+                                                    className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-foreground/5 transition-colors"
+                                                >
+                                                    <UserCog className="h-4 w-4" />
+                                                    <span>내 정보</span>
+                                                </Link>
                                             )}
                                             {isSuperpet && (
                                                 <button
@@ -223,30 +239,6 @@ export function Navbar() {
                                     )}
                                 </AnimatePresence>
                             </div>
-                        )}
-                        {mounted && !authLoading && (
-                            user ? (
-                                <div className="hidden md:flex items-center">
-                                    <Link href="/profile" className="text-sm text-foreground/70 font-bold hover:text-foreground transition-colors">
-                                        {lang === 'ko' ? '내정보' : 'Profile'}
-                                    </Link>
-                                    <button
-                                        onClick={logout}
-                                        className="p-2 rounded-full hover:bg-foreground/5 transition-colors"
-                                        aria-label="로그아웃"
-                                    >
-                                        <LogOut className="h-4 w-4" />
-                                    </button>
-                                </div>
-                            ) : (
-                                <Link
-                                    href={`/login?callbackUrl=${encodeURIComponent(pathname)}`}
-                                    className="hidden md:block p-2 rounded-full hover:bg-foreground/5 transition-colors"
-                                    aria-label="로그인"
-                                >
-                                    <div className="flex items-center gap-1">{lang === 'ko' ? '로그인' : 'LogIn'}<LogIn className="h-4 w-4" /></div>
-                                </Link>
-                            )
                         )}
                     </div>
                 </div>
