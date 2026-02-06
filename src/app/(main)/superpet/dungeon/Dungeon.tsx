@@ -1,11 +1,11 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, PawPrint, UserPlus } from 'lucide-react';
+import { Heart, PawPrint, Sparkles, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
-import { type Character, GAME_ITEMS, addItemToInventory, addExpToCharacter, ITEM_RARITY_TEXT, loadCharacter, saveCharacter, getTotalStats, useFood, loadInventory, type InventoryItem } from '../types';
+import { type Character, GAME_ITEMS, addItemToInventory, addExpToCharacter, ITEM_RARITY_TEXT, ITEM_RARITY_BORDER, loadCharacter, saveCharacter, getTotalStats, useFood, loadInventory, type InventoryItem, type GameItem } from '../types';
 import { getItem } from '../storage';
 import { useDebouncedSave } from '../gameSync';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -33,6 +33,7 @@ export default function Dungeon() {
     const [droppedItems, setDroppedItems] = useState<DroppedItem[]>([]);
     const [lowHpWarning, setLowHpWarning] = useState(false);
     const [showSignupModal, setShowSignupModal] = useState(false);
+    const [rareItemModal, setRareItemModal] = useState<GameItem | null>(null);
     const [activeToast, setActiveToast] = useState<{ message: string; tone: 'success' | 'error'; key: number } | null>(null);
     const router = useRouter();
     const logRef = useRef<HTMLDivElement>(null);
@@ -230,6 +231,15 @@ export default function Dungeon() {
                             {drop.item.emoji} <span className={ITEM_RARITY_TEXT[drop.item.rarity]}>{t(drop.item.name)}</span> {t('획득!')}
                         </span>
                     );
+                }
+                // 희귀 등급 이상의 장비/주문서 획득 시 축하 모달
+                const rareDrops = ['희귀', '에픽', '전설'];
+                const rareItem = drops.find(d =>
+                    rareDrops.includes(d.item.rarity) &&
+                    (d.item.type === 'equipment' || d.item.type === 'scroll')
+                );
+                if (rareItem) {
+                    setTimeout(() => setRareItemModal(rareItem.item), 500);
                 }
             } else {
                 newLog.push(t('드롭된 아이템이 없다...'));
@@ -438,6 +448,95 @@ export default function Dungeon() {
                                 >
                                     <UserPlus className="h-4 w-4" /> {t('회원가입')}
                                 </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* 희귀 아이템 획득 축하 모달 */}
+            <AnimatePresence>
+                {rareItemModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+                        onClick={() => setRareItemModal(null)}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.8, y: 30 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.8, y: 30 }}
+                            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className={`relative w-full max-w-sm p-6 rounded-2xl shadow-2xl bg-zinc-50 dark:bg-zinc-900 border-4 ${ITEM_RARITY_BORDER[rareItemModal.rarity]}`}
+                        >
+                            {/* 배경 이펙트 */}
+                            <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none">
+                                <motion.div
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
+                                    className="absolute -top-1/2 -left-1/2 w-[200%] h-[200%] bg-gradient-conic from-transparent via-amber-500/10 to-transparent"
+                                />
+                            </div>
+
+                            <div className="relative text-center">
+                                {/* 축하 아이콘 */}
+                                <motion.div
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    transition={{ type: 'spring', stiffness: 400, delay: 0.1 }}
+                                    className="mb-4"
+                                >
+                                    <Sparkles className="h-12 w-12 text-amber-500 mx-auto mb-2" />
+                                </motion.div>
+
+                                {/* 축하 메시지 */}
+                                <motion.h3
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.2 }}
+                                    className="text-xl font-black mb-4"
+                                >
+                                    {lang === 'ko' ? '🎉 레어 아이템 획득!' : '🎉 Rare Item Drop!'}
+                                </motion.h3>
+
+                                {/* 아이템 표시 */}
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: 0.3 }}
+                                    className="mb-6"
+                                >
+                                    <div className="text-6xl mb-3">{rareItemModal.emoji}</div>
+                                    <p className={`text-lg font-bold ${ITEM_RARITY_TEXT[rareItemModal.rarity]}`}>
+                                        {t(rareItemModal.name)}
+                                    </p>
+                                    <p className={`text-sm font-semibold ${ITEM_RARITY_TEXT[rareItemModal.rarity]}`}>
+                                        [{t(rareItemModal.rarity)}]
+                                    </p>
+
+                                    {/* 스탯 표시 */}
+                                    {rareItemModal.type === 'equipment' && (
+                                        <div className="flex flex-wrap justify-center gap-2 mt-3 text-xs text-foreground/60">
+                                            {rareItemModal.stats.hp > 0 && <span>HP+{rareItemModal.stats.hp}</span>}
+                                            {rareItemModal.stats.attack > 0 && <span>{t('공격')}+{rareItemModal.stats.attack}</span>}
+                                            {rareItemModal.stats.defense > 0 && <span>{t('방어')}+{rareItemModal.stats.defense}</span>}
+                                            {rareItemModal.stats.speed > 0 && <span>{t('속도')}+{rareItemModal.stats.speed}</span>}
+                                        </div>
+                                    )}
+                                </motion.div>
+
+                                <motion.button
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: 0.4 }}
+                                    onClick={() => setRareItemModal(null)}
+                                    className="w-full py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 transition-colors"
+                                >
+                                    {t('확인')}
+                                </motion.button>
                             </div>
                         </motion.div>
                     </motion.div>

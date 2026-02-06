@@ -99,6 +99,7 @@ export const dungeons: DungeonData[] = [
                 spawnChance: 17,
                 imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/mush.jpg",
                 drops: [
+                    { itemId: 'armor_enhance_scroll', chance: 2 },
                     { itemId: 'feed', chance: 20 },
                     { itemId: 'running_shoes', chance: 10 },
                     { itemId: 'wooden_shield', chance: 10 },
@@ -114,6 +115,7 @@ export const dungeons: DungeonData[] = [
                 spawnChance: 13,
                 imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/wolf.jpg",
                 drops: [
+                    { itemId: 'weapon_enhance_scroll', chance: 2 },
                     { itemId: 'feed', chance: 20 },
                     { itemId: 'wooden_sword', chance: 10 },
                     { itemId: 'iron_helmet', chance: 10 },
@@ -129,6 +131,8 @@ export const dungeons: DungeonData[] = [
                 spawnChance: 5,
                 videoUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/Forest_Guardian_mov.mp4",
                 drops: [
+                    { itemId: 'weapon_enhance_scroll', chance: 50 },
+                    { itemId: 'armor_enhance_scroll', chance: 50 },
                     { itemId: 'dubai_cookie', chance: 100 },
                     { itemId: 'iron_helmet', chance: 20 },
                     { itemId: 'leather_armor', chance: 20 },
@@ -209,6 +213,7 @@ export const dungeons: DungeonData[] = [
                 spawnChance: 17,
                 imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/Siren.jpg",
                 drops: [
+                    { itemId: 'armor_enhance_scroll', chance: 2 },
                     { itemId: 'feed', chance: 20 },
                     { itemId: 'dubai_cookie', chance: 10 },
                     { itemId: 'leather_boots', chance: 5 },
@@ -225,6 +230,7 @@ export const dungeons: DungeonData[] = [
                 spawnChance: 13,
                 imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/WaterSpirit.jpg",
                 drops: [
+                    { itemId: 'weapon_enhance_scroll', chance: 2 },
                     { itemId: 'feed', chance: 20 },
                     { itemId: 'dubai_cookie', chance: 10 },
                     { itemId: 'iron_sword', chance: 5 },
@@ -241,6 +247,8 @@ export const dungeons: DungeonData[] = [
                 spawnChance: 5,
                 videoUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/Leviathan_mov.mp4",
                 drops: [
+                    { itemId: 'weapon_enhance_scroll', chance: 50 },
+                    { itemId: 'armor_enhance_scroll', chance: 50 },
                     { itemId: 'dubai_cookie', chance: 100 },
                     { itemId: 'bronze_helmet', chance: 10 },
                     { itemId: 'chain_armor', chance: 10 },
@@ -273,10 +281,10 @@ export const dungeons: DungeonData[] = [
                 spawnChance: 25,
                 imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/DesertScorpion.jpg",
                 drops: [
-                    { itemId: 'feed', chance: 40 },
-                    { itemId: 'dubai_cookie', chance: 20 },
-                    { itemId: 'ruby_necklace', chance: 5 },
-                    { itemId: 'sapphire_ring', chance: 5 },
+                    { itemId: 'feed', chance: 20 },
+                    { itemId: 'dubai_cookie', chance: 10 },
+                    { itemId: 'ruby_necklace', chance: 3 },
+                    { itemId: 'sapphire_ring', chance: 3 },
                 ],
             },
             {
@@ -289,10 +297,10 @@ export const dungeons: DungeonData[] = [
                 spawnChance: 22,
                 imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/RockGolem.jpg",
                 drops: [
-                    { itemId: 'feed', chance: 40 },
-                    { itemId: 'dubai_cookie', chance: 20 },
-                    { itemId: 'knight_helmet', chance: 5 },
-                    { itemId: 'plate_armor', chance: 5 },
+                    { itemId: 'feed', chance: 20 },
+                    { itemId: 'dubai_cookie', chance: 10 },
+                    { itemId: 'knight_helmet', chance: 3 },
+                    { itemId: 'plate_armor', chance: 3 },
                 ],
             },
             {
@@ -305,10 +313,10 @@ export const dungeons: DungeonData[] = [
                 spawnChance: 20,
                 imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/TunnelSpider.jpg",
                 drops: [
-                    { itemId: 'feed', chance: 40 },
-                    { itemId: 'dubai_cookie', chance: 20 },
-                    { itemId: 'steel_gauntlets', chance: 5 },
-                    { itemId: 'mage_cloak', chance: 5 },
+                    { itemId: 'feed', chance: 10 },
+                    { itemId: 'dubai_cookie', chance: 5 },
+                    { itemId: 'steel_gauntlets', chance: 3 },
+                    { itemId: 'mage_cloak', chance: 3 },
                 ],
             },
             {
@@ -321,10 +329,11 @@ export const dungeons: DungeonData[] = [
                 spawnChance: 17,
                 imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/EarthLizard.jpg",
                 drops: [
-                    { itemId: 'feed', chance: 40 },
-                    { itemId: 'dubai_cookie', chance: 20 },
-                    { itemId: 'wind_boots', chance: 5 },
-                    { itemId: 'guardian_shield', chance: 5 },
+                    { itemId: 'armor_enhance_scroll', chance: 2 },
+                    { itemId: 'feed', chance: 10 },
+                    { itemId: 'dubai_cookie', chance: 5 },
+                    { itemId: 'wind_boots', chance: 3 },
+                    { itemId: 'guardian_shield', chance: 3 },
                 ],
             },
             {
@@ -337,10 +346,11 @@ export const dungeons: DungeonData[] = [
                 spawnChance: 13,
                 imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/GiantTunnelWorm.jpg",
                 drops: [
-                    { itemId: 'feed', chance: 40 },
-                    { itemId: 'dubai_cookie', chance: 20 },
-                    { itemId: 'katana', chance: 5 },
-                    { itemId: 'knight_helmet', chance: 5 },
+                    { itemId: 'weapon_enhance_scroll', chance: 2 },
+                    { itemId: 'feed', chance: 10 },
+                    { itemId: 'dubai_cookie', chance: 5 },
+                    { itemId: 'katana', chance: 3 },
+                    { itemId: 'knight_helmet', chance: 3 },
                 ],
             },
             {
@@ -353,6 +363,8 @@ export const dungeons: DungeonData[] = [
                 spawnChance: 5,
                 videoUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/Earth_Lord_mov.mp4",
                 drops: [
+                    { itemId: 'weapon_enhance_scroll', chance: 50 },
+                    { itemId: 'armor_enhance_scroll', chance: 50 },
                     { itemId: 'dubai_cookie', chance: 100 },
                     { itemId: 'knight_helmet', chance: 5 },
                     { itemId: 'plate_armor', chance: 5 },
@@ -433,6 +445,7 @@ export const dungeons: DungeonData[] = [
                 spawnChance: 17,
                 imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/ACT_4_VolcanoKnight.jpg",
                 drops: [
+                    { itemId: 'armor_enhance_scroll', chance: 5 },
                     { itemId: 'feed', chance: 40 },
                     { itemId: 'dubai_cookie', chance: 20 },
                     { itemId: 'thunder_boots', chance: 1 },
@@ -449,6 +462,7 @@ export const dungeons: DungeonData[] = [
                 spawnChance: 13,
                 imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/ACT_4_FireFairy.jpg",
                 drops: [
+                    { itemId: 'weapon_enhance_scroll', chance: 5 },
                     { itemId: 'feed', chance: 40 },
                     { itemId: 'dubai_cookie', chance: 20 },
                     { itemId: 'shadow_blade', chance: 1 },
@@ -465,6 +479,9 @@ export const dungeons: DungeonData[] = [
                 spawnChance: 1,
                 videoUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/Phoenix_mov.mp4",
                 drops: [
+                    { itemId: 'weapon_enhance_scroll', chance: 100 },
+                    { itemId: 'armor_enhance_scroll', chance: 100 },
+                    { itemId: 'accessory_enhance_scroll', chance: 100 },
                     { itemId: 'dubai_cookie', chance: 100 },
                     { itemId: 'phoenix_helmet', chance: 5 },
                     { itemId: 'starlight_armor', chance: 5 },
@@ -526,6 +543,7 @@ export const dungeons: DungeonData[] = [
                 isBoss: false,
                 spawnChance: 21,
                 drops: [
+                    { itemId: 'accessory_enhance_scroll', chance: 5 },
                     { itemId: 'meat', chance: 40 },
                     { itemId: 'dubai_cookie', chance: 20 },
                     { itemId: 'shadow_cloak', chance: 1 },
@@ -541,6 +559,7 @@ export const dungeons: DungeonData[] = [
                 isBoss: false,
                 spawnChance: 17,
                 drops: [
+                    { itemId: 'armor_enhance_scroll', chance: 5 },
                     { itemId: 'meat', chance: 40 },
                     { itemId: 'dubai_cookie', chance: 20 },
                     { itemId: 'holy_shield', chance: 1 },
@@ -556,6 +575,7 @@ export const dungeons: DungeonData[] = [
                 isBoss: false,
                 spawnChance: 12,
                 drops: [
+                    { itemId: 'weapon_enhance_scroll', chance: 5 },
                     { itemId: 'meat', chance: 40 },
                     { itemId: 'dubai_cookie', chance: 20 },
                     { itemId: 'emerald_ring', chance: 1 },
@@ -572,6 +592,9 @@ export const dungeons: DungeonData[] = [
                 spawnChance: 1,
                 videoUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/Evil_Dragon_mov.mp4",
                 drops: [
+                    { itemId: 'weapon_enhance_scroll', chance: 100 },
+                    { itemId: 'armor_enhance_scroll', chance: 100 },
+                    { itemId: 'accessory_enhance_scroll', chance: 100 },
                     { itemId: 'legend_meat', chance: 100 },
                     { itemId: 'dragon_helmet', chance: 1 },
                     { itemId: 'dragon_armor', chance: 1 },
