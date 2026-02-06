@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Swords, Coins, Gem, X, Heart, Shield, Zap, Gauge, Search, Sword, Feather, Loader2, UserPlus, Copy } from 'lucide-react';
+import { Package, Swords, Coins, Gem, X, Heart, Shield, Zap, Gauge, Search, Sword, Feather, Loader2, UserPlus, Copy, CheckSquare, Square, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import {
@@ -76,6 +76,11 @@ export default function Room() {
     }>({ isOpen: false, target: null, scrollId: '' });
     const debouncedSaveToServer = useDebouncedSave();
 
+    // 일괄 선택 모드
+    const [bulkSelectMode, setBulkSelectMode] = useState(false);
+    const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set()); // instanceId 저장
+    const [bulkSellConfirm, setBulkSellConfirm] = useState(false);
+
     useEffect(() => {
         setInventory(loadInventory());
         setCharacter(loadCharacter());
@@ -104,6 +109,81 @@ export default function Room() {
 
     const handleSellRequest = (itemId: string, sellAll: boolean) => {
         setSellConfirm({ itemId, sellAll });
+    };
+
+    // 일괄 선택 토글
+    const toggleBulkSelect = (instanceId: string) => {
+        setSelectedItems((prev) => {
+            const next = new Set(prev);
+            if (next.has(instanceId)) {
+                next.delete(instanceId);
+            } else {
+                next.add(instanceId);
+            }
+            return next;
+        });
+    };
+
+    // 전체 선택/해제 (장비 아이템만)
+    const toggleSelectAll = () => {
+        const equipmentItems = filteredInventory.filter(
+            (e) => e.item.type === 'equipment' && e.instanceId
+        );
+        const allSelected = equipmentItems.every((e) => selectedItems.has(e.instanceId!));
+        if (allSelected) {
+            setSelectedItems(new Set());
+        } else {
+            setSelectedItems(new Set(equipmentItems.map((e) => e.instanceId!)));
+        }
+    };
+
+    // 선택된 아이템들의 총 판매 금액 계산
+    const getSelectedItemsTotal = () => {
+        let total = 0;
+        for (const instanceId of selectedItems) {
+            const entry = inventory.find((e) => e.instanceId === instanceId);
+            if (entry) {
+                total += ITEM_SELL_PRICE[entry.item.rarity];
+            }
+        }
+        return total;
+    };
+
+    // 일괄 판매 실행
+    const handleBulkSellConfirm = () => {
+        if (selectedItems.size === 0) return;
+
+        let totalGold = 0;
+        const updated = inventory.filter((e) => {
+            if (e.instanceId && selectedItems.has(e.instanceId)) {
+                totalGold += ITEM_SELL_PRICE[e.item.rarity];
+                return false;
+            }
+            return true;
+        });
+
+        setInventory(updated);
+        saveInventory(updated);
+        const updatedChar = addGoldToCharacter(totalGold);
+        setCharacter(updatedChar);
+
+        showToast(
+            lang === 'ko'
+                ? `${selectedItems.size}개의 장비를 ${totalGold}G에 판매했습니다!`
+                : `Sold ${selectedItems.size} items for ${totalGold}G!`,
+            'success'
+        );
+
+        setSelectedItems(new Set());
+        setBulkSelectMode(false);
+        setBulkSellConfirm(false);
+        debouncedSaveToServer();
+    };
+
+    // 일괄 선택 모드 종료
+    const exitBulkSelectMode = () => {
+        setBulkSelectMode(false);
+        setSelectedItems(new Set());
     };
 
     const handleSellConfirm = () => {
@@ -532,26 +612,68 @@ export default function Room() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.25 }}
-                    className="flex gap-3 mb-6"
+                    className="flex flex-col gap-3 mb-6"
                 >
-                    <select
-                        value={slotFilter}
-                        onChange={(e) => setSlotFilter(e.target.value as EquipmentSlot | 'all')}
-                        className="px-3 py-2.5 rounded-xl bg-foreground/5 border border-foreground/10 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50"
-                    >
-                        {SLOT_OPTIONS.map((slot) => (
-                            <option key={slot} value={slot}>{slot === 'all' ? t('전체 부위') : t(slot)}</option>
-                        ))}
-                    </select>
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/40" />
-                        <input
-                            type="text"
-                            placeholder={t('아이템 이름 검색')}
-                            value={searchName}
-                            onChange={(e) => setSearchName(e.target.value)}
-                            className="w-50 pl-9 pr-3 py-2.5 rounded-xl bg-foreground/5 border border-foreground/10 text-sm placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
-                        />
+                    <div className="flex gap-3">
+                        <select
+                            value={slotFilter}
+                            onChange={(e) => setSlotFilter(e.target.value as EquipmentSlot | 'all')}
+                            className="px-3 py-2.5 rounded-xl bg-foreground/5 border border-foreground/10 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                        >
+                            {SLOT_OPTIONS.map((slot) => (
+                                <option key={slot} value={slot}>{slot === 'all' ? t('전체 부위') : t(slot)}</option>
+                            ))}
+                        </select>
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/40" />
+                            <input
+                                type="text"
+                                placeholder={t('아이템 이름 검색')}
+                                value={searchName}
+                                onChange={(e) => setSearchName(e.target.value)}
+                                className="w-50 pl-9 pr-3 py-2.5 rounded-xl bg-foreground/5 border border-foreground/10 text-sm placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                            />
+                        </div>
+                    </div>
+
+                    {/* 일괄 선택 모드 토글 */}
+                    <div className="flex items-center gap-2">
+                        {bulkSelectMode ? (
+                            <>
+                                <button
+                                    onClick={toggleSelectAll}
+                                    className="px-3 py-2 rounded-xl bg-foreground/5 border border-foreground/10 text-sm font-semibold hover:bg-foreground/10 transition-colors flex items-center gap-2"
+                                >
+                                    {filteredInventory.filter((e) => e.item.type === 'equipment' && e.instanceId).every((e) => selectedItems.has(e.instanceId!))
+                                        ? <CheckSquare className="h-4 w-4 text-amber-500" />
+                                        : <Square className="h-4 w-4" />}
+                                    {t('전체 선택')}
+                                </button>
+                                <button
+                                    onClick={exitBulkSelectMode}
+                                    className="px-3 py-2 rounded-xl bg-foreground/5 border border-foreground/10 text-sm font-semibold hover:bg-foreground/10 transition-colors"
+                                >
+                                    {t('취소')}
+                                </button>
+                                {selectedItems.size > 0 && (
+                                    <button
+                                        onClick={() => setBulkSellConfirm(true)}
+                                        className="px-4 py-2 rounded-xl bg-amber-500 text-white text-sm font-bold hover:bg-amber-600 transition-colors flex items-center gap-2 ml-auto"
+                                    >
+                                        <Coins className="h-4 w-4" />
+                                        {selectedItems.size}{lang === 'ko' ? '개 판매' : ' Sell'} ({getSelectedItemsTotal()}G)
+                                    </button>
+                                )}
+                            </>
+                        ) : (
+                            <button
+                                onClick={() => setBulkSelectMode(true)}
+                                className="px-3 py-2 rounded-xl bg-foreground/5 border border-foreground/10 text-sm font-semibold hover:bg-foreground/10 transition-colors flex items-center gap-2"
+                            >
+                                <CheckSquare className="h-4 w-4" />
+                                {t('일괄 선택')}
+                            </button>
+                        )}
                     </div>
                 </motion.div>
             )}
@@ -559,35 +681,60 @@ export default function Room() {
             {/* 아이템 그리드 */}
             {inventory.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {filteredInventory.map((entry, idx) => (
-                        <motion.button
-                            key={entry.item.id}
-                            initial={{ opacity: 0, y: 15 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.05 * idx }}
-                            whileHover={{ y: -3 }}
-                            onClick={() => setSelectedItem(entry)}
-                            className={`relative p-5 rounded-2xl border-2 text-center transition-all ${ITEM_RARITY_COLORS[entry.item.rarity]} ${selectedItem?.item.id === entry.item.id ? 'ring-2 ring-amber-500' : ''
+                    {filteredInventory.map((entry, idx) => {
+                        const isEquipment = entry.item.type === 'equipment';
+                        const isSelected = isEquipment && entry.instanceId && selectedItems.has(entry.instanceId);
+                        const canSelect = bulkSelectMode && isEquipment && entry.instanceId;
+
+                        return (
+                            <motion.button
+                                key={entry.instanceId || entry.item.id}
+                                initial={{ opacity: 0, y: 15 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.05 * idx }}
+                                whileHover={{ y: -3 }}
+                                onClick={() => {
+                                    if (canSelect) {
+                                        toggleBulkSelect(entry.instanceId!);
+                                    } else if (!bulkSelectMode) {
+                                        setSelectedItem(entry);
+                                    }
+                                }}
+                                className={`relative p-5 rounded-2xl border-2 text-center transition-all ${ITEM_RARITY_COLORS[entry.item.rarity]} ${
+                                    isSelected ? 'ring-2 ring-amber-500 bg-amber-500/10' : ''
+                                } ${selectedItem?.item.id === entry.item.id && !bulkSelectMode ? 'ring-2 ring-amber-500' : ''} ${
+                                    bulkSelectMode && !isEquipment ? 'opacity-40 cursor-not-allowed' : ''
                                 }`}
-                        >
-                            <div className="text-4xl mb-3">{entry.item.emoji}</div>
-                            <h4 className="text-sm font-bold mb-1 truncate">
-                                {t(entry.item.name)}
-                                {entry.item.type === 'equipment' && (entry.enhanceLevel ?? 0) > 0 && (
-                                    <span className="text-amber-500 ml-1">+{entry.enhanceLevel}</span>
+                            >
+                                {/* 체크박스 (일괄 선택 모드에서 장비 아이템만) */}
+                                {bulkSelectMode && isEquipment && (
+                                    <div className="absolute top-2 left-2">
+                                        {isSelected ? (
+                                            <CheckSquare className="h-5 w-5 text-amber-500" />
+                                        ) : (
+                                            <Square className="h-5 w-5 text-foreground/40" />
+                                        )}
+                                    </div>
                                 )}
-                            </h4>
-                            <span className={`text-xs font-semibold ${ITEM_RARITY_TEXT[entry.item.rarity]}`}>
-                                {t(entry.item.rarity)}
-                            </span>
-                            {/* 장비 아이템은 수량 표시 안함 (항상 1개) */}
-                            {entry.item.type !== 'equipment' && (
-                                <span className="absolute top-2 right-2 min-w-[24px] h-6 flex items-center justify-center px-1.5 rounded-full bg-foreground/80 text-background text-xs font-bold">
-                                    {entry.quantity}
+                                <div className="text-4xl mb-3">{entry.item.emoji}</div>
+                                <h4 className="text-sm font-bold mb-1 truncate">
+                                    {t(entry.item.name)}
+                                    {isEquipment && (entry.enhanceLevel ?? 0) > 0 && (
+                                        <span className="text-amber-500 ml-1">+{entry.enhanceLevel}</span>
+                                    )}
+                                </h4>
+                                <span className={`text-xs font-semibold ${ITEM_RARITY_TEXT[entry.item.rarity]}`}>
+                                    {t(entry.item.rarity)}
                                 </span>
-                            )}
-                        </motion.button>
-                    ))}
+                                {/* 장비 아이템은 수량 표시 안함 (항상 1개) */}
+                                {!isEquipment && (
+                                    <span className="absolute top-2 right-2 min-w-[24px] h-6 flex items-center justify-center px-1.5 rounded-full bg-foreground/80 text-background text-xs font-bold">
+                                        {entry.quantity}
+                                    </span>
+                                )}
+                            </motion.button>
+                        );
+                    })}
                 </div>
             )}
 
@@ -874,6 +1021,85 @@ export default function Room() {
                         </motion.div>
                     );
                 })()}
+            </AnimatePresence>
+
+            {/* 일괄 판매 확인 모달 */}
+            <AnimatePresence>
+                {bulkSellConfirm && selectedItems.size > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+                        onClick={() => setBulkSellConfirm(false)}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="relative w-full max-w-sm p-6 rounded-2xl shadow-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-amber-500"
+                        >
+                            <div className="text-center mb-6">
+                                <Trash2 className="h-16 w-16 text-amber-500 mx-auto mb-3" />
+                                <h3 className="text-xl font-black mb-2">{t('일괄 판매')}</h3>
+                                <p className="text-sm text-foreground/60">
+                                    {lang === 'ko' ? (
+                                        <>
+                                            선택한 <span className="font-bold text-foreground">{selectedItems.size}개</span>의 장비를<br />
+                                            <span className="font-bold text-amber-600">{getSelectedItemsTotal()}G</span>에 판매합니다
+                                        </>
+                                    ) : (
+                                        <>
+                                            Sell <span className="font-bold text-foreground">{selectedItems.size} items</span><br />
+                                            for <span className="font-bold text-amber-600">{getSelectedItemsTotal()}G</span>
+                                        </>
+                                    )}
+                                </p>
+                                {/* 선택된 아이템 미리보기 */}
+                                <div className="mt-4 max-h-32 overflow-y-auto">
+                                    <div className="flex flex-wrap gap-2 justify-center">
+                                        {Array.from(selectedItems).slice(0, 10).map((instanceId) => {
+                                            const entry = inventory.find((e) => e.instanceId === instanceId);
+                                            if (!entry) return null;
+                                            return (
+                                                <span
+                                                    key={instanceId}
+                                                    className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold ${ITEM_RARITY_COLORS[entry.item.rarity]}`}
+                                                >
+                                                    {entry.item.emoji} {t(entry.item.name)}
+                                                    {(entry.enhanceLevel ?? 0) > 0 && (
+                                                        <span className="text-amber-500">+{entry.enhanceLevel}</span>
+                                                    )}
+                                                </span>
+                                            );
+                                        })}
+                                        {selectedItems.size > 10 && (
+                                            <span className="text-xs text-foreground/50">
+                                                +{selectedItems.size - 10}{lang === 'ko' ? '개 더' : ' more'}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setBulkSellConfirm(false)}
+                                    className="flex-1 py-3 rounded-xl bg-foreground/10 text-foreground/60 font-bold hover:bg-foreground/20 transition-colors"
+                                >
+                                    {t('취소')}
+                                </button>
+                                <button
+                                    onClick={handleBulkSellConfirm}
+                                    className="flex-1 py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <Coins className="h-4 w-4" /> {t('판매')}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
             </AnimatePresence>
 
             {/* 강화 모달 */}
