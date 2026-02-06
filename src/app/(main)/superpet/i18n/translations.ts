@@ -310,6 +310,9 @@ export const koToEn: Record<string, string> = {
     '멋진 캐릭터 카드를 생성 중입니다...': 'Generating an awesome character card...',
     '동물 사진이 아닙니다': 'This is not an animal photo',
     '카드 생성에 실패했습니다': 'Failed to generate card',
+    '슈퍼펫에 온 걸 환영해!': 'Welcome to Super Pet!',
+    '로그인하기': 'Login',
+    '새로 시작하기': 'Start',
 
     // === 공지 모달 ===
     '확인': 'OK',

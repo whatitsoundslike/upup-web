@@ -1,7 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { Camera, Feather, Gem, Heart, Loader2, LogIn, Mars, PawPrint, Plus, Rocket, Shield, Sparkles, Sword, Swords, Trash2, Venus, X } from 'lucide-react';
+import { Camera, Feather, Gem, Heart, Loader2, LogIn, Mars, PawPrint, Plus, Rocket, Shield, Sparkles, Sword, Swords, Trash2, UserPlus, Venus, X } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from './i18n/LanguageContext';
@@ -22,6 +22,8 @@ import {
 import { saveToServer } from './gameSync';
 import { fetchGemBalance, useGem } from './gemApi';
 import ProgressModal from './components/ProgressModal';
+import { shareToTwitter } from './utils/shareUtils';
+import { useAuth } from '@/components/AuthProvider';
 
 const DELETE_GEM_COST = 100;
 
@@ -34,6 +36,7 @@ const ELEMENT_COLORS: Record<string, string> = {
 
 export default function SuperpetHome() {
     const { t, lang } = useLanguage();
+    const { user } = useAuth();
     const [petName, setPetName] = useState('');
     const [petType, setPetType] = useState<PetInfo['type'] | null>(null);
     const [cardStyle, setCardStyle] = useState<'cute' | 'powerful' | 'furry' | null>(null);
@@ -63,6 +66,9 @@ export default function SuperpetHome() {
 
     // 시작 선택 화면 (로그인/새로 시작)
     const [showStartChoice, setShowStartChoice] = useState(false);
+
+    // 공유 시 로그인 필요 모달
+    const [showShareLoginModal, setShowShareLoginModal] = useState(false);
 
     // 페이지 로드 시 기존 캐릭터 불러오기
     useEffect(() => {
@@ -217,21 +223,18 @@ export default function SuperpetHome() {
         setItem('announcement-shown', today);
     };
 
-    const handleShare = async () => {
-        if (!createdCharacter || isSharing) return;
+    const handleShare = () => {
+        const activeCharacter = createdCharacter || characters.find(c => c.id === activeCharacterId);
+        if (!activeCharacter || isSharing) return;
+
+        // 로그인 상태 확인
+        if (!user) {
+            setShowShareLoginModal(true);
+            return;
+        }
+
         setIsSharing(true);
-
-        // 트위터 창을 먼저 열어서 팝업 차단 방지 (사용자 클릭 컨텍스트 내에서)
-        const tweetText = lang === 'ko'
-            ? `🐾 내 슈퍼펫 「${createdCharacter.name}」을(를) 소개합니다!\n#SuperPet #슈퍼펫`
-            : `🐾 Meet my Super Pet "${createdCharacter.name}"!\n#SuperPet`;
-        const tweetUrl = 'https://zroom.io/superpet';
-        window.open(
-            `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(tweetUrl)}`,
-            '_blank',
-            'noopener,noreferrer'
-        );
-
+        shareToTwitter({ character: activeCharacter, lang });
         setIsSharing(false);
     };
 
@@ -293,14 +296,37 @@ export default function SuperpetHome() {
                         </div>
                     )}
 
-                    <button
-                        onClick={() => setShowAnnouncement(true)}
-                        className="group relative w-[220px] mx-auto py-3 px-6 rounded-lg bg-gradient-to-b from-amber-400 via-amber-500 to-amber-700 text-white font-black text-base border-2transition-all mb-6 flex items-center justify-center gap-2 overflow-hidden"
-                    >
-                        <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                        <span className="text-xl animate-bounce">📢</span>
-                        <span className="drop-shadow-[0_0_4px_rgba(0,0,0,0.3)]">{t('공지사항')}</span>
-                    </button>
+                    {/* 공지사항 & 트위터 공유 버튼 (캐릭터 생성 완료 또는 폼 표시 시 숨김) */}
+                    {!createdCharacter && !showForm && (
+                        <>
+                            <button
+                                onClick={() => setShowAnnouncement(true)}
+                                className="group relative w-[220px] mx-auto py-3 px-6 rounded-lg bg-gradient-to-b from-amber-400 via-amber-500 to-amber-700 text-white font-black text-base border-2transition-all mb-3 flex items-center justify-center gap-2 overflow-hidden"
+                            >
+                                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                                <span className="text-xl animate-bounce">📢</span>
+                                <span className="drop-shadow-[0_0_4px_rgba(0,0,0,0.3)]">{t('공지사항')}</span>
+                            </button>
+
+                            {/* 트위터 공유 버튼 (로그인 + 캐릭터 있을 때) */}
+                            {user && characters.find(c => c.id === activeCharacterId) && (
+                                <button
+                                    onClick={handleShare}
+                                    disabled={isSharing}
+                                    className="group relative w-[220px] mx-auto py-3 px-6 rounded-lg bg-black text-white font-bold text-base transition-all mb-6 flex items-center justify-center gap-2 overflow-hidden hover:bg-zinc-800 disabled:opacity-50"
+                                >
+                                    {isSharing ? (
+                                        <Loader2 className="h-5 w-5 animate-spin" />
+                                    ) : (
+                                        <>
+                                            <span className="text-lg">𝕏</span>
+                                            <span>{t('내 동물카드 공유하기')}</span>
+                                        </>
+                                    )}
+                                </button>
+                            )}
+                        </>
+                    )}
 
                     {/* 캐릭터 생성 결과 */}
                     {createdCharacter && !showForm && (
@@ -427,9 +453,8 @@ export default function SuperpetHome() {
                             animate={{ opacity: 1, y: 0 }}
                             className="p-8 rounded-2xl shadow-2xl bg-gradient-to-b from-zinc-800/90 to-zinc-900/90 border-2 border-amber-500/30 backdrop-blur-sm text-center"
                         >
-                            <div className="text-6xl mb-6">🐾</div>
                             <h2 className="text-2xl font-black mb-3 text-amber-400">
-                                {t('슈퍼펫에 오신 것을 환영합니다!')}
+                                {t('슈퍼펫에 온 걸 환영해!')}
                             </h2>
 
                             <div className="flex flex-col gap-3">
@@ -512,7 +537,7 @@ export default function SuperpetHome() {
                                                 </div>
                                                 <Link
                                                     href="/superpet/dungeon"
-                                                    className="w-full py-2.5 rounded-lg bg-red-500 text-white text-sm font-bold text-center hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
+                                                    className="w-full p-2.5 rounded-lg bg-red-500 text-white text-sm font-bold text-center hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
                                                 >
                                                     <Swords className="h-4 w-4" />
                                                     {t('던전 가기')}
@@ -553,7 +578,7 @@ export default function SuperpetHome() {
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: characters.length * 0.1 }}
-                                        onClick={() => setShowForm(true)}
+                                        onClick={() => { setShowForm(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                                         className="glass p-6 rounded-2xl shadow-lg bg-white/5 hover:bg-white/10 transition-colors flex flex-col items-center justify-center min-h-[200px] border-2 border-dashed border-foreground/20"
                                     >
                                         <Plus className="h-12 w-12 text-amber-500 mb-3" />
@@ -1018,6 +1043,51 @@ export default function SuperpetHome() {
                             >
                                 {t('확인')}
                             </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* 공유 시 로그인 필요 모달 */}
+            <AnimatePresence>
+                {showShareLoginModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+                        onClick={() => setShowShareLoginModal(false)}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="relative w-full max-w-sm p-6 rounded-2xl shadow-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-amber-500"
+                        >
+                            <div className="text-center mb-6">
+                                <UserPlus className="h-16 w-16 text-amber-500 mx-auto mb-3" />
+                                <h3 className="text-xl font-black mb-2">{t('회원가입이 필요합니다')}</h3>
+                                <p className="text-sm text-foreground/60">
+                                    {lang === 'ko'
+                                        ? '친구에게 공유하려면 회원가입이 필요합니다.\n지금 가입하고 친구들과 함께 즐겨보세요!'
+                                        : 'Sign up to share with friends.\nJoin now and enjoy with your friends!'}
+                                </p>
+                            </div>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowShareLoginModal(false)}
+                                    className="flex-1 py-3 rounded-xl bg-foreground/10 text-foreground/60 font-bold hover:bg-foreground/20 transition-colors"
+                                >
+                                    {t('닫기')}
+                                </button>
+                                <Link
+                                    href="/signup"
+                                    className="flex-1 py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <UserPlus className="h-4 w-4" /> {t('회원가입')}
+                                </Link>
+                            </div>
                         </motion.div>
                     </motion.div>
                 )}

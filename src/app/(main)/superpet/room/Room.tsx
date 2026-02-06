@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Swords, Coins, Gem, X, Heart, Shield, Zap, Gauge, Search, Sword, Feather, Loader2 } from 'lucide-react';
+import { Package, Swords, Coins, Gem, X, Heart, Shield, Zap, Gauge, Search, Sword, Feather, Loader2, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import {
@@ -39,6 +39,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { useDebouncedSave, saveToServer } from '../gameSync';
 import { fetchGemBalance } from '../gemApi';
 import { useAuth } from '@/components/AuthProvider';
+import { shareToTwitter } from '../utils/shareUtils';
 
 const STAT_ICONS = {
     hp: { icon: Heart, color: 'text-red-500 fill-red-500' },
@@ -61,6 +62,7 @@ export default function Room() {
     const [searchName, setSearchName] = useState('');
     const [slotFilter, setSlotFilter] = useState<EquipmentSlot | 'all'>('all');
     const [isSharing, setIsSharing] = useState(false);
+    const [showShareLoginModal, setShowShareLoginModal] = useState(false);
     const [enhanceModal, setEnhanceModal] = useState<{
         isOpen: boolean;
         target: {
@@ -285,18 +287,15 @@ export default function Room() {
 
     const handleShare = () => {
         if (!character || isSharing) return;
+
+        // 로그인 상태 확인
+        if (!user) {
+            setShowShareLoginModal(true);
+            return;
+        }
+
         setIsSharing(true);
-
-        const tweetText = lang === 'ko'
-            ? `🐾 내 슈퍼펫 「${character.name}」을(를) 소개합니다!\nLv.${character.level} ${character.className} | ${character.element}\n#SuperPet #슈퍼펫`
-            : `🐾 Meet my Super Pet "${character.name}"!\nLv.${character.level} ${character.className} | ${character.element}\n#SuperPet`;
-        const tweetUrl = 'https://zroom.io/superpet';
-        window.open(
-            `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(tweetUrl)}`,
-            '_blank',
-            'noopener,noreferrer'
-        );
-
+        shareToTwitter({ character, lang });
         setIsSharing(false);
     };
 
@@ -874,6 +873,51 @@ export default function Room() {
                 scrollId={enhanceModal.scrollId}
                 onComplete={handleEnhanceComplete}
             />
+
+            {/* 공유 시 로그인 필요 모달 */}
+            <AnimatePresence>
+                {showShareLoginModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+                        onClick={() => setShowShareLoginModal(false)}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="relative w-full max-w-sm p-6 rounded-2xl shadow-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-amber-500"
+                        >
+                            <div className="text-center mb-6">
+                                <UserPlus className="h-16 w-16 text-amber-500 mx-auto mb-3" />
+                                <h3 className="text-xl font-black mb-2">{t('회원가입이 필요합니다')}</h3>
+                                <p className="text-sm text-foreground/60">
+                                    {lang === 'ko'
+                                        ? '친구에게 공유하려면 회원가입이 필요합니다.\n지금 가입하고 친구들과 함께 즐겨보세요!'
+                                        : 'Sign up to share with friends.\nJoin now and enjoy with your friends!'}
+                                </p>
+                            </div>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowShareLoginModal(false)}
+                                    className="flex-1 py-3 rounded-xl bg-foreground/10 text-foreground/60 font-bold hover:bg-foreground/20 transition-colors"
+                                >
+                                    {t('닫기')}
+                                </button>
+                                <Link
+                                    href="/signup"
+                                    className="flex-1 py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <UserPlus className="h-4 w-4" /> {t('회원가입')}
+                                </Link>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
