@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Swords, Coins, Gem, X, Heart, Shield, Zap, Gauge, Search, Sword, Feather, Loader2, UserPlus, Copy, CheckSquare, Square, Trash2 } from 'lucide-react';
+import { Package, Swords, Coins, Gem, X, Heart, Shield, Zap, Gauge, Search, Sword, Feather, Loader2, UserPlus, Copy, CheckSquare, Square, Trash2, Hammer } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import {
@@ -33,6 +33,7 @@ import {
     MAX_ENHANCE_LEVEL,
     getEnhanceSuccessRate,
     CEILING_LEVELS,
+    addItemToInventory,
 } from '../types';
 import EnhanceModal from '../components/EnhanceModal';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -80,6 +81,9 @@ export default function Room() {
     const [bulkSelectMode, setBulkSelectMode] = useState(false);
     const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set()); // instanceId 저장
     const [bulkSellConfirm, setBulkSellConfirm] = useState(false);
+
+    // 분해 확인 모달
+    const [disassembleConfirm, setDisassembleConfirm] = useState<InventoryItem | null>(null);
 
     useEffect(() => {
         setInventory(loadInventory());
@@ -184,6 +188,54 @@ export default function Room() {
     const exitBulkSelectMode = () => {
         setBulkSelectMode(false);
         setSelectedItems(new Set());
+    };
+
+    // 장비 분해 - 강화 수치만큼 주문서 획득
+    const handleDisassemble = () => {
+        if (!disassembleConfirm) return;
+
+        const item = disassembleConfirm.item;
+        const enhanceLevel = disassembleConfirm.enhanceLevel ?? 0;
+
+        if (item.type !== 'equipment' || !item.equipmentSlot || enhanceLevel <= 0) {
+            setDisassembleConfirm(null);
+            return;
+        }
+
+        // 주문서 종류 결정
+        const scrollType = getRequiredScrollType(item.equipmentSlot);
+        const scrollIdMap: Record<EnhanceScrollType, string> = {
+            weapon: 'weapon_enhance_scroll',
+            armor: 'armor_enhance_scroll',
+            accessory: 'accessory_enhance_scroll',
+        };
+        const scrollId = scrollIdMap[scrollType];
+
+        // 인벤토리에서 장비 제거
+        const updated = inventory.filter((e) => e.instanceId !== disassembleConfirm.instanceId);
+        setInventory(updated);
+        saveInventory(updated);
+
+        // 주문서 추가
+        addItemToInventory(scrollId, enhanceLevel);
+        setInventory(loadInventory());
+
+        const scrollNames: Record<EnhanceScrollType, string> = {
+            weapon: lang === 'ko' ? '무기 강화 주문서' : 'Weapon Enhance Scroll',
+            armor: lang === 'ko' ? '방어구 강화 주문서' : 'Armor Enhance Scroll',
+            accessory: lang === 'ko' ? '악세사리 강화 주문서' : 'Accessory Enhance Scroll',
+        };
+
+        showToast(
+            lang === 'ko'
+                ? `${item.name}을(를) 분해하여 ${scrollNames[scrollType]} ${enhanceLevel}개를 획득했습니다!`
+                : `Disassembled ${item.name} and obtained ${enhanceLevel}x ${scrollNames[scrollType]}!`,
+            'success'
+        );
+
+        setSelectedItem(null);
+        setDisassembleConfirm(null);
+        debouncedSaveToServer();
     };
 
     const handleSellConfirm = () => {
@@ -909,6 +961,16 @@ export default function Room() {
                                                             </div>
                                                         </>
                                                     )}
+                                                    {/* 분해 버튼 - 강화된 장비만 (장착 중이 아닌 경우) */}
+                                                    {!isEquipped && enhanceLevel > 0 && (
+                                                        <button
+                                                            onClick={() => setDisassembleConfirm(selectedItem)}
+                                                            className="w-full py-3 rounded-xl bg-orange-500/10 text-orange-600 font-bold hover:bg-orange-500/20 transition-colors flex items-center justify-center gap-2"
+                                                        >
+                                                            <Hammer className="h-4 w-4" />
+                                                            {t('분해하기')} ({scrollNames[scrollType]} {enhanceLevel}{lang === 'ko' ? '개 획득' : 'x'})
+                                                        </button>
+                                                    )}
                                                 </>
                                             );
                                         })()}
@@ -1100,6 +1162,76 @@ export default function Room() {
                         </motion.div>
                     </motion.div>
                 )}
+            </AnimatePresence>
+
+            {/* 분해 확인 모달 */}
+            <AnimatePresence>
+                {disassembleConfirm && (() => {
+                    const item = disassembleConfirm.item;
+                    const enhanceLevel = disassembleConfirm.enhanceLevel ?? 0;
+                    const slot = item.equipmentSlot;
+                    if (!slot) return null;
+                    const scrollType = getRequiredScrollType(slot);
+                    const scrollNames: Record<EnhanceScrollType, string> = {
+                        weapon: lang === 'ko' ? '무기 강화 주문서' : 'Weapon Enhance Scroll',
+                        armor: lang === 'ko' ? '방어구 강화 주문서' : 'Armor Enhance Scroll',
+                        accessory: lang === 'ko' ? '악세사리 강화 주문서' : 'Accessory Enhance Scroll',
+                    };
+
+                    return (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+                            onClick={() => setDisassembleConfirm(null)}
+                        >
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                                onClick={(e) => e.stopPropagation()}
+                                className="relative w-full max-w-sm p-6 rounded-2xl shadow-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-orange-500"
+                            >
+                                <div className="text-center mb-6">
+                                    <div className="text-5xl mb-3">{item.emoji}</div>
+                                    <h3 className="text-xl font-black mb-2">{t('장비 분해')}</h3>
+                                    <p className="text-sm text-foreground/60">
+                                        {lang === 'ko' ? (
+                                            <>
+                                                <span className="font-bold text-foreground">{item.name} +{enhanceLevel}</span>을(를) 분해하면<br />
+                                                <span className="font-bold text-orange-600">{scrollNames[scrollType]} {enhanceLevel}개</span>를 획득합니다
+                                            </>
+                                        ) : (
+                                            <>
+                                                Disassemble <span className="font-bold text-foreground">{t(item.name)} +{enhanceLevel}</span><br />
+                                                to obtain <span className="font-bold text-orange-600">{enhanceLevel}x {scrollNames[scrollType]}</span>
+                                            </>
+                                        )}
+                                    </p>
+                                    <p className="text-xs text-red-500 mt-2">
+                                        {lang === 'ko' ? '⚠️ 분해된 장비는 복구할 수 없습니다!' : '⚠️ Disassembled equipment cannot be recovered!'}
+                                    </p>
+                                </div>
+
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => setDisassembleConfirm(null)}
+                                        className="flex-1 py-3 rounded-xl bg-foreground/10 text-foreground/60 font-bold hover:bg-foreground/20 transition-colors"
+                                    >
+                                        {t('취소')}
+                                    </button>
+                                    <button
+                                        onClick={handleDisassemble}
+                                        className="flex-1 py-3 rounded-xl bg-orange-500 text-white font-bold hover:bg-orange-600 transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <Hammer className="h-4 w-4" /> {t('분해')}
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </motion.div>
+                    );
+                })()}
             </AnimatePresence>
 
             {/* 강화 모달 */}
