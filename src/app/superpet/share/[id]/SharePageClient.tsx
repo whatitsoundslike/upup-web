@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { PawPrint, Sparkles, Users } from 'lucide-react';
 import Link from 'next/link';
-import { useLanguage } from '../../i18n/LanguageContext';
+import { useLanguage } from '@/app/(main)/superpet/i18n/LanguageContext';
 
 interface ShareCharacterData {
     name: string;
