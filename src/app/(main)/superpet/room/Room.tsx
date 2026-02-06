@@ -35,6 +35,8 @@ import {
 import EnhanceModal from '../components/EnhanceModal';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useDebouncedSave, saveToServer } from '../gameSync';
+import { fetchGemBalance } from '../gemApi';
+import { useAuth } from '@/components/AuthProvider';
 
 const STAT_ICONS = {
     hp: { icon: Heart, color: 'text-red-500 fill-red-500' },
@@ -47,8 +49,10 @@ const SLOT_OPTIONS: (EquipmentSlot | 'all')[] = ['all', '투구', '갑옷', '장
 
 export default function Room() {
     const { t, lang } = useLanguage();
+    const { user } = useAuth();
     const [inventory, setInventory] = useState<InventoryItem[]>([]);
     const [character, setCharacter] = useState<Character | null>(null);
+    const [gemBalance, setGemBalance] = useState<number | null>(null);
     const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
     const [activeToast, setActiveToast] = useState<{ message: string; tone: 'success' | 'error'; key: number } | null>(null);
     const [sellConfirm, setSellConfirm] = useState<{ itemId: string; sellAll: boolean } | null>(null);
@@ -71,6 +75,17 @@ export default function Room() {
         setInventory(loadInventory());
         setCharacter(loadCharacter());
     }, []);
+
+    // 로그인되어 있으면 서버에서 젬 잔액 조회
+    useEffect(() => {
+        if (user) {
+            fetchGemBalance().then((result) => {
+                if (result) {
+                    setGemBalance(result.balance);
+                }
+            });
+        }
+    }, [user]);
 
     useEffect(() => {
         if (!activeToast) return;
@@ -381,7 +396,9 @@ export default function Room() {
                             </div>
                             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/10 text-sm">
                                 <Gem className="h-4 w-4 text-purple-500" />
-                                <span className="font-bold text-purple-600">{character.gem.toLocaleString()}</span>
+                                <span className="font-bold text-purple-600">
+                                    {(user && gemBalance !== null ? gemBalance : character.gem).toLocaleString()}
+                                </span>
                                 <span className="text-foreground/40 text-xs">{t('젬')}</span>
                             </div>
                         </div>

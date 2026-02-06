@@ -14,7 +14,6 @@ import {
     migrateCharacterData,
     PET_TRAITS,
     PET_TYPES,
-    saveCharacter,
     setActiveCharacter,
     getTotalStats,
     type Character,
@@ -58,6 +57,9 @@ export default function SuperpetHome() {
     const [gemBalance, setGemBalance] = useState<number | null>(null);
     const [gemLoading, setGemLoading] = useState(false);
     const [showInsufficientGem, setShowInsufficientGem] = useState(false);
+
+    // 카드 생성 실패 모달
+    const [cardGenerateFailModal, setCardGenerateFailModal] = useState<{ show: boolean; petName: string }>({ show: false, petName: '' });
 
     // 페이지 로드 시 기존 캐릭터 불러오기
     useEffect(() => {
@@ -135,45 +137,56 @@ export default function SuperpetHome() {
         if (!petName.trim() || !petType || traits.length < 3 || !petPhoto || !cardStyle || !gender) return;
         setGenerateError(null);
 
-        // 1단계: 캐릭터 먼저 생성 (이미지 없이)
-        const char = generateCharacter(petName.trim(), petType, traits);
-        const success = addCharacter(char);
-        if (!success) return;
-
-        if (fileInputRef.current) fileInputRef.current.value = '';
+        const charName = petName.trim();
 
         // 프로그레스 모달 표시
-        setProgressMessage(petPhoto ? t('멋진 캐릭터 카드를 생성 중입니다...') : t('데이터를 저장하고 있습니다...'));
+        setProgressMessage(t('멋진 캐릭터 카드를 생성 중입니다...'));
         setIsGenerating(true);
 
-        // 2단계: 사진이 있으면 캐릭터 정보와 함께 카드 생성
-        if (petPhoto) {
-            try {
-                const res = await fetch('/api/superpet/generate-card', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        image: petPhoto,
-                        name: char.name,
-                        className: char.className,
-                        element: char.element,
-                        style: cardStyle,
-                        gender: gender,
-                        characterId: char.id,
-                    }),
-                });
-                const data = await res.json();
-                if (data.success && data.cardImage) {
-                    char.image = data.cardImage;
-                    saveCharacter(char);
-                } else {
-                    setGenerateError(data.error || t('카드 생성에 실패했습니다'));
-                }
-            } catch {
-                setGenerateError(t('카드 생성에 실패했습니다'));
+        // 1단계: 카드 이미지 생성 먼저
+        let cardImage: string | null = null;
+        const char = generateCharacter(charName, petType, traits);
+
+        try {
+            const res = await fetch('/api/superpet/generate-card', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    image: petPhoto,
+                    name: char.name,
+                    className: char.className,
+                    element: char.element,
+                    style: cardStyle,
+                    gender: gender,
+                    characterId: char.id,
+                }),
+            });
+            const data = await res.json();
+            if (data.success && data.cardImage) {
+                cardImage = data.cardImage;
+            } else {
+                // 카드 생성 실패 - 모달 표시하고 중단
+                setIsGenerating(false);
+                setCardGenerateFailModal({ show: true, petName: charName });
+                return;
             }
-            setPetPhoto(null);
+        } catch {
+            // 카드 생성 실패 - 모달 표시하고 중단
+            setIsGenerating(false);
+            setCardGenerateFailModal({ show: true, petName: charName });
+            return;
         }
+
+        // 2단계: 카드 생성 성공 시 캐릭터 저장
+        char.image = cardImage ?? undefined;
+        const success = addCharacter(char);
+        if (!success) {
+            setIsGenerating(false);
+            return;
+        }
+
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        setPetPhoto(null);
 
         // 3단계: 서버 저장
         setProgressMessage(t('데이터를 저장하고 있습니다...'));
@@ -182,6 +195,7 @@ export default function SuperpetHome() {
         setIsGenerating(false);
         setCharacters(loadAllCharacters());
         setPetName('');
+        setPetType(null);
         setTraits([]);
         setCardStyle(null);
         setGender(null);
@@ -845,6 +859,43 @@ export default function SuperpetHome() {
                             </div>
                             <button
                                 onClick={() => setFileSizeError({ show: false, size: 0 })}
+                                className="w-full py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 transition-colors"
+                            >
+                                {t('확인')}
+                            </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* 카드 생성 실패 모달 */}
+            <AnimatePresence>
+                {cardGenerateFailModal.show && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+                        onClick={() => setCardGenerateFailModal({ show: false, petName: '' })}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="relative w-full max-w-sm p-6 rounded-2xl shadow-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-amber-500"
+                        >
+                            <div className="text-center mb-6">
+                                <div className="text-5xl mb-4">😢</div>
+                                <h3 className="text-xl font-black mb-2">{t('카드 생성 실패')}</h3>
+                                <p className="text-sm text-foreground/60">
+                                    {lang === 'ko'
+                                        ? `요청이 많아 '${cardGenerateFailModal.petName}'의 게임카드를 생성하지 못했어요. 잠시 후 다시 시도해주세요.`
+                                        : `Due to high demand, we couldn't generate a game card for '${cardGenerateFailModal.petName}'. Please try again later.`}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setCardGenerateFailModal({ show: false, petName: '' })}
                                 className="w-full py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 transition-colors"
                             >
                                 {t('확인')}
