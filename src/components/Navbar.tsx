@@ -216,7 +216,7 @@ export function Navbar() {
                                                     className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-foreground/5 transition-colors"
                                                 >
                                                     <UserCog className="h-4 w-4" />
-                                                    <span>내 정보</span>
+                                                    <span>{lang === 'ko' ? '내 정보' : 'My Profile'}</span>
                                                 </Link>
                                             )}
                                             {isSuperpet && (
@@ -233,7 +233,7 @@ export function Navbar() {
                                                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-foreground/5 transition-colors"
                                             >
                                                 {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                                                <span>{theme === 'dark' ? '라이트 모드' : '다크 모드'}</span>
+                                                <span>{theme === 'dark' ? (lang === 'ko' ? '라이트 모드' : 'Light Mode') : (lang === 'ko' ? '다크 모드' : 'Dark Mode')}</span>
                                             </button>
                                         </motion.div>
                                     )}
