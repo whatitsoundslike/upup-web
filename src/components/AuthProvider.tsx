@@ -25,6 +25,17 @@ const AuthContext = createContext<AuthContextValue>({
   logout: async () => { },
 });
 
+// 전역 인증 상태 (React 외부에서 사용)
+let globalAuthState: { user: User | null; loading: boolean } = { user: null, loading: true };
+
+export function getAuthState() {
+  return globalAuthState;
+}
+
+export function isLoggedIn(): boolean {
+  return globalAuthState.user !== null && !globalAuthState.loading;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -38,11 +49,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (res.ok) {
         const data = await res.json();
         setUser(data.user);
+        globalAuthState = { user: data.user, loading: false };
       } else {
         setUser(null);
+        globalAuthState = { user: null, loading: false };
       }
     } catch {
       setUser(null);
+      globalAuthState = { user: null, loading: false };
     } finally {
       setLoading(false);
     }
@@ -64,6 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Proceed with logout
     await fetch('/api/auth/logout', { method: 'POST' });
     setUser(null);
+    globalAuthState = { user: null, loading: false };
 
     // Force full page reload to home
     window.location.href = firstSegment ? `/${firstSegment}` : '/';

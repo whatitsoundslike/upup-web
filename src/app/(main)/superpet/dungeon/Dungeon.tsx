@@ -1,8 +1,9 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, PawPrint } from 'lucide-react';
+import { Heart, PawPrint, UserPlus } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { type Character, GAME_ITEMS, addItemToInventory, addExpToCharacter, ITEM_RARITY_TEXT, loadCharacter, saveCharacter, getTotalStats, useFood, loadInventory, type InventoryItem } from '../types';
 import { getItem } from '../storage';
@@ -11,6 +12,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { type DungeonData, type MonsterData, type BattleState } from './dungeonData';
 import DungeonSelect from './DungeonSelect';
 import BattleScreen from './BattleScreen';
+import { useAuth } from '@/components/AuthProvider';
 
 interface DroppedItem {
     item: import('../types').GameItem;
@@ -19,6 +21,7 @@ interface DroppedItem {
 
 export default function Dungeon() {
     const { t, lang } = useLanguage();
+    const { user } = useAuth();
     const [character, setCharacter] = useState<Character | null>(null);
     const [selectedDungeon, setSelectedDungeon] = useState<DungeonData | null>(null);
     const [selectedMonster, setSelectedMonster] = useState<MonsterData | null>(null);
@@ -29,7 +32,9 @@ export default function Dungeon() {
     const [inventory, setInventory] = useState<InventoryItem[]>([]);
     const [droppedItems, setDroppedItems] = useState<DroppedItem[]>([]);
     const [lowHpWarning, setLowHpWarning] = useState(false);
+    const [showSignupModal, setShowSignupModal] = useState(false);
     const [activeToast, setActiveToast] = useState<{ message: string; tone: 'success' | 'error'; key: number } | null>(null);
+    const router = useRouter();
     const logRef = useRef<HTMLDivElement>(null);
     const battleFieldRef = useRef<HTMLDivElement>(null);
     const [isAttacking, setIsAttacking] = useState(false);
@@ -140,6 +145,12 @@ export default function Dungeon() {
 
     const startBattle = (dungeon: DungeonData) => {
         if (!character) return;
+
+        // 비로그인 상태에서는 회원가입 유도
+        if (!user) {
+            setShowSignupModal(true);
+            return;
+        }
 
         if (character.currentHp <= 0) {
             setLowHpWarning(true);
@@ -382,6 +393,51 @@ export default function Dungeon() {
                                 >
                                     <Heart className="h-4 w-4" /> {t('인벤토리')}
                                 </Link>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* 회원가입 유도 모달 */}
+            <AnimatePresence>
+                {showSignupModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+                        onClick={() => setShowSignupModal(false)}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="relative w-full max-w-sm p-6 rounded-2xl shadow-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-amber-500"
+                        >
+                            <div className="text-center mb-6">
+                                <UserPlus className="h-16 w-16 text-amber-500 mx-auto mb-3" />
+                                <h3 className="text-xl font-black mb-2">{t('회원가입이 필요합니다')}</h3>
+                                <p className="text-sm text-foreground/60">
+                                    {t('전투 데이터를 저장하려면 회원가입이 필요합니다.')}<br />
+                                    {t('지금 가입하고 게임을 즐겨보세요!')}
+                                </p>
+                            </div>
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowSignupModal(false)}
+                                    className="flex-1 py-3 rounded-xl bg-foreground/10 text-foreground/60 font-bold hover:bg-foreground/20 transition-colors"
+                                >
+                                    {t('닫기')}
+                                </button>
+                                <button
+                                    onClick={() => router.push('/signup')}
+                                    className="flex-1 py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <UserPlus className="h-4 w-4" /> {t('회원가입')}
+                                </button>
                             </div>
                         </motion.div>
                     </motion.div>

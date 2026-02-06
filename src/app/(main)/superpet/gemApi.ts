@@ -9,6 +9,7 @@ export {
 } from './gemSources';
 
 import type { GemIssueSource, GemUseSource } from './gemSources';
+import { isLoggedIn } from '@/components/AuthProvider';
 
 // ===== 타입 정의 =====
 export type GemBalance = {
@@ -20,14 +21,6 @@ export type GemApiResult = {
   balance?: number;
   error?: string;
 };
-
-// ===== 로그인 체크 =====
-const AUTH_COOKIE_NAME = 'auth-token';
-
-function isLoggedIn(): boolean {
-  if (typeof document === 'undefined') return false;
-  return document.cookie.split(';').some(c => c.trim().startsWith(`${AUTH_COOKIE_NAME}=`));
-}
 
 // ===== API 함수 =====
 
