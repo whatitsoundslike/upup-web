@@ -36,7 +36,7 @@ const ELEMENT_COLORS: Record<string, string> = {
 export default function SuperpetHome() {
     const { t, lang } = useLanguage();
     const [petName, setPetName] = useState('');
-    const [petType, setPetType] = useState<PetInfo['type']>('dog');
+    const [petType, setPetType] = useState<PetInfo['type'] | null>(null);
     const [cardStyle, setCardStyle] = useState<'cute' | 'powerful' | 'furry' | null>(null);
     const [gender, setGender] = useState<'male' | 'female' | null>(null);
     const [traits, setTraits] = useState<string[]>([]);
@@ -132,7 +132,7 @@ export default function SuperpetHome() {
     };
 
     const handleGenerate = async () => {
-        if (!petName.trim() || traits.length < 3) return;
+        if (!petName.trim() || !petType || traits.length < 3 || !petPhoto || !cardStyle || !gender) return;
         setGenerateError(null);
 
         // 1단계: 캐릭터 먼저 생성 (이미지 없이)
@@ -549,151 +549,181 @@ export default function SuperpetHome() {
                                 />
                             </div>
 
-                            {/* 종류 선택 */}
-                            <div className="mb-6">
-                                <label className="block text-sm font-semibold mb-2 text-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.5)]">
-                                    ⚔️ {t('종류')}
-                                </label>
-                                <div className="flex gap-2">
-                                    {PET_TYPES.map((pt) => (
-                                        <button
-                                            key={pt.key}
-                                            onClick={() => setPetType(pt.key)}
-                                            className={`flex-1 py-3 rounded-lg font-bold text-sm transition-all duration-200 border-2 ${petType === pt.key
-                                                ? 'bg-gradient-to-b from-amber-400 to-amber-600 text-white border-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.6),inset_0_1px_0_rgba(255,255,255,0.3)] scale-105'
-                                                : 'bg-gradient-to-b from-zinc-700 to-zinc-800 text-zinc-300 border-zinc-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)] hover:from-zinc-600 hover:to-zinc-700 hover:border-zinc-500 hover:text-white'
-                                                }`}
-                                        >
-                                            {t(pt.label)}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* 카드 스타일 선택 */}
-                            <div className="mb-6">
-                                <label className="block text-sm font-semibold mb-2 text-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.5)]">
-                                    🎨 {t('카드 스타일')} <span className="text-red-400">*</span>
-                                </label>
-                                {cardStyle === null && (
-                                    <p className="text-xs text-red-400 mt-1 drop-shadow-[0_0_4px_rgba(248,113,113,0.5)]">{t('카드 스타일을 선택해주세요')}</p>
+                            {/* 종류 선택 - 이름 입력 후 표시 */}
+                            <AnimatePresence>
+                                {petName.trim() && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="mb-6 overflow-hidden"
+                                    >
+                                        <label className="block text-sm font-semibold mb-2 text-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.5)]">
+                                            ⚔️ {t('종류')}
+                                        </label>
+                                        <div className="flex gap-2">
+                                            {PET_TYPES.map((pt) => (
+                                                <button
+                                                    key={pt.key}
+                                                    onClick={() => setPetType(pt.key)}
+                                                    className={`flex-1 py-3 rounded-lg font-bold text-sm transition-all duration-200 border-2 ${petType === pt.key
+                                                        ? 'bg-gradient-to-b from-amber-400 to-amber-600 text-white border-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.6),inset_0_1px_0_rgba(255,255,255,0.3)] scale-105'
+                                                        : 'bg-gradient-to-b from-zinc-700 to-zinc-800 text-zinc-300 border-zinc-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)] hover:from-zinc-600 hover:to-zinc-700 hover:border-zinc-500 hover:text-white'
+                                                        }`}
+                                                >
+                                                    {t(pt.label)}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </motion.div>
                                 )}
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => setCardStyle('cute')}
-                                        className={`flex-1 py-3 rounded-lg font-bold text-sm transition-all duration-200 border-2 ${cardStyle === 'cute'
-                                            ? 'bg-gradient-to-b from-pink-400 to-pink-600 text-white border-pink-300 shadow-[0_0_12px_rgba(236,72,153,0.6),inset_0_1px_0_rgba(255,255,255,0.3)] scale-105'
-                                            : 'bg-gradient-to-b from-zinc-700 to-zinc-800 text-zinc-300 border-zinc-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)] hover:from-zinc-600 hover:to-zinc-700 hover:border-zinc-500 hover:text-white'
-                                            }`}
-                                    >
-                                        ♥️ {t('귀여운 카툰')}
-                                    </button>
-                                    <button
-                                        onClick={() => setCardStyle('powerful')}
-                                        className={`flex-1 py-3 rounded-lg font-bold text-sm transition-all duration-200 border-2 ${cardStyle === 'powerful'
-                                            ? 'bg-gradient-to-b from-red-500 to-red-700 text-white border-red-400 shadow-[0_0_12px_rgba(239,68,68,0.6),inset_0_1px_0_rgba(255,255,255,0.3)] scale-105'
-                                            : 'bg-gradient-to-b from-zinc-700 to-zinc-800 text-zinc-300 border-zinc-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)] hover:from-zinc-600 hover:to-zinc-700 hover:border-zinc-500 hover:text-white'
-                                            }`}
-                                    >
-                                        🔥 {t('강력한 일러스트')}
-                                    </button>
-                                    <button
-                                        onClick={() => setCardStyle('furry')}
-                                        className={`flex-1 py-3 rounded-lg font-bold text-sm transition-all duration-200 border-2 ${cardStyle === 'furry'
-                                            ? 'bg-gradient-to-b from-purple-500 to-purple-700 text-white border-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.6),inset_0_1px_0_rgba(255,255,255,0.3)] scale-105'
-                                            : 'bg-gradient-to-b from-zinc-700 to-zinc-800 text-zinc-300 border-zinc-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)] hover:from-zinc-600 hover:to-zinc-700 hover:border-zinc-500 hover:text-white'
-                                            }`}
-                                    >
-                                        🐶 {t('퍼리')}
-                                    </button>
-                                </div>
-                            </div>
+                            </AnimatePresence>
 
-                            {/* 성별 선택 */}
-                            <div className="mb-6">
-                                <label className="block text-sm font-semibold mb-2 text-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.5)]">
-                                    👤 {t('성별')} <span className="text-red-400">*</span>
-                                </label>
-                                {gender === null && (
-                                    <p className="text-xs text-red-400 mt-1 drop-shadow-[0_0_4px_rgba(248,113,113,0.5)]">{t('성별을 선택해주세요')}</p>
+                            {/* 카드 스타일 선택 - 종류 선택 후 표시 */}
+                            <AnimatePresence>
+                                {petType && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="mb-6 overflow-hidden"
+                                    >
+                                        <label className="block text-sm font-semibold mb-2 text-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.5)]">
+                                            🎨 {t('카드 스타일')}
+                                        </label>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => setCardStyle('furry')}
+                                                className={`flex-1 py-3 rounded-lg font-bold text-sm transition-all duration-200 border-2 ${cardStyle === 'furry'
+                                                    ? 'bg-gradient-to-b from-purple-500 to-purple-700 text-white border-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.6),inset_0_1px_0_rgba(255,255,255,0.3)] scale-105'
+                                                    : 'bg-gradient-to-b from-zinc-700 to-zinc-800 text-zinc-300 border-zinc-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)] hover:from-zinc-600 hover:to-zinc-700 hover:border-zinc-500 hover:text-white'
+                                                    }`}
+                                            >
+                                                🐶 {t('멋진')}
+                                            </button>
+                                            <button
+                                                onClick={() => setCardStyle('cute')}
+                                                className={`flex-1 py-3 rounded-lg font-bold text-sm transition-all duration-200 border-2 ${cardStyle === 'cute'
+                                                    ? 'bg-gradient-to-b from-pink-400 to-pink-600 text-white border-pink-300 shadow-[0_0_12px_rgba(236,72,153,0.6),inset_0_1px_0_rgba(255,255,255,0.3)] scale-105'
+                                                    : 'bg-gradient-to-b from-zinc-700 to-zinc-800 text-zinc-300 border-zinc-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)] hover:from-zinc-600 hover:to-zinc-700 hover:border-zinc-500 hover:text-white'
+                                                    }`}
+                                            >
+                                                ♥️ {t('귀여운')}
+                                            </button>
+                                        </div>
+                                    </motion.div>
                                 )}
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => setGender('male')}
-                                        className={`flex-1 py-4 rounded-lg font-bold text-lg transition-all duration-200 flex items-center justify-center gap-2 border-2 ${gender === 'male'
-                                            ? 'bg-gradient-to-b from-blue-400 to-blue-600 text-white border-blue-300 shadow-[0_0_12px_rgba(59,130,246,0.6),inset_0_1px_0_rgba(255,255,255,0.3)] scale-105'
-                                            : 'bg-gradient-to-b from-zinc-700 to-zinc-800 text-zinc-300 border-zinc-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)] hover:from-zinc-600 hover:to-zinc-700 hover:border-zinc-500 hover:text-white'
-                                            }`}
-                                    >
-                                        <Mars className="h-6 w-6 drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
-                                    </button>
-                                    <button
-                                        onClick={() => setGender('female')}
-                                        className={`flex-1 py-4 rounded-lg font-bold text-lg transition-all duration-200 flex items-center justify-center gap-2 border-2 ${gender === 'female'
-                                            ? 'bg-gradient-to-b from-pink-400 to-pink-600 text-white border-pink-300 shadow-[0_0_12px_rgba(236,72,153,0.6),inset_0_1px_0_rgba(255,255,255,0.3)] scale-105'
-                                            : 'bg-gradient-to-b from-zinc-700 to-zinc-800 text-zinc-300 border-zinc-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)] hover:from-zinc-600 hover:to-zinc-700 hover:border-zinc-500 hover:text-white'
-                                            }`}
-                                    >
-                                        <Venus className="h-6 w-6 drop-shadow-[0_0_8px_rgba(236,72,153,0.8)]" />
-                                    </button>
-                                </div>
-                            </div>
+                            </AnimatePresence>
 
-                            {/* 특성 선택 */}
-                            <div className="mb-8">
-                                <label className="block text-sm font-semibold mb-2 text-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.5)]">
-                                    ✨ {t('특성 선택')} <span className="text-red-400">*</span> <span className="text-emerald-400 font-normal">({traits.length}/3)</span>
-                                </label>
-                                <div className="flex flex-wrap gap-2">
-                                    {PET_TRAITS.map((trait) => (
-                                        <button
-                                            key={trait}
-                                            onClick={() => toggleTrait(trait)}
-                                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 border-2 ${traits.includes(trait)
-                                                ? 'bg-gradient-to-b from-emerald-400 to-emerald-600 text-white border-emerald-300 shadow-[0_0_10px_rgba(52,211,153,0.5),inset_0_1px_0_rgba(255,255,255,0.3)] scale-105'
-                                                : 'bg-gradient-to-b from-zinc-700 to-zinc-800 text-zinc-300 border-zinc-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)] hover:from-zinc-600 hover:to-zinc-700 hover:border-zinc-500 hover:text-white'
-                                                }`}
-                                        >
-                                            {t(trait)}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* 사진 업로드 (필수) */}
-                            <div className="mb-8">
-                                <label className="block text-sm font-semibold mb-2 text-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.5)]">
-                                    📷 {t('반려동물 사진')} <span className="text-red-400">*</span>
-                                </label>
-                                <p className="text-xs text-zinc-400 mb-3">{t('사진을 첨부하면 AI가 카드로 변환합니다')}</p>
-                                {petPhoto ? (
-                                    <div className="relative inline-block">
-                                        <img src={petPhoto} alt="pet" className="w-32 h-32 object-cover rounded-lg border-2 border-amber-500 shadow-[0_0_12px_rgba(251,191,36,0.4)]" />
-                                        <button
-                                            onClick={() => { setPetPhoto(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
-                                            className="absolute -top-2 -right-2 p-1.5 rounded-full bg-gradient-to-b from-red-500 to-red-700 text-white shadow-[0_0_8px_rgba(239,68,68,0.6)] hover:from-red-400 hover:to-red-600 transition-all border border-red-400"
-                                        >
-                                            <X className="h-3 w-3" />
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <button
-                                        onClick={() => fileInputRef.current?.click()}
-                                        className="flex items-center gap-3 px-5 py-4 rounded-lg bg-gradient-to-b from-zinc-700 to-zinc-800 border-2 border-dashed border-zinc-500 hover:border-amber-500 hover:from-zinc-600 hover:to-zinc-700 transition-all text-zinc-300 hover:text-amber-400 text-sm font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)]"
+                            {/* 성별 선택 - 카드 스타일 선택 후 표시 */}
+                            <AnimatePresence>
+                                {cardStyle && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="mb-6 overflow-hidden"
                                     >
-                                        <Camera className="h-5 w-5" />
-                                        {t('사진 첨부하기')}
-                                        <span className="text-xs text-zinc-500">({t('최대 750KB')})</span>
-                                    </button>
+                                        <label className="block text-sm font-semibold mb-2 text-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.5)]">
+                                            👤 {t('성별')}
+                                        </label>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => setGender('male')}
+                                                className={`flex-1 py-4 rounded-lg font-bold text-lg transition-all duration-200 flex items-center justify-center gap-2 border-2 ${gender === 'male'
+                                                    ? 'bg-gradient-to-b from-blue-400 to-blue-600 text-white border-blue-300 shadow-[0_0_12px_rgba(59,130,246,0.6),inset_0_1px_0_rgba(255,255,255,0.3)] scale-105'
+                                                    : 'bg-gradient-to-b from-zinc-700 to-zinc-800 text-zinc-300 border-zinc-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)] hover:from-zinc-600 hover:to-zinc-700 hover:border-zinc-500 hover:text-white'
+                                                    }`}
+                                            >
+                                                <Mars className="h-6 w-6 drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
+                                            </button>
+                                            <button
+                                                onClick={() => setGender('female')}
+                                                className={`flex-1 py-4 rounded-lg font-bold text-lg transition-all duration-200 flex items-center justify-center gap-2 border-2 ${gender === 'female'
+                                                    ? 'bg-gradient-to-b from-pink-400 to-pink-600 text-white border-pink-300 shadow-[0_0_12px_rgba(236,72,153,0.6),inset_0_1px_0_rgba(255,255,255,0.3)] scale-105'
+                                                    : 'bg-gradient-to-b from-zinc-700 to-zinc-800 text-zinc-300 border-zinc-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)] hover:from-zinc-600 hover:to-zinc-700 hover:border-zinc-500 hover:text-white'
+                                                    }`}
+                                            >
+                                                <Venus className="h-6 w-6 drop-shadow-[0_0_8px_rgba(236,72,153,0.8)]" />
+                                            </button>
+                                        </div>
+                                    </motion.div>
                                 )}
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={handlePhotoChange}
-                                    className="hidden"
-                                />
-                            </div>
+                            </AnimatePresence>
+
+                            {/* 특성 선택 - 성별 선택 후 표시 */}
+                            <AnimatePresence>
+                                {gender && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="mb-8 overflow-hidden"
+                                    >
+                                        <label className="block text-sm font-semibold mb-2 text-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.5)]">
+                                            ✨ {t('특성 선택')} <span className="text-emerald-400 font-normal">({traits.length}/3)</span>
+                                        </label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {PET_TRAITS.map((trait) => (
+                                                <button
+                                                    key={trait}
+                                                    onClick={() => toggleTrait(trait)}
+                                                    className={`px-4 py-2 rounded-lg text-sm font-bold transition-all duration-200 border-2 ${traits.includes(trait)
+                                                        ? 'bg-gradient-to-b from-emerald-400 to-emerald-600 text-white border-emerald-300 shadow-[0_0_10px_rgba(52,211,153,0.5),inset_0_1px_0_rgba(255,255,255,0.3)] scale-105'
+                                                        : 'bg-gradient-to-b from-zinc-700 to-zinc-800 text-zinc-300 border-zinc-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)] hover:from-zinc-600 hover:to-zinc-700 hover:border-zinc-500 hover:text-white'
+                                                        }`}
+                                                >
+                                                    {t(trait)}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            {/* 사진 업로드 - 특성 3개 선택 후 표시 */}
+                            <AnimatePresence>
+                                {traits.length >= 3 && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="mb-8 overflow-hidden"
+                                    >
+                                        <label className="block text-sm font-semibold mb-2 text-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.5)]">
+                                            📷 {t('반려동물 사진')}
+                                        </label>
+                                        <p className="text-xs text-zinc-400 mb-3">{t('사진을 첨부하면 AI가 카드로 변환합니다')}</p>
+                                        {petPhoto ? (
+                                            <div className="relative inline-block">
+                                                <img src={petPhoto} alt="pet" className="w-32 h-32 object-cover rounded-lg border-2 border-amber-500 shadow-[0_0_12px_rgba(251,191,36,0.4)]" />
+                                                <button
+                                                    onClick={() => { setPetPhoto(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+                                                    className="absolute -top-2 -right-2 p-1.5 rounded-full bg-gradient-to-b from-red-500 to-red-700 text-white shadow-[0_0_8px_rgba(239,68,68,0.6)] hover:from-red-400 hover:to-red-600 transition-all border border-red-400"
+                                                >
+                                                    <X className="h-3 w-3" />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={() => fileInputRef.current?.click()}
+                                                className="flex items-center gap-3 px-5 py-4 rounded-lg bg-gradient-to-b from-zinc-700 to-zinc-800 border-2 border-dashed border-zinc-500 hover:border-amber-500 hover:from-zinc-600 hover:to-zinc-700 transition-all text-zinc-300 hover:text-amber-400 text-sm font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)]"
+                                            >
+                                                <Camera className="h-5 w-5" />
+                                                {t('사진 첨부하기')}
+                                                <span className="text-xs text-zinc-500">({t('최대 750KB')})</span>
+                                            </button>
+                                        )}
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handlePhotoChange}
+                                            className="hidden"
+                                        />
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
 
                             {/* 에러 메시지 */}
                             {generateError && (
@@ -702,17 +732,28 @@ export default function SuperpetHome() {
                                 </div>
                             )}
 
-                            {/* 생성 버튼 */}
-                            <motion.button
-                                whileHover={{ scale: 1.03 }}
-                                whileTap={{ scale: 0.97 }}
-                                onClick={handleGenerate}
-                                disabled={!petName.trim() || traits.length < 3 || !petPhoto || !cardStyle || !gender || isGenerating}
-                                className="w-full py-4 rounded-lg bg-gradient-to-b from-amber-400 via-amber-500 to-amber-700 text-white font-black text-lg border-2 border-amber-300 shadow-[0_0_20px_rgba(251,191,36,0.5),inset_0_1px_0_rgba(255,255,255,0.3),0_4px_0_#b45309] hover:shadow-[0_0_30px_rgba(251,191,36,0.7),inset_0_1px_0_rgba(255,255,255,0.3),0_4px_0_#b45309] active:shadow-[0_0_15px_rgba(251,191,36,0.4),inset_0_1px_0_rgba(255,255,255,0.3),0_2px_0_#b45309] active:translate-y-[2px] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2 tracking-wide"
-                            >
-                                <Sparkles className="h-6 w-6 drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
-                                {t('캐릭터 생성')}
-                            </motion.button>
+                            {/* 생성 버튼 - 모든 옵션 선택 완료 시 표시 */}
+                            <AnimatePresence>
+                                {petName.trim() && petType && cardStyle && gender && traits.length >= 3 && petPhoto && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="overflow-hidden"
+                                    >
+                                        <motion.button
+                                            whileHover={{ scale: 1.03 }}
+                                            whileTap={{ scale: 0.97 }}
+                                            onClick={handleGenerate}
+                                            disabled={isGenerating}
+                                            className="w-full py-4 rounded-lg bg-gradient-to-b from-amber-400 via-amber-500 to-amber-700 text-white font-black text-lg border-2 border-amber-300 shadow-[0_0_20px_rgba(251,191,36,0.5),inset_0_1px_0_rgba(255,255,255,0.3),0_4px_0_#b45309] hover:shadow-[0_0_30px_rgba(251,191,36,0.7),inset_0_1px_0_rgba(255,255,255,0.3),0_4px_0_#b45309] active:shadow-[0_0_15px_rgba(251,191,36,0.4),inset_0_1px_0_rgba(255,255,255,0.3),0_2px_0_#b45309] active:translate-y-[2px] transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2 tracking-wide"
+                                        >
+                                            <Sparkles className="h-6 w-6 drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
+                                            {t('캐릭터 생성')}
+                                        </motion.button>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
 
                             {/* 취소 버튼 */}
                             {characters.length > 0 && (
@@ -754,7 +795,7 @@ export default function SuperpetHome() {
                                     - {t('매주 새로운 시즌이 시작됩니다.')}<br />
                                     - {t('캐릭터 저장 기능이 추가되었습니다!')} (2026.02.03)<br />
                                     - {t('랭킹 기능이 추가되었습니다!')} (2026.02.03)
-                                    - {t('무료 사료 배달 기능이 추가되었습니다! 웹 접속시 10분 마다 사료가 지급됩니다.')} (2026.02.03)<br />
+                                    - {t('무료 사료 배달 기능이 추가되었습니다! 웹 접속시 30분 마다 사료가 지급됩니다.')} (2026.02.03)<br />
                                     - {t('캐릭터 생성시 성별을 선택할 수 있습니다.')} (2026.02.06)<br />
                                     - {t('강화 시스템이 추가되었습니다!')} (2026.02.06)<br />
 

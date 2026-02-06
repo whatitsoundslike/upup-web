@@ -296,9 +296,9 @@ export const koToEn: Record<string, string> = {
     '트위터에 슈퍼펫 알려주기': 'Share on X (Twitter)',
 
     // === AI 카드 생성 ===
-    '귀여운 카툰': 'Cute Cartoon',
+    '귀여운': 'Cute',
     '강력한 일러스트': 'Powerful Illustration',
-    '퍼리': 'Furry',
+    '멋진': 'Awesome',
     '성별': 'Gender',
     '성별을 선택해주세요': 'Please select a gender',
     '남': 'Male',
