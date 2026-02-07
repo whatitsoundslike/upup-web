@@ -12,6 +12,7 @@ export {
     ITEM_RARITY_BORDER,
     ITEM_RARITY_TEXT,
     ITEM_SELL_PRICE,
+    RARITY_TO_POWDER,
     GAME_ITEMS,
     generateItemInstanceId,
 } from './itemData';

@@ -12,10 +12,12 @@ import {
     type EquippedItem,
     type EnhanceResult,
     type EnhanceScrollType,
+    type ItemRarity,
     ITEM_RARITY_COLORS,
     ITEM_RARITY_BORDER,
     ITEM_RARITY_TEXT,
     ITEM_SELL_PRICE,
+    RARITY_TO_POWDER,
     GAME_ITEMS,
     loadInventory,
     saveInventory,
@@ -81,6 +83,7 @@ export default function Room() {
     const [bulkSelectMode, setBulkSelectMode] = useState(false);
     const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set()); // instanceId 저장
     const [bulkSellConfirm, setBulkSellConfirm] = useState(false);
+    const [bulkDisassembleConfirm, setBulkDisassembleConfirm] = useState(false);
 
     // 분해 확인 모달
     const [disassembleConfirm, setDisassembleConfirm] = useState<InventoryItem | null>(null);
@@ -190,51 +193,84 @@ export default function Room() {
         setSelectedItems(new Set());
     };
 
-    // 장비 분해 - 강화 수치만큼 주문서 획득
+    // 장비 분해 - 등급에 맞는 가루 획득
     const handleDisassemble = () => {
         if (!disassembleConfirm) return;
 
         const item = disassembleConfirm.item;
-        const enhanceLevel = disassembleConfirm.enhanceLevel ?? 0;
 
-        if (item.type !== 'equipment' || !item.equipmentSlot || enhanceLevel <= 0) {
+        if (item.type !== 'equipment') {
             setDisassembleConfirm(null);
             return;
         }
 
-        // 주문서 종류 결정
-        const scrollType = getRequiredScrollType(item.equipmentSlot);
-        const scrollIdMap: Record<EnhanceScrollType, string> = {
-            weapon: 'weapon_enhance_scroll',
-            armor: 'armor_enhance_scroll',
-            accessory: 'accessory_enhance_scroll',
-        };
-        const scrollId = scrollIdMap[scrollType];
+        // 등급별 가루 아이템 ID
+        const powderId = RARITY_TO_POWDER[item.rarity];
+        const powderItem = GAME_ITEMS[powderId];
 
         // 인벤토리에서 장비 제거
         const updated = inventory.filter((e) => e.instanceId !== disassembleConfirm.instanceId);
         setInventory(updated);
         saveInventory(updated);
 
-        // 주문서 추가
-        addItemToInventory(scrollId, enhanceLevel);
+        // 가루 추가 (1개)
+        addItemToInventory(powderId, 1);
         setInventory(loadInventory());
-
-        const scrollNames: Record<EnhanceScrollType, string> = {
-            weapon: lang === 'ko' ? '무기 강화 주문서' : 'Weapon Enhance Scroll',
-            armor: lang === 'ko' ? '방어구 강화 주문서' : 'Armor Enhance Scroll',
-            accessory: lang === 'ko' ? '악세사리 강화 주문서' : 'Accessory Enhance Scroll',
-        };
 
         showToast(
             lang === 'ko'
-                ? `${item.name}을(를) 분해하여 ${scrollNames[scrollType]} ${enhanceLevel}개를 획득했습니다!`
-                : `Disassembled ${item.name} and obtained ${enhanceLevel}x ${scrollNames[scrollType]}!`,
+                ? `${item.name}을(를) 분해하여 ${powderItem?.name ?? powderId} 1개를 획득했습니다!`
+                : `Disassembled ${t(item.name)} and obtained 1x ${t(powderItem?.name ?? powderId)}!`,
             'success'
         );
 
         setSelectedItem(null);
         setDisassembleConfirm(null);
+        debouncedSaveToServer();
+    };
+
+    // 일괄 분해 - 등급별 가루 획득
+    const handleBulkDisassemble = () => {
+        if (selectedItems.size === 0) return;
+
+        // 등급별 가루 개수 집계
+        const powderCounts: Record<ItemRarity, number> = {
+            '일반': 0, '고급': 0, '희귀': 0, '에픽': 0, '전설': 0
+        };
+
+        const updated = inventory.filter((e) => {
+            if (e.instanceId && selectedItems.has(e.instanceId) && e.item.type === 'equipment') {
+                powderCounts[e.item.rarity]++;
+                return false;
+            }
+            return true;
+        });
+
+        setInventory(updated);
+        saveInventory(updated);
+
+        // 각 등급 가루 추가
+        let totalPowder = 0;
+        for (const [rarity, count] of Object.entries(powderCounts) as [ItemRarity, number][]) {
+            if (count > 0) {
+                const powderId = RARITY_TO_POWDER[rarity];
+                addItemToInventory(powderId, count);
+                totalPowder += count;
+            }
+        }
+
+        setInventory(loadInventory());
+
+        showToast(
+            lang === 'ko'
+                ? `${selectedItems.size}개의 장비를 분해하여 가루 ${totalPowder}개를 획득했습니다!`
+                : `Disassembled ${selectedItems.size} items and obtained ${totalPowder}x powder!`,
+            'success'
+        );
+
+        setSelectedItems(new Set());
+        setBulkSelectMode(false);
+        setBulkDisassembleConfirm(false);
         debouncedSaveToServer();
     };
 
@@ -708,23 +744,41 @@ export default function Room() {
                                     {t('취소')}
                                 </button>
                                 {selectedItems.size > 0 && (
-                                    <button
-                                        onClick={() => setBulkSellConfirm(true)}
-                                        className="px-4 py-2 rounded-xl bg-amber-500 text-white text-sm font-bold hover:bg-amber-600 transition-colors flex items-center gap-2 ml-auto"
-                                    >
-                                        <Coins className="h-4 w-4" />
-                                        {selectedItems.size}{lang === 'ko' ? '개 판매' : ' Sell'} ({getSelectedItemsTotal()}G)
-                                    </button>
+                                    <div className="flex gap-2 ml-auto">
+                                        <button
+                                            onClick={() => setBulkDisassembleConfirm(true)}
+                                            className="px-4 py-2 rounded-xl bg-orange-500 text-white text-sm font-bold hover:bg-orange-600 transition-colors flex items-center gap-2"
+                                        >
+                                            <Hammer className="h-4 w-4" />
+                                            {selectedItems.size}{lang === 'ko' ? '개 분해' : ' Disassemble'}
+                                        </button>
+                                        <button
+                                            onClick={() => setBulkSellConfirm(true)}
+                                            className="px-4 py-2 rounded-xl bg-amber-500 text-white text-sm font-bold hover:bg-amber-600 transition-colors flex items-center gap-2"
+                                        >
+                                            <Coins className="h-4 w-4" />
+                                            {selectedItems.size}{lang === 'ko' ? '개 판매' : ' Sell'} ({getSelectedItemsTotal()}G)
+                                        </button>
+                                    </div>
                                 )}
                             </>
                         ) : (
-                            <button
-                                onClick={() => setBulkSelectMode(true)}
-                                className="px-3 py-2 rounded-xl bg-foreground/5 border border-foreground/10 text-sm font-semibold hover:bg-foreground/10 transition-colors flex items-center gap-2"
-                            >
-                                <CheckSquare className="h-4 w-4" />
-                                {t('일괄 선택')}
-                            </button>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setBulkSelectMode(true)}
+                                    className="px-3 py-2 rounded-xl bg-foreground/5 border border-foreground/10 text-sm font-semibold hover:bg-foreground/10 transition-colors flex items-center gap-2"
+                                >
+                                    <CheckSquare className="h-4 w-4" />
+                                    {t('일괄 선택')}
+                                </button>
+                                <Link
+                                    href="/superpet/craft"
+                                    className="px-3 py-2 rounded-xl bg-purple-500/10 border border-purple-500/30 text-sm font-semibold hover:bg-purple-500/20 transition-colors flex items-center gap-2 text-purple-400"
+                                >
+                                    <Hammer className="h-4 w-4" />
+                                    {t('아이템 제작')}
+                                </Link>
+                            </div>
                         )}
                     </div>
                 </motion.div>
@@ -961,16 +1015,20 @@ export default function Room() {
                                                             </div>
                                                         </>
                                                     )}
-                                                    {/* 분해 버튼 - 강화된 장비만 (장착 중이 아닌 경우) */}
-                                                    {!isEquipped && enhanceLevel > 0 && (
-                                                        <button
-                                                            onClick={() => setDisassembleConfirm(selectedItem)}
-                                                            className="w-full py-3 rounded-xl bg-orange-500/10 text-orange-600 font-bold hover:bg-orange-500/20 transition-colors flex items-center justify-center gap-2"
-                                                        >
-                                                            <Hammer className="h-4 w-4" />
-                                                            {t('분해하기')} ({scrollNames[scrollType]} {enhanceLevel}{lang === 'ko' ? '개 획득' : 'x'})
-                                                        </button>
-                                                    )}
+                                                    {/* 분해 버튼 - 장착 중이 아닌 경우 */}
+                                                    {!isEquipped && (() => {
+                                                        const powderId = RARITY_TO_POWDER[modalItem.rarity];
+                                                        const powderItem = GAME_ITEMS[powderId];
+                                                        return (
+                                                            <button
+                                                                onClick={() => setDisassembleConfirm(selectedItem)}
+                                                                className="w-full py-3 rounded-xl bg-orange-500/10 text-orange-600 font-bold hover:bg-orange-500/20 transition-colors flex items-center justify-center gap-2"
+                                                            >
+                                                                <Hammer className="h-4 w-4" />
+                                                                {t('분해하기')} ({t(powderItem?.name ?? '')} 1{lang === 'ko' ? '개' : 'x'})
+                                                            </button>
+                                                        );
+                                                    })()}
                                                 </>
                                             );
                                         })()}
@@ -1164,19 +1222,98 @@ export default function Room() {
                 )}
             </AnimatePresence>
 
+            {/* 일괄 분해 확인 모달 */}
+            <AnimatePresence>
+                {bulkDisassembleConfirm && selectedItems.size > 0 && (() => {
+                    // 등급별 가루 개수 미리보기
+                    const powderPreview: Record<ItemRarity, number> = {
+                        '일반': 0, '고급': 0, '희귀': 0, '에픽': 0, '전설': 0
+                    };
+                    for (const instanceId of selectedItems) {
+                        const entry = inventory.find((e) => e.instanceId === instanceId);
+                        if (entry && entry.item.type === 'equipment') {
+                            powderPreview[entry.item.rarity]++;
+                        }
+                    }
+
+                    return (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+                            onClick={() => setBulkDisassembleConfirm(false)}
+                        >
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                                onClick={(e) => e.stopPropagation()}
+                                className="relative w-full max-w-sm p-6 rounded-2xl shadow-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-orange-500"
+                            >
+                                <div className="text-center mb-6">
+                                    <Hammer className="h-16 w-16 text-orange-500 mx-auto mb-3" />
+                                    <h3 className="text-xl font-black mb-2">{t('일괄 분해')}</h3>
+                                    <p className="text-sm text-foreground/60 mb-4">
+                                        {lang === 'ko' ? (
+                                            <>
+                                                선택한 <span className="font-bold text-foreground">{selectedItems.size}개</span>의 장비를 분해합니다
+                                            </>
+                                        ) : (
+                                            <>
+                                                Disassemble <span className="font-bold text-foreground">{selectedItems.size} items</span>
+                                            </>
+                                        )}
+                                    </p>
+                                    {/* 획득 예정 가루 */}
+                                    <div className="flex flex-wrap gap-2 justify-center">
+                                        {(Object.entries(powderPreview) as [ItemRarity, number][])
+                                            .filter(([, count]) => count > 0)
+                                            .map(([rarity, count]) => {
+                                                const powderId = RARITY_TO_POWDER[rarity];
+                                                const powderItem = GAME_ITEMS[powderId];
+                                                return (
+                                                    <span
+                                                        key={rarity}
+                                                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold ${ITEM_RARITY_COLORS[rarity]}`}
+                                                    >
+                                                        {powderItem?.emoji} {t(powderItem?.name ?? '')} x{count}
+                                                    </span>
+                                                );
+                                            })}
+                                    </div>
+                                    <p className="text-xs text-red-500 mt-3">
+                                        {lang === 'ko' ? '⚠️ 분해된 장비는 복구할 수 없습니다!' : '⚠️ Disassembled items cannot be recovered!'}
+                                    </p>
+                                </div>
+
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => setBulkDisassembleConfirm(false)}
+                                        className="flex-1 py-3 rounded-xl bg-foreground/10 text-foreground/60 font-bold hover:bg-foreground/20 transition-colors"
+                                    >
+                                        {t('취소')}
+                                    </button>
+                                    <button
+                                        onClick={handleBulkDisassemble}
+                                        className="flex-1 py-3 rounded-xl bg-orange-500 text-white font-bold hover:bg-orange-600 transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <Hammer className="h-4 w-4" /> {t('분해')}
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </motion.div>
+                    );
+                })()}
+            </AnimatePresence>
+
             {/* 분해 확인 모달 */}
             <AnimatePresence>
                 {disassembleConfirm && (() => {
                     const item = disassembleConfirm.item;
                     const enhanceLevel = disassembleConfirm.enhanceLevel ?? 0;
-                    const slot = item.equipmentSlot;
-                    if (!slot) return null;
-                    const scrollType = getRequiredScrollType(slot);
-                    const scrollNames: Record<EnhanceScrollType, string> = {
-                        weapon: lang === 'ko' ? '무기 강화 주문서' : 'Weapon Enhance Scroll',
-                        armor: lang === 'ko' ? '방어구 강화 주문서' : 'Armor Enhance Scroll',
-                        accessory: lang === 'ko' ? '악세사리 강화 주문서' : 'Accessory Enhance Scroll',
-                    };
+                    const powderId = RARITY_TO_POWDER[item.rarity];
+                    const powderItem = GAME_ITEMS[powderId];
 
                     return (
                         <motion.div
@@ -1199,13 +1336,17 @@ export default function Room() {
                                     <p className="text-sm text-foreground/60">
                                         {lang === 'ko' ? (
                                             <>
-                                                <span className="font-bold text-foreground">{item.name} +{enhanceLevel}</span>을(를) 분해하면<br />
-                                                <span className="font-bold text-orange-600">{scrollNames[scrollType]} {enhanceLevel}개</span>를 획득합니다
+                                                <span className="font-bold text-foreground">{item.name}{enhanceLevel > 0 ? ` +${enhanceLevel}` : ''}</span>을(를) 분해하면<br />
+                                                <span className={`inline-flex items-center gap-1 font-bold ${ITEM_RARITY_TEXT[item.rarity]}`}>
+                                                    {powderItem?.emoji} {powderItem?.name} 1개
+                                                </span>를 획득합니다
                                             </>
                                         ) : (
                                             <>
-                                                Disassemble <span className="font-bold text-foreground">{t(item.name)} +{enhanceLevel}</span><br />
-                                                to obtain <span className="font-bold text-orange-600">{enhanceLevel}x {scrollNames[scrollType]}</span>
+                                                Disassemble <span className="font-bold text-foreground">{t(item.name)}{enhanceLevel > 0 ? ` +${enhanceLevel}` : ''}</span><br />
+                                                to obtain <span className={`inline-flex items-center gap-1 font-bold ${ITEM_RARITY_TEXT[item.rarity]}`}>
+                                                    {powderItem?.emoji} 1x {t(powderItem?.name ?? '')}
+                                                </span>
                                             </>
                                         )}
                                     </p>

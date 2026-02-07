@@ -381,4 +381,30 @@ export const koToEn: Record<string, string> = {
     '업로드 가능한 최대 파일 크기는 750KB입니다.': 'Maximum file size is 750KB.',
     '더 작은 용량의 이미지를 선택해주세요.': 'Please select a smaller image.',
     '현재 파일 크기': 'Current file size',
+
+    // === 분해 재료 (가루) ===
+    '빛바랜 가루': 'Faded Powder',
+    '반짝이는 가루': 'Sparkling Powder',
+    '빛나는 가루': 'Shining Powder',
+    '찬란한 가루': 'Brilliant Powder',
+    '태초의 가루': 'Primordial Powder',
+
+    // === 분해 UI ===
+    '일괄 분해': 'Bulk Disassemble',
+
+    // === 아이템 제작 ===
+    '아이템 제작': 'Item Crafting',
+    '제작하기': 'Craft',
+    '제작 가능': 'Available',
+    '재료 부족': 'Insufficient',
+    '필요 재료': 'Required Materials',
+    '재료가 부족합니다': 'Insufficient materials',
+    '성공률': 'Success Rate',
+    '제작 성공!': 'Crafting Success!',
+    '제작 실패...': 'Crafting Failed...',
+    '재료가 모두 소모되었습니다.': 'All materials have been consumed.',
+    '사료 제작': 'Craft Feed',
+    '방어구 강화 주문서 제작': 'Craft Armor Enhancement Scroll',
+    '무기 강화 주문서 제작': 'Craft Weapon Enhancement Scroll',
+    '장신구 강화 주문서 제작': 'Craft Accessory Enhancement Scroll',
 };

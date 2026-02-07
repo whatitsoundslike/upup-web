@@ -8,7 +8,7 @@ export type EquipmentSlot = '투구' | '갑옷' | '장갑' | '부츠' | '망토'
 
 export type ItemRarity = '일반' | '고급' | '희귀' | '에픽' | '전설';
 
-export type ItemType = 'equipment' | 'food' | 'scroll' | 'currency';
+export type ItemType = 'equipment' | 'food' | 'scroll' | 'currency' | 'material';
 
 export type EnhanceScrollType = 'weapon' | 'armor' | 'accessory';
 
@@ -64,6 +64,15 @@ export const ITEM_SELL_PRICE: Record<ItemRarity, number> = {
     '희귀': 80,
     '에픽': 200,
     '전설': 500,
+};
+
+// 등급별 분해 시 획득하는 가루 아이템 ID
+export const RARITY_TO_POWDER: Record<ItemRarity, string> = {
+    '일반': 'faded_powder',
+    '고급': 'sparkling_powder',
+    '희귀': 'shining_powder',
+    '에픽': 'brilliant_powder',
+    '전설': 'primordial_powder',
 };
 
 // === 장비 아이템 고유 ID 생성 ===
@@ -537,6 +546,29 @@ export const GAME_ITEMS: Record<string, GameItem> = {
         equipmentSlot: '반지',
     },
 
+
+    // ========== 제작 장비 ==========
+    seven_star_sword: {
+        id: 'seven_star_sword',
+        name: '칠성검',
+        emoji: '⚔️',
+        rarity: '에픽',
+        stats: { hp: 0, attack: 20, defense: 10, speed: 0 },
+        type: 'equipment',
+        equipmentSlot: '무기',
+    },
+    the_one_ring: {
+        id: 'the_one_ring',
+        name: '절대 반지',
+        emoji: '💍',
+        rarity: '전설',
+        stats: { hp: 20, attack: 10, defense: 15, speed: 15 },
+        type: 'equipment',
+        equipmentSlot: '반지',
+    },
+
+
+
     // ========== 강화 주문서 ==========
     weapon_enhance_scroll: {
         id: 'weapon_enhance_scroll',
@@ -579,5 +611,47 @@ export const GAME_ITEMS: Record<string, GameItem> = {
         type: 'currency',
         shopGemPrice: 50,
         goldAmount: 20000,
+    },
+
+    // ========== 제작 재료 (분해 획득) ==========
+    faded_powder: {
+        id: 'faded_powder',
+        name: '빛바랜 가루',
+        emoji: '✨',
+        rarity: '일반',
+        stats: { hp: 0, attack: 0, defense: 0, speed: 0 },
+        type: 'material',
+    },
+    sparkling_powder: {
+        id: 'sparkling_powder',
+        name: '반짝이는 가루',
+        emoji: '💫',
+        rarity: '고급',
+        stats: { hp: 0, attack: 0, defense: 0, speed: 0 },
+        type: 'material',
+    },
+    shining_powder: {
+        id: 'shining_powder',
+        name: '빛나는 가루',
+        emoji: '🌟',
+        rarity: '희귀',
+        stats: { hp: 0, attack: 0, defense: 0, speed: 0 },
+        type: 'material',
+    },
+    brilliant_powder: {
+        id: 'brilliant_powder',
+        name: '찬란한 가루',
+        emoji: '⭐',
+        rarity: '에픽',
+        stats: { hp: 0, attack: 0, defense: 0, speed: 0 },
+        type: 'material',
+    },
+    primordial_powder: {
+        id: 'primordial_powder',
+        name: '태초의 가루',
+        emoji: '🔮',
+        rarity: '전설',
+        stats: { hp: 0, attack: 0, defense: 0, speed: 0 },
+        type: 'material',
     },
 };
