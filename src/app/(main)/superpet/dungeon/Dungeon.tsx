@@ -252,7 +252,7 @@ export default function Dungeon() {
             newLog.push(`${t(selectedMonster.name)}${t('을(를) 쓰러뜨렸다!')}`);
             const drops: DroppedItem[] = [];
             for (const { itemId, chance } of selectedMonster.drops) {
-                if (Math.random() * 100 < chance) {
+                if (Math.random() * 1000 < chance) {
                     const item = GAME_ITEMS[itemId];
                     if (!item) continue;
                     addItemToInventory(itemId, 1);
@@ -346,6 +346,7 @@ export default function Dungeon() {
         setBattleState('idle');
         setBattleLog([]);
         setDroppedItems([]);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     return (
