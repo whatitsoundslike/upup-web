@@ -4,10 +4,12 @@ import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { addItemToInventory, loadCharacter } from '../types';
 import { getItem, setItem } from '../storage';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const FEED_INTERVAL = 30 * 60 * 1000; // 30 minutes
 
 export default function FeedReward() {
+    const { t, lang } = useLanguage();
     const [showModal, setShowModal] = useState(false);
     const [characterName, setCharacterName] = useState('');
 
@@ -60,19 +62,22 @@ export default function FeedReward() {
                     >
                         <div className="text-center mb-6">
                             <div className="text-5xl mb-3">🥫</div>
-                            <h3 className="text-xl font-black mb-2">간식 도착!</h3>
+                            <h3 className="text-xl font-black mb-2">{t('간식 도착!')}</h3>
                             <p className="text-sm text-foreground/60">
-                                <span className="font-bold text-foreground">{characterName}</span>을(를) 위한 간식이 도착했어요!
+                                {lang === 'ko'
+                                    ? <><span className="font-bold text-foreground">{characterName}</span>을(를) 위한 간식이 도착했어요!</>
+                                    : <>A snack has arrived for <span className="font-bold text-foreground">{characterName}</span>!</>
+                                }
                             </p>
                             <p className="mt-2 text-sm font-semibold text-amber-600">
-                                사료 x10 획득!
+                                {t('사료')} x10 {t('획득')}!
                             </p>
                         </div>
                         <button
                             onClick={claimFeed}
                             className="w-full py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 transition-colors"
                         >
-                            확인
+                            {t('확인')}
                         </button>
                     </motion.div>
                 </motion.div>

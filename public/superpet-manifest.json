@@ -1,0 +1,25 @@
+{
+  "name": "Super Pet",
+  "short_name": "SuperPet",
+  "description": "우리집 멍냥이와 함께하는 RPG 모험!",
+  "start_url": "/superpet",
+  "scope": "/superpet",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1a1a2e",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "/room-icon/superpet_icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/room-icon/superpet_icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

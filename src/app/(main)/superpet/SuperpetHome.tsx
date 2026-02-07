@@ -26,6 +26,7 @@ import { fetchGemBalance, useGem } from './gemApi';
 import ProgressModal from './components/ProgressModal';
 import { shareToTwitter } from './utils/shareUtils';
 import { useAuth } from '@/components/AuthProvider';
+import imageCompression from 'browser-image-compression';
 
 const ELEMENT_COLORS: Record<string, string> = {
     '불': 'bg-red-500',
@@ -73,6 +74,7 @@ export default function SuperpetHome() {
 
     // Gem 상태
     const [gemBalance, setGemBalance] = useState<number | null>(null);
+    const [gemLoading, setGemLoading] = useState(true);
     const [showInsufficientGem, setShowInsufficientGem] = useState(false);
 
     // 페이지 로드 시 기존 캐릭터 불러오기
@@ -112,13 +114,15 @@ export default function SuperpetHome() {
     // Gem 잔액 로드
     useEffect(() => {
         const loadGem = async () => {
+            setGemLoading(true);
             const data = await fetchGemBalance();
             if (data) {
                 setGemBalance(data.balance);
             }
+            setGemLoading(false);
         };
         loadGem();
-    }, []);
+    }, [user]);
 
     const toggleTrait = (trait: string) => {
         setTraits((prev) =>
@@ -128,23 +132,34 @@ export default function SuperpetHome() {
         );
     };
 
-    const MAX_FILE_SIZE = 750 * 1024; // 750KB
+    const [isCompressing, setIsCompressing] = useState(false);
 
-    const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
         setGenerateError(null);
+        setIsCompressing(true);
 
-        // 파일 크기 체크
-        if (file.size > MAX_FILE_SIZE) {
-            setFileSizeError({ show: true, size: file.size });
+        try {
+            // 클라이언트에서 이미지 압축 (750KB 이하로)
+            const options = {
+                maxSizeMB: 0.73,            // 750KB
+                maxWidthOrHeight: 1024,
+                useWebWorker: true,
+            };
+
+            const compressedFile = await imageCompression(file, options);
+
+            // base64로 변환
+            const reader = new FileReader();
+            reader.onload = () => setPetPhoto(reader.result as string);
+            reader.readAsDataURL(compressedFile);
+        } catch {
+            setGenerateError(t('이미지 처리 중 오류가 발생했습니다.'));
             if (fileInputRef.current) fileInputRef.current.value = '';
-            return;
+        } finally {
+            setIsCompressing(false);
         }
-
-        const reader = new FileReader();
-        reader.onload = () => setPetPhoto(reader.result as string);
-        reader.readAsDataURL(file);
     };
 
     const handleGenerate = async () => {
@@ -153,9 +168,11 @@ export default function SuperpetHome() {
 
         const charName = petName.trim();
 
-        // 2번째 캐릭터부터 젬 소모
+        // 2번째 캐릭터부터 젬 소모 (로그인 사용자만)
         const isNotFirstCharacter = characters.length >= 1;
-        if (isNotFirstCharacter) {
+        if (isNotFirstCharacter && user) {
+            // 아직 로딩 중이면 대기
+            if (gemLoading) return;
             // 젬 잔액 확인
             if (gemBalance === null || gemBalance < CREATE_GEM_COST) {
                 setShowInsufficientGem(true);
@@ -294,8 +311,10 @@ export default function SuperpetHome() {
     };
 
     const handleNewCharacterClick = () => {
-        // 2번째 캐릭터부터 젬 체크
-        if (characters.length >= 1) {
+        // 2번째 캐릭터부터 젬 체크 (로그인 사용자만)
+        if (characters.length >= 1 && user) {
+            // 아직 로딩 중이면 기다리도록
+            if (gemLoading) return;
             if (gemBalance === null || gemBalance < CREATE_GEM_COST) {
                 setShowInsufficientGem(true);
                 return;
@@ -863,11 +882,20 @@ export default function SuperpetHome() {
                                         ) : (
                                             <button
                                                 onClick={() => fileInputRef.current?.click()}
-                                                className="flex items-center gap-3 px-5 py-4 rounded-lg bg-gradient-to-b from-zinc-700 to-zinc-800 border-2 border-dashed border-zinc-500 hover:border-amber-500 hover:from-zinc-600 hover:to-zinc-700 transition-all text-zinc-300 hover:text-amber-400 text-sm font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)]"
+                                                disabled={isCompressing}
+                                                className="flex items-center gap-3 px-5 py-4 rounded-lg bg-gradient-to-b from-zinc-700 to-zinc-800 border-2 border-dashed border-zinc-500 hover:border-amber-500 hover:from-zinc-600 hover:to-zinc-700 transition-all text-zinc-300 hover:text-amber-400 text-sm font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_4px_rgba(0,0,0,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
-                                                <Camera className="h-5 w-5" />
-                                                {t('사진 첨부하기')}
-                                                <span className="text-xs text-zinc-500">({t('최대 750KB')})</span>
+                                                {isCompressing ? (
+                                                    <>
+                                                        <Loader2 className="h-5 w-5 animate-spin" />
+                                                        {t('이미지 처리 중...')}
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Camera className="h-5 w-5" />
+                                                        {t('사진 첨부하기')}
+                                                    </>
+                                                )}
                                             </button>
                                         )}
                                         <input

@@ -251,6 +251,14 @@ export const koToEn: Record<string, string> = {
     '보스': 'Boss',
     '레벨 업!': 'Level Up!',
 
+    // === 사료 보상 모달 ===
+    '간식 도착!': 'Snack Arrived!',
+    '획득': 'obtained',
+
+    // === PWA 설치 ===
+    '앱으로 설치하기': 'Install as App',
+    '설치': 'Install',
+
     // === 체력 부족 모달 ===
     '체력이 부족합니다!': 'Not enough HP!',
     '던전에 도전하려면 체력이 필요합니다.': 'You need HP to challenge dungeons.',
