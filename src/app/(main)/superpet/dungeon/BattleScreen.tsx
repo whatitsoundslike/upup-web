@@ -255,6 +255,14 @@ export default function BattleScreen({
                             >
                                 <Swords className="h-4 w-4" /> {t('다음 전투')}
                             </button>
+                            <button
+                                onClick={onExitBattle}
+                                className="px-3 py-1.5 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 transition-colors flex items-center gap-2"
+                            >
+                                {t('다른 던전 가기')}
+                            </button>
+                        </div>
+                        <div className="mt-3 flex justify-center">
                             <div className="px-3 py-1.5 rounded-xl bg-foreground/5 text-foreground/50 text-sm font-bold flex items-center gap-1.5">
                                 🍖 {t('무료 사료')} {feedCountdown}
                             </div>

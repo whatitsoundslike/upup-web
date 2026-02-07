@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { type Character, GAME_ITEMS, addItemToInventory, addExpToCharacter, ITEM_RARITY_TEXT, ITEM_RARITY_BORDER, loadCharacter, saveCharacter, getTotalStats, useFood, loadInventory, type InventoryItem, type GameItem } from '../types';
-import { getItem } from '../storage';
+import { getItem, setItem } from '../storage';
 import { useDebouncedSave } from '../gameSync';
 import { useLanguage } from '../i18n/LanguageContext';
 import { type DungeonData, type MonsterData, type BattleState } from './dungeonData';
@@ -157,6 +157,9 @@ export default function Dungeon() {
             setLowHpWarning(true);
             return;
         }
+
+        // 마지막 전투 던전 기록
+        setItem('last-dungeon', String(dungeon.id));
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
 

@@ -228,6 +228,7 @@ export const koToEn: Record<string, string> = {
     '다시 도전': 'Try Again',
     '전투 포기': 'Give Up',
     '다음 전투': 'Continue',
+    '다른 던전 가기': 'Other Dungeon',
     '다른 던전 선택': 'Select Another',
     '패배...': 'Defeat...',
     '다음에는 더 강해져서 돌아오자!': 'Come back stronger next time!',

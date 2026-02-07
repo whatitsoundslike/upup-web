@@ -1,7 +1,9 @@
 import { motion } from 'framer-motion';
-import { Swords, Heart, Gift, Timer } from 'lucide-react';
-import { type Character, GAME_ITEMS, getTotalStats } from '../types';
+import { Swords, Heart, Timer } from 'lucide-react';
+import { useMemo } from 'react';
+import { type Character, getTotalStats } from '../types';
 import { useLanguage } from '../i18n/LanguageContext';
+import { getItem } from '../storage';
 import { type DungeonData, dungeons, ELEMENT_EMOJI } from './dungeonData';
 
 interface DungeonSelectProps {
@@ -12,6 +14,23 @@ interface DungeonSelectProps {
 
 export default function DungeonSelect({ character, feedCountdown, onStartBattle }: DungeonSelectProps) {
     const { t, lang } = useLanguage();
+
+    // 마지막 전투 던전 ID
+    const lastDungeonId = useMemo(() => {
+        const id = getItem('last-dungeon');
+        return id ? Number(id) : null;
+    }, []);
+
+    // 마지막 전투 던전을 가장 먼저 표시
+    const sortedDungeons = useMemo(() => {
+        if (!lastDungeonId) return dungeons;
+
+        return [...dungeons].sort((a, b) => {
+            if (a.id === lastDungeonId) return -1;
+            if (b.id === lastDungeonId) return 1;
+            return 0;
+        });
+    }, [lastDungeonId]);
 
     return (
         <div className="max-w-4xl mx-auto px-4 py-2 lg:p-12">
@@ -57,15 +76,21 @@ export default function DungeonSelect({ character, feedCountdown, onStartBattle 
             </motion.div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                {dungeons.map((dungeon, idx) => (
+                {sortedDungeons.map((dungeon, idx) => (
                     <motion.div
                         key={dungeon.id}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.1 }}
                         whileHover={{ y: -5 }}
-                        className="p-6 rounded-2xl bg-white/5 shadow-lg flex flex-col border-1 border-foreground/20"
+                        className={`relative p-6 rounded-2xl bg-white/5 shadow-lg flex flex-col ${dungeon.id === lastDungeonId ? 'border-2 border-amber-500' : 'border-1 border-foreground/20'}`}
                     >
+                        {/* 최근 전투 태그 */}
+                        {dungeon.id === lastDungeonId && (
+                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold shadow-lg">
+                                {lang === 'ko' ? '최근 전투' : 'Recent'}
+                            </div>
+                        )}
                         {(() => {
                             const boss = dungeon.monsters.find(m => m.isBoss);
                             if (!boss) return null;
