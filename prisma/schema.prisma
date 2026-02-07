@@ -64,6 +64,8 @@ model GameSave {
   data      Json
   rankScore Int      @default(0)
   rankCharacterId String? @db.VarChar(64)
+  rankCharacter Json?
+  tester    Boolean  @default(false)
   updatedAt DateTime @default(now()) @updatedAt
 
   @@index([rankScore])

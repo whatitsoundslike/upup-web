@@ -3,33 +3,62 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 
 type SavedEquipmentItem = {
-  stats?: {
-    hp?: number;
-    attack?: number;
-    defense?: number;
-    speed?: number;
+  item?: {
+    stats?: {
+      hp?: number;
+      attack?: number;
+      defense?: number;
+      speed?: number;
+    };
   };
+  enhanceLevel?: number;
 };
 
 type SavedEquipment = Record<string, SavedEquipmentItem | null> | null;
 
 type SavedCharacter = {
   id?: string;
+  name?: string;
+  level?: number;
+  className?: string;
+  element?: string;
+  hp?: number;
   attack?: number;
   defense?: number;
   speed?: number;
   equipment?: SavedEquipment;
+  image?: string;
+  videoUrl?: string;
+};
+
+type RankCharacter = {
+  name: string;
+  level: number;
+  className: string | null;
+  element: string | null;
+  imageUrl: string | null;
+  stats: {
+    hp: number;
+    attack: number;
+    defense: number;
+    speed: number;
+  };
 };
 
 function sumEquipmentStats(equipment?: SavedEquipment) {
-  const totals = { attack: 0, defense: 0, speed: 0 };
+  const totals = { hp: 0, attack: 0, defense: 0, speed: 0 };
   if (!equipment || typeof equipment !== 'object') return totals;
 
-  for (const item of Object.values(equipment)) {
-    if (!item?.stats) continue;
-    totals.attack += Number(item.stats.attack ?? 0);
-    totals.defense += Number(item.stats.defense ?? 0);
-    totals.speed += Number(item.stats.speed ?? 0);
+  for (const equippedItem of Object.values(equipment)) {
+    if (!equippedItem?.item?.stats) continue;
+    const stats = equippedItem.item.stats;
+    const enhanceLevel = equippedItem.enhanceLevel ?? 0;
+    // 강화 레벨당 10% 보너스
+    const multiplier = 1 + enhanceLevel * 0.1;
+    totals.hp += Math.floor(Number(stats.hp ?? 0) * multiplier);
+    totals.attack += Math.floor(Number(stats.attack ?? 0) * multiplier);
+    totals.defense += Math.floor(Number(stats.defense ?? 0) * multiplier);
+    totals.speed += Math.floor(Number(stats.speed ?? 0) * multiplier);
   }
 
   return totals;
@@ -37,38 +66,65 @@ function sumEquipmentStats(equipment?: SavedEquipment) {
 
 function getRankFromData(
   data: Record<string, string | null>
-): { score: number; characterId: string | null } {
+): {
+  score: number;
+  characterId: string | null;
+  character: RankCharacter | null;
+} {
   const charactersRaw = data['characters'];
-  if (!charactersRaw) return { score: 0, characterId: null };
+  const activeCharacterId = data['active-character'];
+
+  if (!charactersRaw || !activeCharacterId) {
+    return { score: 0, characterId: null, character: null };
+  }
 
   try {
     const characters = JSON.parse(charactersRaw) as SavedCharacter[];
     if (!Array.isArray(characters) || characters.length === 0) {
-      return { score: 0, characterId: null };
+      return { score: 0, characterId: null, character: null };
     }
 
-    let maxScore = 0;
-    let maxId: string | null = null;
-    for (const character of characters) {
-      const equipStats = sumEquipmentStats(character?.equipment);
-      const attack = Number(character?.attack ?? 0) + equipStats.attack;
-      const defense = Number(character?.defense ?? 0) + equipStats.defense;
-      const speed = Number(character?.speed ?? 0) + equipStats.speed;
-      const score = attack + defense + speed;
-      if (score > maxScore) {
-        maxScore = score;
-        maxId = character?.id ?? null;
-      }
+    // 현재 선택된 캐릭터 찾기
+    const activeCharacter = characters.find(c => c.id === activeCharacterId);
+    if (!activeCharacter) {
+      return { score: 0, characterId: null, character: null };
     }
 
-    if (!Number.isFinite(maxScore)) return { score: 0, characterId: null };
+    // 장비 스탯 계산
+    const equipStats = sumEquipmentStats(activeCharacter.equipment);
+
+    // 총 스탯 계산
+    const totalStats = {
+      hp: Number(activeCharacter.hp ?? 0) + equipStats.hp,
+      attack: Number(activeCharacter.attack ?? 0) + equipStats.attack,
+      defense: Number(activeCharacter.defense ?? 0) + equipStats.defense,
+      speed: Number(activeCharacter.speed ?? 0) + equipStats.speed,
+    };
+
+    // 랭크 점수 = 공격력 + 방어력 + 속도
+    const score = totalStats.attack + totalStats.defense + totalStats.speed;
+
+    if (!Number.isFinite(score)) {
+      return { score: 0, characterId: null, character: null };
+    }
+
+    // 랭킹용 캐릭터 정보 (imageUrl 포함)
+    const rankCharacter: RankCharacter = {
+      name: activeCharacter.name || '알 수 없음',
+      level: Number(activeCharacter.level ?? 1),
+      className: activeCharacter.className || null,
+      element: activeCharacter.element || null,
+      imageUrl: activeCharacter.image || activeCharacter.videoUrl || null,
+      stats: totalStats,
+    };
 
     return {
-      score: Math.max(0, Math.floor(maxScore)),
-      characterId: maxId,
+      score: Math.max(0, Math.floor(score)),
+      characterId: activeCharacter.id ?? null,
+      character: rankCharacter,
     };
   } catch {
-    return { score: 0, characterId: null };
+    return { score: 0, characterId: null, character: null };
   }
 }
 
@@ -103,11 +159,19 @@ export async function POST(request: Request) {
 
     const memberId = BigInt(session.sub);
     const rank = getRankFromData(data);
-    await prisma.gameSave.upsert({
-      where: { memberId },
-      update: { data, rankScore: rank.score, rankCharacterId: rank.characterId },
-      create: { memberId, data, rankScore: rank.score, rankCharacterId: rank.characterId },
-    });
+    const rankCharacterJson = rank.character ? JSON.stringify(rank.character) : null;
+
+    // Raw query로 upsert
+    await prisma.$executeRaw`
+      INSERT INTO GameSave (memberId, data, rankScore, rankCharacterId, rankCharacter, updatedAt)
+      VALUES (${memberId}, ${JSON.stringify(data)}, ${rank.score}, ${rank.characterId}, ${rankCharacterJson}, NOW())
+      ON DUPLICATE KEY UPDATE
+        data = ${JSON.stringify(data)},
+        rankScore = ${rank.score},
+        rankCharacterId = ${rank.characterId},
+        rankCharacter = ${rankCharacterJson},
+        updatedAt = NOW()
+    `;
 
     return NextResponse.json({ success: true });
   } catch (error) {
