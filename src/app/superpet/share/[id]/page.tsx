@@ -11,51 +11,38 @@ type CharacterData = {
     image?: string;
 };
 
+type RankCharacter = {
+    name: string;
+    level: number;
+    className: string | null;
+    element: string | null;
+    imageUrl: string | null;
+};
+
+type GameSaveRow = {
+    rankCharacter: RankCharacter | null;
+};
+
 async function getCharacter(id: string): Promise<CharacterData | null> {
     try {
-        // 먼저 rankCharacterId로 찾기
-        const gameSaves = await prisma.gameSave.findMany({
-            where: {
-                rankCharacterId: id,
-            },
-            select: {
-                data: true,
-            },
-        });
+        // rankCharacter에서 바로 찾기 (활성 캐릭터만 공유 가능)
+        const results = await prisma.$queryRaw<GameSaveRow[]>`
+            SELECT rankCharacter
+            FROM GameSave
+            WHERE rankCharacterId = ${id} AND rankCharacter IS NOT NULL
+            LIMIT 1
+        `;
 
-        for (const save of gameSaves) {
-            const data = save.data as Record<string, string | null>;
-            const charactersRaw = data?.['characters'];
-            if (!charactersRaw) continue;
-
-            try {
-                const characters = JSON.parse(charactersRaw) as CharacterData[];
-                const character = characters.find((c) => c.id === id);
-                if (character) return character;
-            } catch {
-                continue;
-            }
-        }
-
-        // 전체 검색
-        const allSaves = await prisma.gameSave.findMany({
-            select: {
-                data: true,
-            },
-        });
-
-        for (const save of allSaves) {
-            const data = save.data as Record<string, string | null>;
-            const charactersRaw = data?.['characters'];
-            if (!charactersRaw) continue;
-
-            try {
-                const characters = JSON.parse(charactersRaw) as CharacterData[];
-                const character = characters.find((c) => c.id === id);
-                if (character) return character;
-            } catch {
-                continue;
-            }
+        if (results.length > 0 && results[0].rankCharacter) {
+            const char = results[0].rankCharacter;
+            return {
+                id,
+                name: char.name,
+                level: char.level,
+                className: char.className ?? '',
+                element: char.element ?? '',
+                image: char.imageUrl ?? undefined,
+            };
         }
 
         return null;
