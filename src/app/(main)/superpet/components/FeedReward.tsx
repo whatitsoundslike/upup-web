@@ -1,17 +1,20 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { addItemToInventory, loadCharacter } from '../types';
-import { getItem, setItem } from '../storage';
+import { getItem, setItem, removeItem } from '../storage';
 import { useLanguage } from '../i18n/LanguageContext';
+import { useAuth } from '@/components/AuthProvider';
 
 const FEED_INTERVAL = 30 * 60 * 1000; // 30 minutes
 
 export default function FeedReward() {
     const { t, lang } = useLanguage();
+    const { user } = useAuth();
     const [showModal, setShowModal] = useState(false);
     const [characterName, setCharacterName] = useState('');
+    const prevUserRef = useRef<typeof user>(undefined);
 
     const showFeedPopup = useCallback(() => {
         const character = loadCharacter();
@@ -27,7 +30,29 @@ export default function FeedReward() {
         setShowModal(false);
     }, []);
 
+    // 로그인 상태 변화 감지: 로그아웃 시 타이머 초기화, 로그인 시 새로 시작
     useEffect(() => {
+        const prevUser = prevUserRef.current;
+
+        // 로그아웃 감지: 이전에 user가 있었는데 지금은 없음
+        if (prevUser && !user) {
+            removeItem('last-feed-time');
+        }
+
+        // 로그인 감지: 이전에 user가 없었는데 지금은 있음
+        if (!prevUser && user) {
+            // 로그인 시 현재 시간으로 초기화 (30분 후에 지급)
+            setItem('last-feed-time', Date.now().toString());
+        }
+
+        prevUserRef.current = user;
+    }, [user]);
+
+    // 로그인한 사용자만 급식 체크
+    useEffect(() => {
+        if (!user) return; // 로그인하지 않은 사용자는 체크하지 않음
+
+        // 로그인했는데 last-feed-time이 없으면 설정
         const stored = getItem('last-feed-time');
         if (!stored) {
             setItem('last-feed-time', Date.now().toString());
@@ -42,7 +67,7 @@ export default function FeedReward() {
 
         const interval = setInterval(check, 1000);
         return () => clearInterval(interval);
-    }, [showFeedPopup]);
+    }, [user, showFeedPopup]);
 
     return (
         <AnimatePresence>

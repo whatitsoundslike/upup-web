@@ -19,6 +19,7 @@ import {
     User,
     Settings,
     MoreHorizontal,
+    Download,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -40,6 +41,7 @@ export function Navbar() {
     const menuRef = React.useRef<HTMLDivElement>(null);
     const [saveStatus, setSaveStatus] = React.useState<'idle' | 'saving' | 'saved'>('idle');
     const [showSaveModal, setShowSaveModal] = React.useState(false);
+    const [isStandalone, setIsStandalone] = React.useState(true); // 기본값 true로 설정하여 초기 렌더링시 버튼 숨김
 
     const handleSave = async () => {
         if (saveStatus === 'saving') return;
@@ -56,6 +58,18 @@ export function Navbar() {
         setMounted(true);
         const saved = localStorage.getItem('superpet-lang');
         if (saved === 'en') setLang('en');
+
+        // PWA 설치 여부 확인
+        const checkStandalone = () => {
+            const standalone = window.matchMedia('(display-mode: standalone)').matches;
+            setIsStandalone(standalone);
+        };
+        checkStandalone();
+
+        // display-mode 변경 감지
+        const mediaQuery = window.matchMedia('(display-mode: standalone)');
+        mediaQuery.addEventListener('change', checkStandalone);
+        return () => mediaQuery.removeEventListener('change', checkStandalone);
     }, []);
 
     React.useEffect(() => {
@@ -165,6 +179,17 @@ export function Navbar() {
                             </button>
                         )}
 
+                        {/* PWA 설치 버튼 (superpet 모바일만, 미설치 상태에서만) */}
+                        {mounted && isSuperpet && !isStandalone && (
+                            <button
+                                onClick={() => window.dispatchEvent(new Event('pwa-install-trigger'))}
+                                className="md:hidden p-2 rounded-full hover:bg-foreground/5 transition-colors text-indigo-500"
+                                aria-label="앱 설치"
+                            >
+                                <Download className="h-5 w-5" />
+                            </button>
+                        )}
+
                         {mounted && !authLoading && (
                             user ? (
                                 <div className="flex items-center">
@@ -220,13 +245,24 @@ export function Navbar() {
                                                 </Link>
                                             )}
                                             {isSuperpet && (
-                                                <button
-                                                    onClick={() => { toggleLang(); setMenuOpen(false); }}
-                                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-foreground/5 transition-colors"
-                                                >
-                                                    <Globe className="h-4 w-4" />
-                                                    <span>{lang === 'ko' ? 'English' : '한국어'}</span>
-                                                </button>
+                                                <>
+                                                    <button
+                                                        onClick={() => { toggleLang(); setMenuOpen(false); }}
+                                                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-foreground/5 transition-colors"
+                                                    >
+                                                        <Globe className="h-4 w-4" />
+                                                        <span>{lang === 'ko' ? 'English' : '한국어'}</span>
+                                                    </button>
+                                                    {!isStandalone && (
+                                                        <button
+                                                            onClick={() => { window.dispatchEvent(new Event('pwa-install-trigger')); setMenuOpen(false); }}
+                                                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-foreground/5 transition-colors text-indigo-500"
+                                                        >
+                                                            <Download className="h-4 w-4" />
+                                                            <span>{lang === 'ko' ? '앱 설치' : 'Install App'}</span>
+                                                        </button>
+                                                    )}
+                                                </>
                                             )}
                                             <button
                                                 onClick={() => { setTheme(theme === 'dark' ? 'light' : 'dark'); setMenuOpen(false); }}

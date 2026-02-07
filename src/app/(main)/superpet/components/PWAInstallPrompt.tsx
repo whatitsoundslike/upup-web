@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Download, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -23,28 +23,30 @@ export default function PWAInstallPrompt() {
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
         if (isStandalone) return;
 
-        // 오늘 이미 닫았는지 확인
-        const dismissedDate = getItem('pwa-prompt-dismissed');
-        const today = new Date().toISOString().slice(0, 10);
-        if (dismissedDate === today) return;
-
         // iOS 감지
         const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent);
         setIsIOS(isIOSDevice);
 
-        // 모바일에서만 표시
+        // 모바일에서만 자동 표시
         const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        if (!isMobile) return;
+
+        // 오늘 이미 닫았는지 확인 (자동 표시용)
+        const dismissedDate = getItem('pwa-prompt-dismissed');
+        const today = new Date().toISOString().slice(0, 10);
+        const shouldAutoShow = isMobile && dismissedDate !== today;
 
         if (isIOSDevice) {
-            // iOS는 beforeinstallprompt 이벤트가 없으므로 바로 표시
-            setTimeout(() => setShowPrompt(true), 3000);
+            if (shouldAutoShow) {
+                setTimeout(() => setShowPrompt(true), 3000);
+            }
         } else {
             // Android/Chrome
             const handler = (e: Event) => {
                 e.preventDefault();
                 setDeferredPrompt(e as BeforeInstallPromptEvent);
-                setTimeout(() => setShowPrompt(true), 3000);
+                if (shouldAutoShow) {
+                    setTimeout(() => setShowPrompt(true), 3000);
+                }
             };
 
             window.addEventListener('beforeinstallprompt', handler);
@@ -52,7 +54,7 @@ export default function PWAInstallPrompt() {
         }
     }, []);
 
-    const handleInstall = async () => {
+    const handleInstall = useCallback(async () => {
         if (isIOS) {
             setShowIOSGuide(true);
             return;
@@ -67,7 +69,27 @@ export default function PWAInstallPrompt() {
             setShowPrompt(false);
         }
         setDeferredPrompt(null);
-    };
+    }, [isIOS, deferredPrompt]);
+
+    // Navbar에서 수동으로 트리거하는 이벤트 리스너
+    useEffect(() => {
+        const handleManualTrigger = () => {
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+            if (isStandalone) return;
+
+            if (isIOS) {
+                setShowIOSGuide(true);
+            } else if (deferredPrompt) {
+                handleInstall();
+            } else {
+                // beforeinstallprompt가 아직 안 왔으면 가이드 표시
+                setShowPrompt(true);
+            }
+        };
+
+        window.addEventListener('pwa-install-trigger', handleManualTrigger);
+        return () => window.removeEventListener('pwa-install-trigger', handleManualTrigger);
+    }, [isIOS, deferredPrompt, handleInstall]);
 
     const handleDismiss = () => {
         setShowPrompt(false);
@@ -127,7 +149,7 @@ export default function PWAInstallPrompt() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 px-4 pb-4"
+                        className="fixed inset-0 z-51 flex items-end justify-center bg-black/50 px-4 pb-4"
                         onClick={handleDismiss}
                     >
                         <motion.div
