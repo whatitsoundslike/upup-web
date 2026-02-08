@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import TeslaTips from './TeslaTips';
+import TipsList from '@/components/tips/TipsList';
+import { fetchTipData } from '@/components/tips/tipData';
 
 export const metadata: Metadata = {
     title: "테슬라 꿀팁 & 가이드 - ZROOM Tesla Tips",
@@ -18,6 +19,7 @@ export const metadata: Metadata = {
     },
 };
 
-export default function Page() {
-    return <TeslaTips />;
+export default async function Page() {
+    const tips = await fetchTipData('tesla');
+    return <TipsList tips={tips} theme="tesla" />;
 }

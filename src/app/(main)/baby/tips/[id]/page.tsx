@@ -16,20 +16,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
 
     return {
-        title: `${tip.title} - ZROOM Tesla Tips`,
+        title: `${tip.title} - ZROOM Baby Tips`,
         description: tip.summary,
-        keywords: `테슬라팁, ${tip.title}, 테슬라가이드, 전기차꿀팁`,
+        keywords: `육아팁, ${tip.title}, 육아가이드`,
         openGraph: {
-            title: `${tip.title} - ZROOM Tesla Tips`,
+            title: `${tip.title} - ZROOM Baby Tips`,
             description: tip.summary ?? undefined,
-            url: `https://zroom.io/tesla/tips/${tip.id}`,
+            url: `https://zroom.io/baby/tips/${tip.id}`,
             siteName: 'ZROOM',
             images: tip.thumbnail ? [{ url: tip.thumbnail }] : undefined,
             locale: 'ko_KR',
             type: 'article',
         },
         alternates: {
-            canonical: `https://zroom.io/tesla/tips/${tip.id}`,
+            canonical: `https://zroom.io/baby/tips/${tip.id}`,
         },
     };
 }
@@ -42,7 +42,7 @@ export default async function TipDetailPage({ params }: PageProps) {
         notFound();
     }
 
-    const relatedTips = await fetchRelatedTips('tesla', id, 2);
+    const relatedTips = await fetchRelatedTips('baby', id, 2);
 
-    return <TipDetail tip={tip} relatedTips={relatedTips} theme="tesla" />;
+    return <TipDetail tip={tip} relatedTips={relatedTips} theme="baby" />;
 }

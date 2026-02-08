@@ -16,7 +16,7 @@ const features = [
         title: '육아정보',
         desc: '아이를 키우는 데 꼭 필요한 꿀팁과 정보를 확인하세요.',
         icon: Lightbulb,
-        href: '/baby/info',
+        href: '/baby/tips',
         color: 'text-pink-500'
     },
     {

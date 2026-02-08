@@ -33,14 +33,14 @@ export interface NavConfig {
 export const navConfigs: NavConfig = {
     tesla: [
         { name: '뉴스', href: '/tesla/news', icon: Newspaper },
-        { name: 'Shop', href: '/tesla/shop', icon: ShoppingBag },
         { name: '팁', href: '/tesla/tips', icon: Warehouse },
         { name: '슈퍼차저', href: '/tesla/charger', icon: Zap },
         { name: '보조금 현황', href: '/tesla/subsidy', icon: CircleDollarSign },
+        { name: 'Shop', href: '/tesla/shop', icon: ShoppingBag },
     ],
     baby: [
         { name: '뉴스', href: '/baby/news', icon: Newspaper },
-        { name: '육아정보', href: '/baby/info', icon: BookOpen },
+        { name: '육아정보', href: '/baby/tips', icon: BookOpen },
         { name: 'Shop', href: '/baby/shop', icon: ShoppingBag },
         { name: 'Room', href: '/baby/room', icon: Handshake },
     ],

@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
+import { unstable_cache } from 'next/cache';
 import SharePageClient from './SharePageClient';
 
 type CharacterData = {
@@ -23,7 +24,7 @@ type GameSaveRow = {
     rankCharacter: RankCharacter | null;
 };
 
-async function getCharacter(id: string): Promise<CharacterData | null> {
+async function _getCharacter(id: string): Promise<CharacterData | null> {
     try {
         // rankCharacter에서 바로 찾기 (활성 캐릭터만 공유 가능)
         const results = await prisma.$queryRaw<GameSaveRow[]>`
@@ -49,6 +50,20 @@ async function getCharacter(id: string): Promise<CharacterData | null> {
     } catch {
         return null;
     }
+}
+
+const CACHE_REVALIDATE = 3600; // 1시간
+const isDev = process.env.NODE_ENV === 'development';
+
+async function getCharacter(id: string): Promise<CharacterData | null> {
+    if (isDev) {
+        return _getCharacter(id);
+    }
+    return unstable_cache(
+        () => _getCharacter(id),
+        [`share-character-${id}`],
+        { revalidate: CACHE_REVALIDATE }
+    )();
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
