@@ -21,7 +21,7 @@ import {
     type PetInfo,
     type CharacterClass
 } from './types';
-import { saveToServer } from './gameSync';
+import { saveToServer, startGameSession, SESSION_EXPIRED_EVENT } from './gameSync';
 import { fetchGemBalance, useGem } from './gemApi';
 import ProgressModal from './components/ProgressModal';
 import { shareToTwitter } from './utils/shareUtils';
@@ -77,6 +77,9 @@ export default function SuperpetHome() {
     const [gemLoading, setGemLoading] = useState(true);
     const [showInsufficientGem, setShowInsufficientGem] = useState(false);
 
+    // 세션 만료 모달
+    const [showSessionExpired, setShowSessionExpired] = useState(false);
+
     // 페이지 로드 시 기존 캐릭터 불러오기
     useEffect(() => {
         migrateCharacterData(); // 기존 데이터 마이그레이션
@@ -122,6 +125,21 @@ export default function SuperpetHome() {
             setGemLoading(false);
         };
         loadGem();
+    }, [user]);
+
+    // 게임 세션 관리
+    useEffect(() => {
+        // 로그인 사용자만 세션 시작
+        if (user) {
+            startGameSession();
+        }
+
+        // 세션 만료 이벤트 리스너
+        const handleSessionExpired = () => {
+            setShowSessionExpired(true);
+        };
+        window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+        return () => window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
     }, [user]);
 
     const toggleTrait = (trait: string) => {
@@ -1232,6 +1250,43 @@ export default function SuperpetHome() {
                                 className="w-full py-3 rounded-xl bg-emerald-500 text-white font-bold hover:bg-emerald-600 transition-colors"
                             >
                                 {t('확인')}
+                            </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* 세션 만료 모달 */}
+            <AnimatePresence>
+                {showSessionExpired && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4"
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="relative w-full max-w-sm p-6 rounded-2xl shadow-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-red-500"
+                        >
+                            <div className="text-center mb-6">
+                                <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-3">
+                                    <X className="h-8 w-8 text-red-500" />
+                                </div>
+                                <h3 className="text-xl font-black mb-2 text-red-500">{t('세션이 종료되었습니다')}</h3>
+                                <p className="text-sm text-foreground/60">
+                                    {lang === 'ko'
+                                        ? '다른 기기에서 접속하여 현재 세션이 종료되었습니다.\n계속하려면 새로고침해 주세요.'
+                                        : 'Your session has ended because you logged in from another device.\nPlease refresh to continue.'}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => window.location.reload()}
+                                className="w-full py-3 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors"
+                            >
+                                {t('새로고침')}
                             </button>
                         </motion.div>
                     </motion.div>

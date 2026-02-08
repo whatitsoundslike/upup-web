@@ -128,7 +128,7 @@ function getRankFromData(
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const session = await getSession();
     if (!session) {
@@ -136,7 +136,17 @@ export async function GET() {
     }
 
     const memberId = BigInt(session.sub);
+    const gameSessionId = request.headers.get('X-Game-Session-Id');
+
     const save = await prisma.gameSave.findUnique({ where: { memberId } });
+
+    // 세션 ID 검증 (gameSessionId가 있는 경우에만)
+    if (gameSessionId && save?.gameSessionId && save.gameSessionId !== gameSessionId) {
+      return NextResponse.json(
+        { error: 'SESSION_EXPIRED', message: '다른 기기에서 접속하여 현재 세션이 종료되었습니다.' },
+        { status: 403 }
+      );
+    }
 
     return NextResponse.json({ data: save?.data ?? null });
   } catch (error) {
@@ -152,12 +162,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 });
     }
 
+    const gameSessionId = request.headers.get('X-Game-Session-Id');
     const { data } = await request.json();
     if (!data) {
       return NextResponse.json({ error: '저장할 데이터가 없습니다.' }, { status: 400 });
     }
 
     const memberId = BigInt(session.sub);
+
+    // 세션 ID 검증
+    if (gameSessionId) {
+      const existingSave = await prisma.gameSave.findUnique({
+        where: { memberId },
+        select: { gameSessionId: true }
+      });
+
+      if (existingSave?.gameSessionId && existingSave.gameSessionId !== gameSessionId) {
+        return NextResponse.json(
+          { error: 'SESSION_EXPIRED', message: '다른 기기에서 접속하여 현재 세션이 종료되었습니다.' },
+          { status: 403 }
+        );
+      }
+    }
     const rank = getRankFromData(data);
     const rankCharacterJson = rank.character ? JSON.stringify(rank.character) : null;
 

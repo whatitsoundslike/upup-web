@@ -4,6 +4,51 @@ import { isLoggedIn } from '@/components/AuthProvider';
 
 const SYNC_KEYS = ['characters', 'active-character', 'inventory'] as const;
 
+// 세션 만료 이벤트
+export const SESSION_EXPIRED_EVENT = 'superpet:session-expired';
+
+// 메모리에 sessionId 저장 (탭별로 독립적)
+let currentGameSessionId: string | null = null;
+
+function getGameSessionId(): string | null {
+  return currentGameSessionId;
+}
+
+function setGameSessionId(sessionId: string): void {
+  currentGameSessionId = sessionId;
+}
+
+export function clearGameSessionId(): void {
+  currentGameSessionId = null;
+}
+
+// 새 게임 세션 시작 (게임 페이지 진입 시 호출)
+export async function startGameSession(): Promise<boolean> {
+  if (!isLoggedIn()) return false;
+
+  try {
+    const res = await fetch('/api/superpet/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!res.ok) return false;
+
+    const { gameSessionId } = await res.json();
+    if (gameSessionId) {
+      setGameSessionId(gameSessionId);
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+function handleSessionExpired() {
+  window.dispatchEvent(new CustomEvent(SESSION_EXPIRED_EVENT));
+}
+
 export async function saveToServer(): Promise<boolean> {
   if (!isLoggedIn()) return false;
 
@@ -13,11 +58,25 @@ export async function saveToServer(): Promise<boolean> {
       data[key] = getItem(key);
     }
 
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    const sessionId = getGameSessionId();
+    if (sessionId) {
+      headers['X-Game-Session-Id'] = sessionId;
+    }
+
     const res = await fetch('/api/superpet/save', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ data }),
     });
+
+    if (res.status === 403) {
+      const result = await res.json();
+      if (result.error === 'SESSION_EXPIRED') {
+        handleSessionExpired();
+        return false;
+      }
+    }
 
     return res.ok;
   } catch {
@@ -29,7 +88,22 @@ export async function loadFromServer(): Promise<boolean> {
   if (!isLoggedIn()) return false;
 
   try {
-    const res = await fetch('/api/superpet/save');
+    const headers: Record<string, string> = {};
+    const sessionId = getGameSessionId();
+    if (sessionId) {
+      headers['X-Game-Session-Id'] = sessionId;
+    }
+
+    const res = await fetch('/api/superpet/save', { headers });
+
+    if (res.status === 403) {
+      const result = await res.json();
+      if (result.error === 'SESSION_EXPIRED') {
+        handleSessionExpired();
+        return false;
+      }
+    }
+
     if (!res.ok) return false;
 
     const { data } = await res.json();
@@ -81,3 +155,4 @@ export function useDebouncedSave(delay = 10000) {
 
   return debouncedSave;
 }
+
