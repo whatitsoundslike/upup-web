@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import RoomPreparing from '@/components/room/RoomPreparing';
+import Shop from '@/components/Shop';
 
 export const metadata: Metadata = {
     title: "똑똑한 엄마들의 육아템 쇼핑 - ZROOM Baby Shop",
@@ -19,5 +19,6 @@ export const metadata: Metadata = {
 };
 
 export default function BabyShopPage() {
-    return <RoomPreparing />;
+    return <Shop category="baby" />;
 }
+

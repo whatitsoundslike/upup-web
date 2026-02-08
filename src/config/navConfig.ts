@@ -39,7 +39,8 @@ export const navConfigs: NavConfig = {
         { name: '보조금 현황', href: '/tesla/subsidy', icon: CircleDollarSign },
     ],
     baby: [
-        { name: '육아정보', href: '/baby/info', icon: Newspaper },
+        { name: '뉴스', href: '/baby/news', icon: Newspaper },
+        { name: '육아정보', href: '/baby/info', icon: BookOpen },
         { name: 'Shop', href: '/baby/shop', icon: ShoppingBag },
         { name: 'Room', href: '/baby/room', icon: Handshake },
     ],

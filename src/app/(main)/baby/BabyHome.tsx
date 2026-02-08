@@ -1,14 +1,21 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ShoppingBag, Cpu, ArrowRight, Newspaper } from 'lucide-react';
+import { ShoppingBag, Cpu, ArrowRight, Newspaper, Lightbulb } from 'lucide-react';
 import Link from 'next/link';
 
 const features = [
     {
+        title: '뉴스',
+        desc: '육아와 관련된 최신 뉴스와 정보를 확인하세요.',
+        icon: Newspaper,
+        href: '/baby/news',
+        color: 'text-purple-500'
+    },
+    {
         title: '육아정보',
         desc: '아이를 키우는 데 꼭 필요한 꿀팁과 정보를 확인하세요.',
-        icon: Newspaper,
+        icon: Lightbulb,
         href: '/baby/info',
         color: 'text-pink-500'
     },
