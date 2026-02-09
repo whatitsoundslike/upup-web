@@ -21,6 +21,10 @@ const themeConfigs: Record<TipsTheme, ThemeConfig> = {
         accentColor: 'text-pink-500',
         basePath: '/baby/tips',
     },
+    ai: {
+        accentColor: 'text-cyan-500',
+        basePath: '/ai/tips',
+    },
 };
 
 interface Props {

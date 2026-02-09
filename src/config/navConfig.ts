@@ -17,6 +17,7 @@ import {
     Swords,
     PawPrint,
     Briefcase,
+    Sparkles,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -51,6 +52,12 @@ export const navConfigs: NavConfig = {
         { name: '상점', nameEn: 'Shop', href: '/superpet/shop', icon: ShoppingCart },
         { name: '인벤토리', nameEn: 'Inventory', href: '/superpet/room', icon: Warehouse },
     ],
+    ai: [
+        { name: '뉴스', href: '/ai/news', icon: Newspaper },
+        { name: '팁', href: '/ai/tips', icon: Warehouse },
+        { name: 'Shop', href: '/ai/shop', icon: ShoppingBag },
+        { name: 'Room', href: '/ai/room', icon: Handshake },
+    ],
 };
 
 // 기본 네비게이션 (루트 경로일 때)
@@ -58,16 +65,19 @@ export const defaultNavItems: NavItem[] = [
     { name: 'Tesla', href: '/tesla', icon: Home },
     { name: 'Baby', href: '/baby', icon: Baby },
     { name: 'Superpet', href: '/superpet', icon: PawPrint },
+    { name: 'AI', href: '/ai', icon: Sparkles },
 ];
 
 export const navRoomLogo: Record<string, string> = {
     tesla: '/room-icon/tesla.png',
     baby: '/room-icon/baby.png',
     superpet: '/room-icon/superpet_icon.png',
+    ai: '/room-icon/ai.jpg',
 }
 
 export const navRoomDescription: Record<string, string> = {
     tesla: '테슬라 관련 정보 및 커뮤니티',
     baby: '육아 정보 및 커뮤니티',
     superpet: '반려동물 RPG 게임 및 커뮤니티',
+    ai: 'AI 팁 및 커뮤니티',
 }

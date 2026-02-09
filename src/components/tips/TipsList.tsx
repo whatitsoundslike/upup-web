@@ -5,7 +5,7 @@ import { Lightbulb, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import type { TipItem } from './tipData';
 
-export type TipsTheme = 'tesla' | 'baby';
+export type TipsTheme = 'tesla' | 'baby' | 'ai';
 
 interface ThemeConfig {
     title: string;
@@ -26,6 +26,12 @@ const themeConfigs: Record<TipsTheme, ThemeConfig> = {
         description: '육아 꿀팁과 필수 정보를 공유합니다.',
         accentColor: 'group-hover:text-pink-500',
         basePath: '/baby/tips',
+    },
+    ai: {
+        title: 'AI Tips',
+        description: 'ChatGPT, Claude, Gemini 등 AI 도구 활용 꿀팁과 프롬프트를 공유합니다.',
+        accentColor: 'group-hover:text-cyan-500',
+        basePath: '/ai/tips',
     },
 };
 
