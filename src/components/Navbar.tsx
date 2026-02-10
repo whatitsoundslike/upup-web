@@ -376,10 +376,15 @@ export function MobileBottomNav() {
     const navItems: NavItem[] = navConfigs[firstSegment] || defaultNavItems;
     const isSuperpet = firstSegment === 'superpet';
 
+    // 홈 페이지에서는 하단 네비게이션 숨김
+    const isHome = pathname === '/';
+
     const getNavName = (item: NavItem) => {
         if (isSuperpet && lang === 'en' && item.nameEn) return item.nameEn;
         return item.name;
     };
+
+    if (isHome) return null;
 
     return (
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t dark:border-white/10 px-4 py-2" style={{ backgroundColor: 'var(--background-hex)' }}>

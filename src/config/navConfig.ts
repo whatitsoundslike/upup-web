@@ -19,6 +19,7 @@ import {
     Briefcase,
     Sparkles,
     LampDesk,
+    Lightbulb,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -35,16 +36,17 @@ export interface NavConfig {
 export const navConfigs: NavConfig = {
     tesla: [
         { name: '뉴스', href: '/tesla/news', icon: Newspaper },
-        { name: '팁', href: '/tesla/tips', icon: Warehouse },
+        { name: '팁', href: '/tesla/tips', icon: Lightbulb },
         { name: '슈퍼차저', href: '/tesla/charger', icon: Zap },
         { name: '보조금 현황', href: '/tesla/subsidy', icon: CircleDollarSign },
         { name: 'Shop', href: '/tesla/shop', icon: ShoppingBag },
+        { name: 'Room', href: '/tesla/room', icon: Warehouse },
     ],
     baby: [
         { name: '뉴스', href: '/baby/news', icon: Newspaper },
-        { name: '육아정보', href: '/baby/tips', icon: BookOpen },
+        { name: '육아정보', href: '/baby/tips', icon: Lightbulb },
         { name: 'Shop', href: '/baby/shop', icon: ShoppingBag },
-        { name: 'Room', href: '/baby/room', icon: Handshake },
+        { name: 'Room', href: '/baby/room', icon: Warehouse },
     ],
     superpet: [
         { name: '홈', nameEn: 'Home', href: '/superpet', icon: Home },
@@ -55,15 +57,15 @@ export const navConfigs: NavConfig = {
     ],
     ai: [
         { name: '뉴스', href: '/ai/news', icon: Newspaper },
-        { name: '팁', href: '/ai/tips', icon: Warehouse },
+        { name: '팁', href: '/ai/tips', icon: Lightbulb },
         { name: 'Shop', href: '/ai/shop', icon: ShoppingBag },
-        { name: 'Room', href: '/ai/room', icon: Handshake },
+        { name: 'Room', href: '/ai/room', icon: Warehouse },
     ],
     desk: [
         { name: '뉴스', href: '/desk/news', icon: Newspaper },
-        { name: '팁', href: '/desk/tips', icon: Warehouse },
+        { name: '팁', href: '/desk/tips', icon: Lightbulb },
         { name: 'Shop', href: '/desk/shop', icon: ShoppingBag },
-        { name: 'Room', href: '/desk/room', icon: Handshake },
+        { name: 'Room', href: '/desk/room', icon: Warehouse },
     ],
 };
 

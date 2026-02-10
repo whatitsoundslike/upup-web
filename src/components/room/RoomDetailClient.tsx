@@ -1,0 +1,613 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import Image from 'next/image';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Loader2, X, ArrowLeft, ShoppingBag, MessageSquare, ExternalLink, Lock, LogIn, UserPlus, Plus, Pencil, Trash2, Save, Settings } from 'lucide-react';
+import Room2D from './Room2D';
+import { useAuth } from '@/components/AuthProvider';
+
+interface Item {
+    id: string;
+    name: string | null;
+    images: string[];
+    sale: boolean;
+    price: string;
+    buyUrl: string | null;
+}
+
+interface Record {
+    id: string;
+    text: string | null;
+    images: string[];
+}
+
+interface Room {
+    id: string;
+    name: string | null;
+    description: string | null;
+    category: string;
+    images: string[];
+    items: Item[];
+    records: Record[];
+    member: { id: string; name: string | null; email: string | null };
+}
+
+interface RoomDetailClientProps {
+    roomId: string;
+    category: string;
+}
+
+export default function RoomDetailClient({ roomId, category }: RoomDetailClientProps) {
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const { user, loading: authLoading } = useAuth();
+    const [room, setRoom] = useState<Room | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [selectedOrb, setSelectedOrb] = useState<{ type: 'item' | 'record'; data: Item | Record } | null>(null);
+    const [autoSelectDone, setAutoSelectDone] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [saving, setSaving] = useState(false);
+
+    // 수정 폼 상태
+    const [editName, setEditName] = useState('');
+    const [editPrice, setEditPrice] = useState('');
+    const [editBuyUrl, setEditBuyUrl] = useState('');
+    const [editSale, setEditSale] = useState(false);
+    const [editText, setEditText] = useState('');
+
+    // 룸 수정 상태
+    const [isEditingRoom, setIsEditingRoom] = useState(false);
+    const [editRoomName, setEditRoomName] = useState('');
+    const [editRoomDescription, setEditRoomDescription] = useState('');
+    const [savingRoom, setSavingRoom] = useState(false);
+
+    const isOwner = user && room && user.id === room.member.id;
+
+    const fetchRoom = useCallback(async () => {
+        try {
+            const res = await fetch(`/api/rooms/${roomId}`);
+            if (!res.ok) {
+                if (res.status === 404) {
+                    throw new Error('룸을 찾을 수 없습니다.');
+                }
+                throw new Error('룸을 불러오는데 실패했습니다.');
+            }
+            const data = await res.json();
+            setRoom(data);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : '오류가 발생했습니다.');
+        } finally {
+            setLoading(false);
+        }
+    }, [roomId]);
+
+    useEffect(() => {
+        if (!authLoading && user) {
+            fetchRoom();
+        }
+    }, [fetchRoom, authLoading, user]);
+
+    // 쿼리 파라미터로 전달된 아이템/기록 자동 선택
+    useEffect(() => {
+        if (!room || autoSelectDone) return;
+
+        const selectType = searchParams.get('select');
+        const selectId = searchParams.get('id');
+
+        if (selectType && selectId) {
+            if (selectType === 'item') {
+                const item = room.items.find(i => i.id === selectId);
+                if (item) {
+                    setSelectedOrb({ type: 'item', data: item });
+                }
+            } else if (selectType === 'record') {
+                const record = room.records.find(r => r.id === selectId);
+                if (record) {
+                    setSelectedOrb({ type: 'record', data: record });
+                }
+            }
+            setAutoSelectDone(true);
+        }
+    }, [room, searchParams, autoSelectDone]);
+
+    const handleOrbClick = (type: 'item' | 'record', data: Item | Record) => {
+        setSelectedOrb({ type, data });
+        setIsEditing(false);
+    };
+
+    const startEditing = () => {
+        if (!selectedOrb) return;
+
+        if (selectedOrb.type === 'item') {
+            const item = selectedOrb.data as Item;
+            setEditName(item.name || '');
+            setEditPrice(item.price || '0');
+            setEditBuyUrl(item.buyUrl || '');
+            setEditSale(item.sale);
+        } else {
+            const record = selectedOrb.data as Record;
+            setEditText(record.text || '');
+        }
+        setIsEditing(true);
+    };
+
+    const cancelEditing = () => {
+        setIsEditing(false);
+    };
+
+    const handleSave = async () => {
+        if (!selectedOrb) return;
+
+        setSaving(true);
+        try {
+            const endpoint = selectedOrb.type === 'item'
+                ? `/api/rooms/items/${selectedOrb.data.id}`
+                : `/api/rooms/records/${selectedOrb.data.id}`;
+
+            const body = selectedOrb.type === 'item'
+                ? { name: editName, price: editPrice, buyUrl: editBuyUrl, sale: editSale }
+                : { text: editText };
+
+            const res = await fetch(endpoint, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+
+            if (!res.ok) throw new Error('수정에 실패했습니다.');
+
+            // 룸 데이터 새로고침
+            await fetchRoom();
+            setSelectedOrb(null);
+            setIsEditing(false);
+        } catch (err) {
+            alert(err instanceof Error ? err.message : '오류가 발생했습니다.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!selectedOrb) return;
+        if (!confirm('정말 삭제하시겠습니까?')) return;
+
+        setSaving(true);
+        try {
+            const endpoint = selectedOrb.type === 'item'
+                ? `/api/rooms/items/${selectedOrb.data.id}`
+                : `/api/rooms/records/${selectedOrb.data.id}`;
+
+            const res = await fetch(endpoint, { method: 'DELETE' });
+
+            if (!res.ok) throw new Error('삭제에 실패했습니다.');
+
+            // 룸 데이터 새로고침
+            await fetchRoom();
+            setSelectedOrb(null);
+        } catch (err) {
+            alert(err instanceof Error ? err.message : '오류가 발생했습니다.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    // 룸 수정 시작
+    const startEditingRoom = () => {
+        if (!room) return;
+        setEditRoomName(room.name || '');
+        setEditRoomDescription(room.description || '');
+        setIsEditingRoom(true);
+    };
+
+    // 룸 수정 취소
+    const cancelEditingRoom = () => {
+        setIsEditingRoom(false);
+    };
+
+    // 룸 저장
+    const handleSaveRoom = async () => {
+        if (!room) return;
+
+        setSavingRoom(true);
+        try {
+            const res = await fetch(`/api/rooms/${room.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: editRoomName,
+                    description: editRoomDescription,
+                }),
+            });
+
+            if (!res.ok) throw new Error('룸 수정에 실패했습니다.');
+
+            const updated = await res.json();
+            setRoom(updated);
+            setIsEditingRoom(false);
+        } catch (err) {
+            alert(err instanceof Error ? err.message : '오류가 발생했습니다.');
+        } finally {
+            setSavingRoom(false);
+        }
+    };
+
+    // 인증 로딩 중
+    if (authLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[70vh]">
+                <Loader2 className="w-8 h-8 animate-spin text-tesla-red" />
+            </div>
+        );
+    }
+
+    // 비로그인 상태
+    if (!user) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[70vh] px-4">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center"
+                >
+                    <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center">
+                        <Lock className="w-10 h-10 text-gray-400" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                        로그인이 필요합니다
+                    </h2>
+                    <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-sm">
+                        룸을 구경하려면 로그인이 필요합니다.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                        <Link
+                            href={`/login?callbackUrl=${encodeURIComponent(pathname)}`}
+                            className="flex items-center justify-center gap-2 px-6 py-3 bg-tesla-red text-white rounded-full font-semibold hover:bg-red-600 transition-colors"
+                        >
+                            <LogIn className="w-5 h-5" />
+                            로그인
+                        </Link>
+                        <Link
+                            href={`/signup?callbackUrl=${encodeURIComponent(pathname)}`}
+                            className="flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-full font-semibold hover:border-tesla-red hover:text-tesla-red transition-colors"
+                        >
+                            <UserPlus className="w-5 h-5" />
+                            회원가입
+                        </Link>
+                    </div>
+                </motion.div>
+            </div>
+        );
+    }
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[70vh]">
+                <Loader2 className="w-8 h-8 animate-spin text-tesla-red" />
+            </div>
+        );
+    }
+
+    if (error || !room) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[70vh] gap-4">
+                <p className="text-red-500">{error || '룸을 찾을 수 없습니다.'}</p>
+                <Link
+                    href={`/${category}/room`}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-tesla-red text-white hover:bg-red-600 transition-colors"
+                >
+                    <ArrowLeft className="w-4 h-4" />
+                    피드로 돌아가기
+                </Link>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen">
+            {/* 피드로 돌아가기 버튼 */}
+            <Link
+                href={`/${category}/room`}
+                className="fixed bottom-24 md:bottom-8 left-4 md:left-8 z-30 w-12 h-12 flex items-center justify-center bg-white dark:bg-zinc-800 rounded-full text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors shadow-lg"
+            >
+                <ArrowLeft className="w-5 h-5" />
+            </Link>
+
+            {/* 내 룸일 때 우측 하단 버튼들 */}
+            {isOwner && (
+                <div className="fixed bottom-24 md:bottom-8 right-4 md:right-8 z-30 flex items-center gap-2">
+                    {/* 룸 설정 버튼 */}
+                    <button
+                        onClick={startEditingRoom}
+                        className="w-12 h-12 flex items-center justify-center bg-white dark:bg-zinc-800 rounded-full text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors shadow-lg"
+                    >
+                        <Settings className="w-5 h-5" />
+                    </button>
+                    {/* 아이템/기록 추가 버튼 */}
+                    <Link
+                        href={`/${category}/room/new`}
+                        className="w-12 h-12 flex items-center justify-center bg-tesla-red rounded-full text-white hover:bg-red-600 transition-colors shadow-lg"
+                    >
+                        <Plus className="w-6 h-6" />
+                    </Link>
+                </div>
+            )}
+
+            {/* 2D 룸 */}
+            <Room2D room={room} onOrbClick={handleOrbClick} />
+
+            {/* 구슬 상세 모달 */}
+            <AnimatePresence>
+                {selectedOrb && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4"
+                        onClick={() => { setSelectedOrb(null); setIsEditing(false); }}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            onClick={e => e.stopPropagation()}
+                            className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden shadow-2xl max-h-[80vh] overflow-y-auto"
+                        >
+                            {/* 모달 헤더 */}
+                            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-zinc-800">
+                                <div className="flex items-center gap-2">
+                                    {selectedOrb.type === 'item' ? (
+                                        <ShoppingBag className="w-5 h-5 text-tesla-red" />
+                                    ) : (
+                                        <MessageSquare className="w-5 h-5 text-blue-500" />
+                                    )}
+                                    <span className="font-semibold">
+                                        {selectedOrb.type === 'item' ? '아이템' : '기록'}
+                                        {isEditing && ' 수정'}
+                                    </span>
+                                </div>
+                                <button
+                                    onClick={() => { setSelectedOrb(null); setIsEditing(false); }}
+                                    className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-full transition-colors"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            {/* 모달 컨텐츠 */}
+                            <div className="p-4">
+                                {/* 이미지 */}
+                                {selectedOrb.data.images.length > 0 && (
+                                    <div className="relative aspect-square mb-4 rounded-xl overflow-hidden bg-gray-100 dark:bg-zinc-800">
+                                        <Image
+                                            src={selectedOrb.data.images[0]}
+                                            alt=""
+                                            fill
+                                            className="object-cover"
+                                        />
+                                    </div>
+                                )}
+
+                                {/* 아이템 상세 / 수정 폼 */}
+                                {selectedOrb.type === 'item' && (
+                                    <div>
+                                        {isEditing ? (
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">이름</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editName}
+                                                        onChange={e => setEditName(e.target.value)}
+                                                        className="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800"
+                                                    />
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        id="editSale"
+                                                        checked={editSale}
+                                                        onChange={e => setEditSale(e.target.checked)}
+                                                        className="w-4 h-4"
+                                                    />
+                                                    <label htmlFor="editSale" className="text-sm">판매중</label>
+                                                </div>
+                                                {editSale && (
+                                                    <div>
+                                                        <label className="block text-sm font-medium mb-1">가격</label>
+                                                        <input
+                                                            type="number"
+                                                            value={editPrice}
+                                                            onChange={e => setEditPrice(e.target.value)}
+                                                            className="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800"
+                                                        />
+                                                    </div>
+                                                )}
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">구매 링크</label>
+                                                    <input
+                                                        type="url"
+                                                        value={editBuyUrl}
+                                                        onChange={e => setEditBuyUrl(e.target.value)}
+                                                        className="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800"
+                                                    />
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <h3 className="text-xl font-bold mb-2">
+                                                    {(selectedOrb.data as Item).name || '이름 없음'}
+                                                </h3>
+                                                {(selectedOrb.data as Item).sale && (selectedOrb.data as Item).price && (
+                                                    <p className="text-2xl font-bold text-tesla-red mb-4">
+                                                        ₩{Number((selectedOrb.data as Item).price).toLocaleString()}
+                                                    </p>
+                                                )}
+                                                {(selectedOrb.data as Item).buyUrl && (
+                                                    <a
+                                                        href={(selectedOrb.data as Item).buyUrl!}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                                                    >
+                                                        <ExternalLink className="w-4 h-4" />
+                                                        구매 링크
+                                                    </a>
+                                                )}
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* 기록 상세 / 수정 폼 */}
+                                {selectedOrb.type === 'record' && (
+                                    <div>
+                                        {isEditing ? (
+                                            <div>
+                                                <label className="block text-sm font-medium mb-1">내용</label>
+                                                <textarea
+                                                    value={editText}
+                                                    onChange={e => setEditText(e.target.value)}
+                                                    rows={5}
+                                                    className="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 resize-none"
+                                                />
+                                            </div>
+                                        ) : (
+                                            <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                                                {(selectedOrb.data as Record).text || '내용 없음'}
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* 소유자일 때 수정/삭제 버튼 */}
+                                {isOwner && (
+                                    <div className="flex gap-2 mt-6 pt-4 border-t border-gray-200 dark:border-zinc-800">
+                                        {isEditing ? (
+                                            <>
+                                                <button
+                                                    onClick={cancelEditing}
+                                                    disabled={saving}
+                                                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+                                                >
+                                                    취소
+                                                </button>
+                                                <button
+                                                    onClick={handleSave}
+                                                    disabled={saving}
+                                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-tesla-red text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
+                                                >
+                                                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                                    저장
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <button
+                                                    onClick={startEditing}
+                                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+                                                >
+                                                    <Pencil className="w-4 h-4" />
+                                                    수정
+                                                </button>
+                                                <button
+                                                    onClick={handleDelete}
+                                                    disabled={saving}
+                                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors disabled:opacity-50"
+                                                >
+                                                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                                                    삭제
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* 룸 수정 모달 */}
+            <AnimatePresence>
+                {isEditingRoom && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4"
+                        onClick={cancelEditingRoom}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            onClick={e => e.stopPropagation()}
+                            className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden shadow-2xl"
+                        >
+                            {/* 모달 헤더 */}
+                            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-zinc-800">
+                                <div className="flex items-center gap-2">
+                                    <Settings className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
+                                    <span className="font-semibold">룸 설정</span>
+                                </div>
+                                <button
+                                    onClick={cancelEditingRoom}
+                                    className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-full transition-colors"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            {/* 모달 컨텐츠 */}
+                            <div className="p-4 space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">룸 이름</label>
+                                    <input
+                                        type="text"
+                                        value={editRoomName}
+                                        onChange={e => setEditRoomName(e.target.value)}
+                                        placeholder="룸 이름을 입력하세요"
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">설명</label>
+                                    <textarea
+                                        value={editRoomDescription}
+                                        onChange={e => setEditRoomDescription(e.target.value)}
+                                        placeholder="룸에 대한 설명을 입력하세요"
+                                        rows={4}
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 resize-none"
+                                    />
+                                </div>
+
+                                {/* 버튼 */}
+                                <div className="flex gap-2 pt-2">
+                                    <button
+                                        onClick={cancelEditingRoom}
+                                        disabled={savingRoom}
+                                        className="flex-1 px-4 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+                                    >
+                                        취소
+                                    </button>
+                                    <button
+                                        onClick={handleSaveRoom}
+                                        disabled={savingRoom}
+                                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-tesla-red text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
+                                    >
+                                        {savingRoom ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                        저장
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+}

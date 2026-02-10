@@ -19,8 +19,16 @@ export function Footer() {
     const navItems: NavItem[] = navConfigs[firstSegment] || defaultNavItems;
 
     return (
-        <footer className="dark:border-white/10 bg-background pt-12 pb-24 md:pb-12">
-            
+        <footer className="dark:border-white/10 bg-background pt-2 pb-10">
+            <div className="container mx-auto px-4">
+                <div className="flex flex-col items-center">
+                    <div className="flex items-center gap-2">
+                        <span className="text-xl font-bold text-gray-900 dark:text-white">
+                            Z Room
+                        </span>
+                    </div>
+                </div>
+            </div>
         </footer>
     );
 }
