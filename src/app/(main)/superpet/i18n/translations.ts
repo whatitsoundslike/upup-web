@@ -161,6 +161,7 @@ export const koToEn: Record<string, string> = {
     '대지의 균열': 'Rift of the Earth',
     '피닉스의 둥지': 'Phoenix Nest',
     '용의 계곡': 'Dragon Valley',
+    '거인의 탑': 'Tower of Giants',
 
     // === 던전 설명 ===
     '신비로운 숲. 다양한 숲속 생물들이 서식한다': 'A mystical forest. Home to various woodland creatures.',
@@ -168,6 +169,8 @@ export const koToEn: Record<string, string> = {
     '대지가 갈라지며 드러난 지하 세계. 용암과 바위 사이로 강력한 존재들이 도사린다': 'An underground world revealed by a cracked earth. Powerful beings lurk between lava and rock.',
     '하늘 높이 솟은 화산 꼭대기의 둥지. 불사조의 화염이 모든 것을 태운다': 'A nest atop a towering volcano. The phoenix\'s flames burn everything.',
     '고대의 용들이 서식하는 위험한 계곡. 강력한 드래곤들이 도사리고 있다': 'A dangerous valley inhabited by ancient dragons. Powerful dragons lurk within.',
+    '태고의 거인들이 사는 탑. 하늘을 찌를 듯 솟은 탑을 오르며 거인들의 흔적을 따라가보자': 'A tower where ancient giants live. Climb the tower that pierces the sky and follow the traces of the giants.',
+
 
     // === 몬스터 이름 ===
     '솔잎 다람쥐': 'Pine Squirrel',
@@ -204,6 +207,13 @@ export const koToEn: Record<string, string> = {
     '빙결 와이번': 'Frost Wyvern',
     '암흑 비룡': 'Dark Wyvern',
     '마룡': 'Evil Dragon',
+
+    '작은 거인': 'Small Giant',
+    '강철 거인': 'Steel Giant',
+    '수호 거인': 'Guardian Giant',
+    '파괴자 거인': 'Destroyer Giant',
+    '지혜의 거인': 'Giant of Wisdom',
+    '발두르그': 'Baldurug',
 
     // === 던전 UI ===
     '던전 탐험': 'Dungeon Exploration',
