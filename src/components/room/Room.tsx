@@ -64,6 +64,33 @@ export default function Room({ category }: RoomPageProps) {
                 },
             ],
         },
+        desk: {
+            title: 'Desk Community Room',
+            subtitle: '데스크 테리어 커뮤니티',
+            rooms: [
+                {
+                    id: 1,
+                    name: '신제품 리뷰',
+                    description: '최신 장난감 리뷰와 평가',
+                    members: 567,
+                    icon: MessageSquare,
+                },
+                {
+                    id: 2,
+                    name: '수집가 모임',
+                    description: '희귀 아이템 정보 공유',
+                    members: 234,
+                    icon: Users,
+                },
+                {
+                    id: 3,
+                    name: '교환/거래',
+                    description: '안전한 거래 공간',
+                    members: 789,
+                    icon: TrendingUp,
+                },
+            ],
+        },
     };
 
     const config = categoryConfig[category];

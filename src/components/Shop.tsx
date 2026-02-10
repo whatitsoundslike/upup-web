@@ -17,7 +17,7 @@ interface Product {
 // 1시간 단위 버전 값 생성
 
 interface ShopPageProps {
-    category: 'tesla' | 'baby' | 'ai';
+    category: 'tesla' | 'baby' | 'ai' | 'desk';
 }
 
 export default function Shop({ category }: ShopPageProps) {
@@ -28,11 +28,15 @@ export default function Shop({ category }: ShopPageProps) {
         },
         baby: {
             title: 'Baby Shop',
-            subtitle: '우리 아가를 위한 최고의 육아용품을 만나보세요.',
+            subtitle: '우리 아이를 위한 최고의 육아용품을 만나보세요.',
         },
         ai: {
             title: 'AI Shop',
-            subtitle: 'AI를 활용한 최고의 육아용품을 만나보세요.',
+            subtitle: 'AI기술과 함께 활용할 제품들을 만나보세요.',
+        },
+        desk: {
+            title: 'Desk Shop',
+            subtitle: '데스크테리어를 위한 최고의 선택.',
         },
     };
 
@@ -141,12 +145,12 @@ export default function Shop({ category }: ShopPageProps) {
                 ))}
             </div>
             <a className="flex mt-12 justify-center"
-                href="https://link.coupang.com/a/dCQO0Y"
+                href="https://link.coupang.com/a/dJNasn"
                 target="_blank"
                 referrerPolicy="unsafe-url"
             >
                 <img
-                    src="https://ads-partners.coupang.com/banners/961892?subId=&traceId=V0-301-5079b8362432a905-I961892&w=728&h=90"
+                    src="https://ads-partners.coupang.com/banners/964332?subId=&traceId=V0-301-879dd1202e5c73b2-I964332&w=728&h=90"
                     alt=""
                 />
             </a>

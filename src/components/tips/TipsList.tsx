@@ -5,7 +5,7 @@ import { Lightbulb, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import type { TipItem } from './tipData';
 
-export type TipsTheme = 'tesla' | 'baby' | 'ai';
+export type TipsTheme = 'tesla' | 'baby' | 'ai' | 'desk';
 
 interface ThemeConfig {
     title: string;
@@ -32,6 +32,12 @@ const themeConfigs: Record<TipsTheme, ThemeConfig> = {
         description: 'ChatGPT, Claude, Gemini 등 AI 도구 활용 꿀팁과 프롬프트를 공유합니다.',
         accentColor: 'group-hover:text-cyan-500',
         basePath: '/ai/tips',
+    },
+    desk: {
+        title: 'Desk Tips',
+        description: '생산성을 높이는 데스크 셋업 꿀팁과 인테리어 가이드를 공유합니다.',
+        accentColor: 'group-hover:text-orange-500',
+        basePath: '/desk/tips',
     },
 };
 

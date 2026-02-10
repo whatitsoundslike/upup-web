@@ -25,6 +25,10 @@ const themeConfigs: Record<TipsTheme, ThemeConfig> = {
         accentColor: 'text-cyan-500',
         basePath: '/ai/tips',
     },
+    desk: {
+        accentColor: 'text-orange-500',
+        basePath: '/desk/tips',
+    },
 };
 
 interface Props {
