@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { roomId, name, images, sale, price, buyUrl } = body;
+        const { roomId, name, description, images, sale, price, buyUrl, purchasedAt } = body;
 
         if (!roomId) {
             return NextResponse.json({ error: "Room ID is required" }, { status: 400 });
@@ -35,10 +35,12 @@ export async function POST(request: NextRequest) {
                 roomId: BigInt(roomId),
                 memberId: member.id,
                 name: name || null,
+                description: description || null,
                 images: images || [],
                 sale: sale || false,
                 price: BigInt(price || 0),
                 buyUrl: buyUrl || null,
+                purchasedAt: purchasedAt ? new Date(purchasedAt) : null,
             },
         });
 

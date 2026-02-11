@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Zap, ShieldCheck, Cpu, ArrowRight, DockIcon, ShoppingBag, Calculator, CircleDollarSign, Newspaper, Warehouse, Lightbulb } from 'lucide-react';
+import { Zap, ArrowRight, ShoppingBag, Newspaper, Warehouse, Lightbulb } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { get1HourVersion } from '@/lib/utils';
@@ -29,26 +29,19 @@ const features = [
         color: 'text-yellow-500'
     },
     {
-        title: '슈퍼차저',
-        desc: '테슬라 슈퍼차저 위치를 확인하세요.',
+        title: '충전 & 보조금',
+        desc: '슈퍼차저 위치와 전기차 보조금 현황을 확인하세요.',
         icon: Zap,
-        href: '/tesla/charger',
+        href: '/tesla/info',
         color: 'text-blue-500'
     },
     {
-        title: '보조금현황',
-        desc: '2026년 지자체별 전기차 보조금 잔여 현황을 확인하세요.',
-        icon: CircleDollarSign,
-        href: '/tesla/subsidy',
-        color: 'text-amber-500'
+        title: '룸',
+        desc: '테슬라 오너들의 차에는 무엇이 있을까요? 사용자들의 꿀팁 확인하기.',
+        icon: Warehouse,
+        href: '/tesla/room',
+        color: 'text-emerald-500'
     },
-    // {
-    //     title: '룸',
-    //     desc: '테슬라 오너들의 차에는 무엇이 있을까요? 사용자들의 꿀팁 확인하기.',
-    //     icon: Warehouse,
-    //     href: '/tesla/room',
-    //     color: 'text-emerald-500'
-    // },
 ];
 
 interface NewsItem {

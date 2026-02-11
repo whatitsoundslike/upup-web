@@ -19,6 +19,7 @@ import {
     ArrowLeft
 } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
+import DatePicker from '@/components/ui/DatePicker';
 
 interface Room {
     id: string;
@@ -51,10 +52,12 @@ export default function RoomCreateForm({ category }: RoomCreateFormProps) {
 
     // 아이템 폼
     const [itemName, setItemName] = useState('');
+    const [itemDescription, setItemDescription] = useState('');
     const [itemImages, setItemImages] = useState<string[]>(['']);
     const [itemSale, setItemSale] = useState(false);
     const [itemPrice, setItemPrice] = useState('');
     const [itemBuyUrl, setItemBuyUrl] = useState('');
+    const [itemPurchasedAt, setItemPurchasedAt] = useState('');
 
     // 기록 폼
     const [recordText, setRecordText] = useState('');
@@ -123,10 +126,12 @@ export default function RoomCreateForm({ category }: RoomCreateFormProps) {
                 body: JSON.stringify({
                     roomId: selectedRoom.id,
                     name: itemName,
+                    description: itemDescription || null,
                     images,
                     sale: itemSale,
                     price: itemPrice ? parseInt(itemPrice) : 0,
                     buyUrl: itemBuyUrl || null,
+                    purchasedAt: itemPurchasedAt || null,
                 }),
             });
             if (res.ok) {
@@ -248,8 +253,7 @@ export default function RoomCreateForm({ category }: RoomCreateFormProps) {
 
     return (
         <div className="max-w-lg mx-auto px-4 py-6 pb-24">
-            <h1 className="text-2xl font-bold mb-6">새 콘텐츠 등록</h1>
-
+    
             {/* 뒤로가기 버튼 */}
             <Link
                 href={`/${category}/room`}
@@ -341,7 +345,7 @@ export default function RoomCreateForm({ category }: RoomCreateFormProps) {
                                         type="text"
                                         value={newRoomName}
                                         onChange={e => setNewRoomName(e.target.value)}
-                                        placeholder="예: 내 데스크 셋업"
+                                        placeholder="예: 작고 소중한 내 방"
                                         className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-transparent"
                                     />
                                 </div>
@@ -423,6 +427,26 @@ export default function RoomCreateForm({ category }: RoomCreateFormProps) {
                                     onChange={e => setItemName(e.target.value)}
                                     placeholder="예: 삼성 모니터 27인치"
                                     className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-transparent"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1">상품 설명</label>
+                                <textarea
+                                    value={itemDescription}
+                                    onChange={e => setItemDescription(e.target.value)}
+                                    placeholder="상품에 대한 설명을 입력하세요"
+                                    rows={3}
+                                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-transparent resize-none"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1">구매 일자</label>
+                                <DatePicker
+                                    value={itemPurchasedAt}
+                                    onChange={setItemPurchasedAt}
+                                    placeholder="구매 일자 선택"
                                 />
                             </div>
 

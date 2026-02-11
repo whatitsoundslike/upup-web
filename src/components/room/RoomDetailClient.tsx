@@ -3,25 +3,30 @@
 import { useState, useEffect, useCallback } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, X, ArrowLeft, ShoppingBag, MessageSquare, ExternalLink, Lock, LogIn, UserPlus, Plus, Pencil, Trash2, Save, Settings } from 'lucide-react';
-import Room2D from './Room2D';
+import { Loader2, X, ArrowLeft, ShoppingBag, MessageSquare, ExternalLink, Lock, LogIn, UserPlus, Plus, Pencil, Trash2, Save, Settings, ImagePlus } from 'lucide-react';
+import { format } from 'date-fns';
+import Room from './Room';
 import { useAuth } from '@/components/AuthProvider';
+import DatePicker from '@/components/ui/DatePicker';
 
 interface Item {
     id: string;
     name: string | null;
+    description: string | null;
     images: string[];
     sale: boolean;
     price: string;
     buyUrl: string | null;
+    purchasedAt: string | null;
+    createdAt: string;
 }
 
 interface Record {
     id: string;
     text: string | null;
     images: string[];
+    createdAt: string;
 }
 
 interface Room {
@@ -54,10 +59,13 @@ export default function RoomDetailClient({ roomId, category }: RoomDetailClientP
 
     // 수정 폼 상태
     const [editName, setEditName] = useState('');
+    const [editDescription, setEditDescription] = useState('');
     const [editPrice, setEditPrice] = useState('');
     const [editBuyUrl, setEditBuyUrl] = useState('');
     const [editSale, setEditSale] = useState(false);
     const [editText, setEditText] = useState('');
+    const [editImages, setEditImages] = useState<string[]>(['']);
+    const [editPurchasedAt, setEditPurchasedAt] = useState('');
 
     // 룸 수정 상태
     const [isEditingRoom, setIsEditingRoom] = useState(false);
@@ -122,12 +130,18 @@ export default function RoomDetailClient({ roomId, category }: RoomDetailClientP
     const startEditing = () => {
         if (!selectedOrb) return;
 
+        // 이미지 초기화 (기존 이미지가 있으면 사용, 없으면 빈 입력 필드 하나)
+        const images = selectedOrb.data.images.length > 0 ? [...selectedOrb.data.images] : [''];
+        setEditImages(images);
+
         if (selectedOrb.type === 'item') {
             const item = selectedOrb.data as Item;
             setEditName(item.name || '');
+            setEditDescription(item.description || '');
             setEditPrice(item.price || '0');
             setEditBuyUrl(item.buyUrl || '');
             setEditSale(item.sale);
+            setEditPurchasedAt(item.purchasedAt ? item.purchasedAt.split('T')[0] : '');
         } else {
             const record = selectedOrb.data as Record;
             setEditText(record.text || '');
@@ -148,9 +162,12 @@ export default function RoomDetailClient({ roomId, category }: RoomDetailClientP
                 ? `/api/rooms/items/${selectedOrb.data.id}`
                 : `/api/rooms/records/${selectedOrb.data.id}`;
 
+            // 빈 이미지 URL 필터링
+            const images = editImages.filter(url => url.trim());
+
             const body = selectedOrb.type === 'item'
-                ? { name: editName, price: editPrice, buyUrl: editBuyUrl, sale: editSale }
-                : { text: editText };
+                ? { name: editName, description: editDescription, price: editPrice, buyUrl: editBuyUrl, sale: editSale, images, purchasedAt: editPurchasedAt || null }
+                : { text: editText, images };
 
             const res = await fetch(endpoint, {
                 method: 'PATCH',
@@ -337,7 +354,7 @@ export default function RoomDetailClient({ roomId, category }: RoomDetailClientP
             )}
 
             {/* 2D 룸 */}
-            <Room2D room={room} onOrbClick={handleOrbClick} />
+            <Room room={room} onOrbClick={handleOrbClick} />
 
             {/* 구슬 상세 모달 */}
             <AnimatePresence>
@@ -368,6 +385,9 @@ export default function RoomDetailClient({ roomId, category }: RoomDetailClientP
                                         {selectedOrb.type === 'item' ? '아이템' : '기록'}
                                         {isEditing && ' 수정'}
                                     </span>
+                                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                                        {format(new Date(selectedOrb.data.createdAt), 'yyyy.MM.dd')}
+                                    </span>
                                 </div>
                                 <button
                                     onClick={() => { setSelectedOrb(null); setIsEditing(false); }}
@@ -380,13 +400,12 @@ export default function RoomDetailClient({ roomId, category }: RoomDetailClientP
                             {/* 모달 컨텐츠 */}
                             <div className="p-4">
                                 {/* 이미지 */}
-                                {selectedOrb.data.images.length > 0 && (
+                                {selectedOrb.data.images.length > 0 && !isEditing && (
                                     <div className="relative aspect-square mb-4 rounded-xl overflow-hidden bg-gray-100 dark:bg-zinc-800">
-                                        <Image
+                                        <img
                                             src={selectedOrb.data.images[0]}
                                             alt=""
-                                            fill
-                                            className="object-cover"
+                                            className="w-full h-full object-cover"
                                         />
                                     </div>
                                 )}
@@ -404,6 +423,55 @@ export default function RoomDetailClient({ roomId, category }: RoomDetailClientP
                                                         onChange={e => setEditName(e.target.value)}
                                                         className="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800"
                                                     />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">상품 설명</label>
+                                                    <textarea
+                                                        value={editDescription}
+                                                        onChange={e => setEditDescription(e.target.value)}
+                                                        rows={3}
+                                                        placeholder="상품에 대한 설명을 입력하세요"
+                                                        className="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 resize-none"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">구매 일자</label>
+                                                    <DatePicker
+                                                        value={editPurchasedAt}
+                                                        onChange={setEditPurchasedAt}
+                                                        placeholder="구매 일자 선택"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">이미지 URL</label>
+                                                    {editImages.map((url, index) => (
+                                                        <div key={index} className="flex gap-2 mb-2">
+                                                            <input
+                                                                type="url"
+                                                                value={url}
+                                                                onChange={e => setEditImages(prev => prev.map((v, i) => i === index ? e.target.value : v))}
+                                                                placeholder="https://..."
+                                                                className="flex-1 px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800"
+                                                            />
+                                                            {editImages.length > 1 && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setEditImages(prev => prev.filter((_, i) => i !== index))}
+                                                                    className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+                                                                >
+                                                                    <X className="w-4 h-4" />
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setEditImages(prev => [...prev, ''])}
+                                                        className="text-sm text-tesla-red flex items-center gap-1"
+                                                    >
+                                                        <ImagePlus className="w-4 h-4" />
+                                                        이미지 추가
+                                                    </button>
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <input
@@ -441,6 +509,16 @@ export default function RoomDetailClient({ roomId, category }: RoomDetailClientP
                                                 <h3 className="text-xl font-bold mb-2">
                                                     {(selectedOrb.data as Item).name || '이름 없음'}
                                                 </h3>
+                                                {(selectedOrb.data as Item).description && (
+                                                    <p className="text-gray-600 dark:text-gray-400 mb-3 whitespace-pre-wrap">
+                                                        {(selectedOrb.data as Item).description}
+                                                    </p>
+                                                )}
+                                                {(selectedOrb.data as Item).purchasedAt && (
+                                                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                                                        구매일: {format(new Date((selectedOrb.data as Item).purchasedAt!), 'yyyy.MM.dd')}
+                                                    </p>
+                                                )}
                                                 {(selectedOrb.data as Item).sale && (selectedOrb.data as Item).price && (
                                                     <p className="text-2xl font-bold text-tesla-red mb-4">
                                                         ₩{Number((selectedOrb.data as Item).price).toLocaleString()}
@@ -466,14 +544,47 @@ export default function RoomDetailClient({ roomId, category }: RoomDetailClientP
                                 {selectedOrb.type === 'record' && (
                                     <div>
                                         {isEditing ? (
-                                            <div>
-                                                <label className="block text-sm font-medium mb-1">내용</label>
-                                                <textarea
-                                                    value={editText}
-                                                    onChange={e => setEditText(e.target.value)}
-                                                    rows={5}
-                                                    className="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 resize-none"
-                                                />
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">내용</label>
+                                                    <textarea
+                                                        value={editText}
+                                                        onChange={e => setEditText(e.target.value)}
+                                                        rows={5}
+                                                        className="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 resize-none"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1">이미지 URL</label>
+                                                    {editImages.map((url, index) => (
+                                                        <div key={index} className="flex gap-2 mb-2">
+                                                            <input
+                                                                type="url"
+                                                                value={url}
+                                                                onChange={e => setEditImages(prev => prev.map((v, i) => i === index ? e.target.value : v))}
+                                                                placeholder="https://..."
+                                                                className="flex-1 px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800"
+                                                            />
+                                                            {editImages.length > 1 && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setEditImages(prev => prev.filter((_, i) => i !== index))}
+                                                                    className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+                                                                >
+                                                                    <X className="w-4 h-4" />
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setEditImages(prev => [...prev, ''])}
+                                                        className="text-sm text-blue-500 flex items-center gap-1"
+                                                    >
+                                                        <ImagePlus className="w-4 h-4" />
+                                                        이미지 추가
+                                                    </button>
+                                                </div>
                                             </div>
                                         ) : (
                                             <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">

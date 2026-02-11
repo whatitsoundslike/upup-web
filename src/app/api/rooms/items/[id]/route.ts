@@ -31,16 +31,18 @@ export async function PATCH(
         }
 
         const body = await request.json();
-        const { name, images, sale, price, buyUrl } = body;
+        const { name, description, images, sale, price, buyUrl, purchasedAt } = body;
 
         const updated = await prisma.item.update({
             where: { id: BigInt(id) },
             data: {
                 ...(name !== undefined && { name }),
+                ...(description !== undefined && { description }),
                 ...(images !== undefined && { images }),
                 ...(sale !== undefined && { sale }),
                 ...(price !== undefined && { price: BigInt(price) }),
                 ...(buyUrl !== undefined && { buyUrl }),
+                ...(purchasedAt !== undefined && { purchasedAt: purchasedAt ? new Date(purchasedAt) : null }),
             },
         });
 

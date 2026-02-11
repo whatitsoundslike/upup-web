@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ShoppingBag, MessageSquare, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -70,11 +69,10 @@ export default function FeedCard({ item, category }: FeedCardProps) {
             {/* 이미지 */}
             {item.images.length > 0 && (
                 <div className="relative aspect-square bg-gray-100 dark:bg-zinc-800">
-                    <Image
+                    <img
                         src={item.images[currentImageIndex]}
                         alt={item.name || item.text || '피드 이미지'}
-                        fill
-                        className="object-cover"
+                        className="absolute inset-0 w-full h-full object-cover"
                     />
                     {hasMultipleImages && (
                         <>

@@ -219,7 +219,11 @@ function MapController({ center, zoom }: { center: { lat: number; lng: number } 
     return null;
 }
 
-export default function TeslaChargerMap() {
+interface TeslaChargerMapProps {
+    embedded?: boolean;
+}
+
+export default function TeslaChargerMap({ embedded = false }: TeslaChargerMapProps) {
     const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
     const [selectedCharger, setSelectedCharger] = useState<SuperchargerLocation | null>(null);
     const [sortedChargers, setSortedChargers] = useState<SuperchargerLocation[]>(SUPERCHARGERS);
@@ -318,40 +322,42 @@ export default function TeslaChargerMap() {
 
     return (
         <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
-            <div className="relative w-full h-screen md:flex md:flex-row overflow-hidden">
-                {/* Mobile Header with Search and Toggle - Fixed */}
-                <div className="md:hidden fixed top-0 left-0 right-0 w-full bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 z-50">
-                    <div className="flex items-center gap-2 mb-3">
-                        <button
-                            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                            className="p-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
-                            aria-label="Toggle sidebar"
-                        >
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            <div className={`relative w-full ${embedded ? 'h-full' : 'h-screen'} md:flex md:flex-row overflow-hidden`}>
+                {/* Mobile Header with Search and Toggle - Fixed (hidden in embedded mode) */}
+                {!embedded && (
+                    <div className="md:hidden fixed top-0 left-0 right-0 w-full bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 z-50">
+                        <div className="flex items-center gap-2 mb-3">
+                            <button
+                                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                                className="p-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+                                aria-label="Toggle sidebar"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                                </svg>
+                            </button>
+                            <h1 className="text-xl font-bold text-gray-900 dark:text-white">테슬라 슈퍼차저</h1>
+                        </div>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="충전소 이름 또는 주소 검색..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onFocus={() => setIsSidebarOpen(true)}
+                                className="w-full px-4 py-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
+                            />
+                            <svg
+                                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
-                        </button>
-                        <h1 className="text-xl font-bold text-gray-900 dark:text-white">테슬라 슈퍼차저</h1>
+                        </div>
                     </div>
-                    <div className="relative">
-                        <input
-                            type="text"
-                            placeholder="충전소 이름 또는 주소 검색..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            onFocus={() => setIsSidebarOpen(true)}
-                            className="w-full px-4 py-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
-                        />
-                        <svg
-                            className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </div>
-                </div>
+                )}
 
                 {/* Sidebar */}
                 <div
@@ -367,7 +373,7 @@ export default function TeslaChargerMap() {
                         overflow-y-auto
                         transition-transform duration-300 ease-in-out
                         z-30
-                        pt-[120px] md:pt-0
+                        ${embedded ? 'pt-0' : 'pt-[120px]'} md:pt-0
                     `}
                 >
                     {/* Desktop Search */}
@@ -433,7 +439,7 @@ export default function TeslaChargerMap() {
                 )}
 
                 {/* Map */}
-                <div className="flex-1 relative pt-[60px] md:pt-0 h-screen md:h-full">
+                <div className={`flex-1 relative ${embedded ? 'pt-0' : 'pt-[60px]'} md:pt-0 ${embedded ? 'h-full' : 'h-screen'} md:h-full`}>
                     <Map
                         defaultCenter={initialCenter}
                         defaultZoom={initialZoom}

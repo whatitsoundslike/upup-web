@@ -135,7 +135,7 @@ export default function RoomFeed({ category }: RoomFeedProps) {
                     </h2>
                     <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-sm">
                         Room에서 다른 사람들의 아이템과 기록을 구경하고,<br />
-                        나만의 콘텐츠도 등록해보세요!
+                        내 아이템과 기록도 등록해보세요!
                     </p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
                         <Link

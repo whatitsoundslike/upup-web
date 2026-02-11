@@ -196,9 +196,17 @@ export function addCharacter(character: Character): boolean {
     const allChars = loadAllCharacters();
     if (allChars.length >= 3) return false;
 
+    // 최초 캐릭터 생성 시 사료 10개 지급
+    const isFirstCharacter = allChars.length === 0;
+
     allChars.push(character);
     saveAllCharacters(allChars);
     setActiveCharacter(character.id);
+
+    if (isFirstCharacter) {
+        addItemToInventory('feed', 10);
+    }
+
     return true;
 }
 

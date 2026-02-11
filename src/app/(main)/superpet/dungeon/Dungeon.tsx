@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, LogIn, PawPrint, Skull, Sparkles, Swords, UserPlus } from 'lucide-react';
+import { Heart, Lock, LogIn, PawPrint, Skull, Sparkles, Swords, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { type Character, GAME_ITEMS, addItemToInventory, addExpToCharacter, ITEM_RARITY_TEXT, ITEM_RARITY_BORDER, loadCharacter, saveCharacter, getTotalStats, useFood, loadInventory, type InventoryItem, type GameItem } from '../types';
@@ -35,6 +35,7 @@ export default function Dungeon() {
     const [rareItemModal, setRareItemModal] = useState<GameItem | null>(null);
     const [activeToast, setActiveToast] = useState<{ message: string; tone: 'success' | 'error'; key: number } | null>(null);
     const [bossEncounter, setBossEncounter] = useState<{ dungeon: DungeonData; monster: MonsterData } | null>(null);
+    const [lowLevelWarning, setLowLevelWarning] = useState<{ required: number; current: number } | null>(null);
     const logRef = useRef<HTMLDivElement>(null);
     const battleFieldRef = useRef<HTMLDivElement>(null);
     const [isAttacking, setIsAttacking] = useState(false);
@@ -128,19 +129,19 @@ export default function Dungeon() {
         }
     };
 
-    // 몬스터 랜덤 선택 함수
+    // 몬스터 랜덤 선택 함수 (% 단위: spawnChance가 25면 25% 확률)
     const selectRandomMonster = (dungeon: DungeonData): MonsterData => {
-        const totalChance = dungeon.monsters.reduce((sum, m) => sum + m.spawnChance, 0);
-        let random = Math.random() * totalChance;
+        // 희귀도 순으로 정렬 (낮은 확률 = 희귀 몬스터 먼저)
+        const sortedMonsters = [...dungeon.monsters].sort((a, b) => a.spawnChance - b.spawnChance);
 
-        for (const monster of dungeon.monsters) {
-            random -= monster.spawnChance;
-            if (random <= 0) {
+        for (const monster of sortedMonsters) {
+            if (Math.random() * 100 < monster.spawnChance) {
                 return monster;
             }
         }
 
-        return dungeon.monsters[0];
+        // 모든 확률 체크 실패 시, 가장 흔한 몬스터 반환
+        return sortedMonsters[sortedMonsters.length - 1];
     };
 
     const startBattle = (dungeon: DungeonData) => {
@@ -154,6 +155,12 @@ export default function Dungeon() {
 
         if (character.currentHp <= 0) {
             setLowHpWarning(true);
+            return;
+        }
+
+        // 레벨 체크
+        if (character.level < dungeon.minLevel) {
+            setLowLevelWarning({ required: dungeon.minLevel, current: character.level });
             return;
         }
 
@@ -273,7 +280,7 @@ export default function Dungeon() {
             newLog.push(`${t(selectedMonster.name)}${t('을(를) 쓰러뜨렸다!')}`);
             const drops: DroppedItem[] = [];
             for (const { itemId, chance } of selectedMonster.drops) {
-                if (Math.random() * 1000 < chance) {
+                if (Math.random() * 100 < chance) {
                     const item = GAME_ITEMS[itemId];
                     if (!item) continue;
                     addItemToInventory(itemId, 1);
@@ -588,6 +595,48 @@ export default function Dungeon() {
                                     <Heart className="h-4 w-4" /> {t('인벤토리')}
                                 </Link>
                             </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* 레벨 부족 경고 모달 */}
+            <AnimatePresence>
+                {lowLevelWarning && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+                        onClick={() => setLowLevelWarning(null)}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="relative w-full max-w-sm p-6 rounded-2xl shadow-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-amber-500"
+                        >
+                            <div className="text-center mb-6">
+                                <Lock className="h-16 w-16 text-amber-500 mx-auto mb-3" />
+                                <h3 className="text-xl font-black mb-2">{t('레벨이 부족합니다!')}</h3>
+                                <p className="text-sm text-foreground/60">
+                                    {lang === 'ko'
+                                        ? `이 던전은 레벨 ${lowLevelWarning.required} 이상만 입장할 수 있습니다.`
+                                        : `This dungeon requires level ${lowLevelWarning.required} or higher.`}
+                                </p>
+                                <div className="mt-3 flex justify-center gap-4 text-sm">
+                                    <span className="text-foreground/60">{t('현재 레벨')}: <span className="font-bold text-foreground">{lowLevelWarning.current}</span></span>
+                                    <span className="text-foreground/60">{t('필요 레벨')}: <span className="font-bold text-amber-500">{lowLevelWarning.required}</span></span>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => setLowLevelWarning(null)}
+                                className="w-full py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 transition-colors"
+                            >
+                                {t('확인')}
+                            </button>
                         </motion.div>
                     </motion.div>
                 )}

@@ -75,6 +75,16 @@ export const CRAFTING_RECIPES: CraftingRecipe[] = [
         successRate: 100,
         rarity: '전설',
     },
+    {
+        id: 'craft_dominator_sword',
+        resultItemId: 'dominator_sword',
+        resultQuantity: 1,
+        materials: [
+            { itemId: 'dominator_stone', quantity: 100 },
+        ],
+        successRate: 100,
+        rarity: '전설',
+    },
 ];
 
 // === 헬퍼 함수 ===

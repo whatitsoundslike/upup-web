@@ -1,22 +1,25 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import Image from 'next/image';
 import { ShoppingBag, MessageSquare } from 'lucide-react';
 
 interface Item {
     id: string;
     name: string | null;
+    description: string | null;
     images: string[];
     sale: boolean;
     price: string;
     buyUrl: string | null;
+    purchasedAt: string | null;
+    createdAt: string;
 }
 
 interface Record {
     id: string;
     text: string | null;
     images: string[];
+    createdAt: string;
 }
 
 interface MemoryOrbProps {
@@ -53,11 +56,10 @@ export default function MemoryOrb({ type, data, size = 64, onClick, delay = 0 }:
                 {/* 이미지 또는 아이콘 */}
                 {imageUrl ? (
                     <div className="absolute inset-1 rounded-full overflow-hidden">
-                        <Image
+                        <img
                             src={imageUrl}
                             alt=""
-                            fill
-                            className="object-cover"
+                            className="w-full h-full object-cover"
                         />
                     </div>
                 ) : (
