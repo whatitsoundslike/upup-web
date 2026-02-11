@@ -10,13 +10,13 @@
   "theme_color": "#6366f1",
   "icons": [
     {
-      "src": "/room-icon/superpet_icon.webp",
+      "src": "/room-icon/superpet.webp",
       "sizes": "192x192",
       "type": "image/webp",
       "purpose": "any maskable"
     },
     {
-      "src": "/room-icon/superpet_icon.webp",
+      "src": "/room-icon/superpet.webp",
       "sizes": "512x512",
       "type": "image/webp",
       "purpose": "any maskable"

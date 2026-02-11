@@ -1,9 +1,8 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, PawPrint, Sparkles, UserPlus } from 'lucide-react';
+import { Heart, LogIn, PawPrint, Skull, Sparkles, Swords, UserPlus } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { type Character, GAME_ITEMS, addItemToInventory, addExpToCharacter, ITEM_RARITY_TEXT, ITEM_RARITY_BORDER, loadCharacter, saveCharacter, getTotalStats, useFood, loadInventory, type InventoryItem, type GameItem } from '../types';
 import { getItem, setItem } from '../storage';
@@ -35,7 +34,7 @@ export default function Dungeon() {
     const [showSignupModal, setShowSignupModal] = useState(false);
     const [rareItemModal, setRareItemModal] = useState<GameItem | null>(null);
     const [activeToast, setActiveToast] = useState<{ message: string; tone: 'success' | 'error'; key: number } | null>(null);
-    const router = useRouter();
+    const [bossEncounter, setBossEncounter] = useState<{ dungeon: DungeonData; monster: MonsterData } | null>(null);
     const logRef = useRef<HTMLDivElement>(null);
     const battleFieldRef = useRef<HTMLDivElement>(null);
     const [isAttacking, setIsAttacking] = useState(false);
@@ -161,9 +160,22 @@ export default function Dungeon() {
         // 마지막 전투 던전 기록
         setItem('last-dungeon', String(dungeon.id));
 
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-
         const monster = selectRandomMonster(dungeon);
+
+        // 보스인 경우 모달 표시
+        if (monster.isBoss) {
+            setBossEncounter({ dungeon, monster });
+            return;
+        }
+
+        // 일반 몬스터는 바로 전투 시작
+        beginBattle(dungeon, monster);
+    };
+
+    const beginBattle = (dungeon: DungeonData, monster: MonsterData) => {
+        if (!character) return;
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
 
         setSelectedDungeon(dungeon);
         setSelectedMonster(monster);
@@ -216,6 +228,15 @@ export default function Dungeon() {
         setBattleState('fighting');
         setBattleLog(battleLogEntries);
         setDroppedItems([]);
+    };
+
+    const handleBossFight = (fight: boolean) => {
+        if (!bossEncounter) return;
+
+        if (fight) {
+            beginBattle(bossEncounter.dungeon, bossEncounter.monster);
+        }
+        setBossEncounter(null);
     };
 
     const handleAttack = useCallback(() => {
@@ -400,6 +421,133 @@ export default function Dungeon() {
                 />
             )}
 
+            {/* 보스 조우 모달 */}
+            <AnimatePresence>
+                {bossEncounter && character && (() => {
+                    const totalStats = getTotalStats(character);
+                    const maxHp = totalStats.hp;
+                    const foodItems = inventory.filter(e => e.item.type === 'food' && e.quantity > 0);
+
+                    return (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+                        >
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                                onClick={(e) => e.stopPropagation()}
+                                className="relative w-full max-w-sm p-6 rounded-2xl shadow-2xl bg-zinc-50 dark:bg-zinc-900 border-2 border-purple-500 max-h-[85vh] overflow-y-auto"
+                            >
+                                {/* 보스 이미지/이모지 */}
+                                <div className="text-center mb-4">
+                                    <div className="w-24 h-40 mx-auto rounded-xl overflow-hidden bg-purple-500/10 mb-3">
+                                        {bossEncounter.monster.imageUrl ? (
+                                            <img
+                                                src={bossEncounter.monster.imageUrl}
+                                                alt={bossEncounter.monster.name}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : bossEncounter.monster.videoUrl ? (
+                                            <video
+                                                src={bossEncounter.monster.videoUrl}
+                                                autoPlay
+                                                loop
+                                                muted
+                                                playsInline
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-5xl">
+                                                {bossEncounter.monster.emoji}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="inline-block px-3 py-1 rounded-full bg-purple-500 text-white text-xs font-bold mb-2">
+                                        <Skull className="inline h-3 w-3 mr-1" />
+                                        {t('보스')} LV.{bossEncounter.monster.level}
+                                    </div>
+                                    <h3 className="text-xl font-black text-purple-500 mb-1">
+                                        {t(bossEncounter.monster.name)}
+                                    </h3>
+                                    <p className="text-sm text-foreground/60 mb-3">
+                                        {lang === 'ko' ? '강력한 보스가 나타났습니다!' : 'A powerful boss has appeared!'}
+                                    </p>
+
+                                    {/* 보스 스탯 */}
+                                    <div className="flex justify-center gap-4 text-xs text-foreground/60 mb-4">
+                                        <span>HP {bossEncounter.monster.hp}</span>
+                                        <span>{t('공격력')} {bossEncounter.monster.attack}</span>
+                                    </div>
+
+                                    {/* 내 캐릭터 HP */}
+                                    <div className="bg-foreground/5 rounded-xl p-3 mb-4">
+                                        <div className="flex items-center justify-between text-sm mb-1">
+                                            <span className="font-semibold">{character.name}</span>
+                                            <span className={`font-bold ${character.currentHp < maxHp * 0.3 ? 'text-red-500' : 'text-green-500'}`}>
+                                                HP {character.currentHp}/{maxHp}
+                                            </span>
+                                        </div>
+                                        <div className="w-full h-2 bg-foreground/10 rounded-full overflow-hidden">
+                                            <div
+                                                className={`h-full transition-all ${character.currentHp < maxHp * 0.3 ? 'bg-red-500' : 'bg-green-500'}`}
+                                                style={{ width: `${(character.currentHp / maxHp) * 100}%` }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* 소비 아이템 */}
+                                    {foodItems.length > 0 && (
+                                        <div className="mb-4">
+                                            <p className="text-xs font-semibold text-foreground/60 mb-2">
+                                                {lang === 'ko' ? '회복 아이템' : 'Recovery Items'}
+                                            </p>
+                                            <div className="flex flex-wrap justify-center gap-2">
+                                                {foodItems.slice(0, 6).map((entry) => (
+                                                    <button
+                                                        key={entry.item.id}
+                                                        onClick={() => handleUseFood(entry.item.id)}
+                                                        disabled={character.currentHp >= maxHp}
+                                                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-green-500/10 text-green-600 text-xs font-semibold hover:bg-green-500/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        title={`${t(entry.item.name)} (+${entry.item.stats.hp} HP)`}
+                                                    >
+                                                        <span>{entry.item.emoji}</span>
+                                                        <span>+{entry.item.stats.hp}</span>
+                                                        <span className="text-foreground/40">x{entry.quantity}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <p className="text-sm font-semibold text-foreground/80">
+                                        {lang === 'ko' ? '싸우시겠습니까?' : 'Will you fight?'}
+                                    </p>
+                                </div>
+
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => handleBossFight(false)}
+                                        className="flex-1 py-3 rounded-xl bg-foreground/10 text-foreground/60 font-bold hover:bg-foreground/20 transition-colors"
+                                    >
+                                        {t('도망가기')}
+                                    </button>
+                                    <button
+                                        onClick={() => handleBossFight(true)}
+                                        className="flex-1 py-3 rounded-xl bg-purple-500 text-white font-bold hover:bg-purple-600 transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <Swords className="h-4 w-4" /> {t('싸우기')}
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </motion.div>
+                    );
+                })()}
+            </AnimatePresence>
+
             {/* 체력 부족 경고 모달 */}
             <AnimatePresence>
                 {lowHpWarning && (
@@ -471,18 +619,26 @@ export default function Dungeon() {
                                 </p>
                             </div>
 
-                            <div className="flex gap-3">
+                            <div className="flex flex-col gap-2">
+                                <div className="flex gap-2">
+                                    <Link
+                                        href="/login?callbackUrl=/superpet/dungeon"
+                                        className="flex-1 py-3 rounded-xl bg-blue-500 text-white font-bold hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <LogIn className="h-4 w-4" /> {t('로그인')}
+                                    </Link>
+                                    <Link
+                                        href="/signup?callbackUrl=/superpet/dungeon"
+                                        className="flex-1 py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <UserPlus className="h-4 w-4" /> {t('회원가입')}
+                                    </Link>
+                                </div>
                                 <button
                                     onClick={() => setShowSignupModal(false)}
-                                    className="flex-1 py-3 rounded-xl bg-foreground/10 text-foreground/60 font-bold hover:bg-foreground/20 transition-colors"
+                                    className="w-full py-3 rounded-xl bg-foreground/10 text-foreground/60 font-bold hover:bg-foreground/20 transition-colors"
                                 >
                                     {t('닫기')}
-                                </button>
-                                <button
-                                    onClick={() => router.push('/signup')}
-                                    className="flex-1 py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
-                                >
-                                    <UserPlus className="h-4 w-4" /> {t('회원가입')}
                                 </button>
                             </div>
                         </motion.div>

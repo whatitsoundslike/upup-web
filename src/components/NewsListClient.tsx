@@ -33,7 +33,7 @@ const categoryConfigs: Record<NewsCategory, {
         description: '테슬라와 전기차 시장의 가장 생생한 소식을 전해드립니다.',
         accentColor: 'group-hover:text-tesla-red',
         badgeColor: 'text-tesla-red bg-tesla-red/10',
-        defaultThumbnail: '/tesla_thumbnail.png',
+        defaultThumbnail: '/tesla_thumbnail.webp',
         emoji: '🚗',
     },
     baby: {

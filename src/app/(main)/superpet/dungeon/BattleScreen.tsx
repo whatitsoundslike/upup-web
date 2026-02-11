@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Swords, Heart, Skull } from 'lucide-react';
+import { Swords, Heart, Skull, ShoppingCart } from 'lucide-react';
 import { type ReactNode, type RefObject } from 'react';
 import { type Character, ITEM_RARITY_TEXT, getTotalStats, type InventoryItem } from '../types';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -228,14 +228,6 @@ export default function BattleScreen({
                     <div className="w-full py-4 rounded-xl bg-foreground/10 text-foreground/60 font-bold text-lg flex items-center justify-center gap-2">
                         <Swords className="h-5 w-5 animate-pulse text-red-500" /> {t('자동 전투 진행 중...')}
                     </div>
-                    <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={onExitBattle}
-                        className="w-full py-3 rounded-xl bg-foreground/5 text-foreground/40 text-sm font-bold hover:bg-foreground/10 transition-colors"
-                    >
-                        {t('전투 포기')}
-                    </motion.button>
                 </div>
             )}
 
@@ -300,7 +292,15 @@ export default function BattleScreen({
                                         );
                                     })}
                                 {inventory.filter(entry => entry.item.type === 'food').length === 0 && (
-                                    <p className="text-sm text-foreground/40 italic py-4">{t('보유 중인 식품이 없습니다.')}</p>
+                                    <div className="py-4">
+                                        <p className="text-sm text-foreground/40 italic mb-3">{t('보유 중인 간식이 없습니다')}</p>
+                                        <button
+                                            onClick={() => router.push('/superpet/shop')}
+                                            className="px-4 py-2 rounded-xl bg-blue-500/20 text-blue-500 text-sm font-bold hover:bg-blue-500/30 transition-colors flex items-center gap-2 mx-auto"
+                                        >
+                                            <ShoppingCart className="h-4 w-4" /> {t('상점으로 가기')}
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -316,13 +316,21 @@ export default function BattleScreen({
                         <Skull className="h-16 w-16 text-red-500 mx-auto mb-4" />
                         <h3 className="text-2xl font-black mb-2">{t('패배...')}</h3>
                         <p className="text-foreground/60 mb-4">{t('다음에는 더 강해져서 돌아오자!')}</p>
-                        <div className="flex gap-3 justify-center items-center">
+                        <div className="flex flex-wrap gap-3 justify-center items-center">
                             <button
                                 onClick={() => { router.push("/superpet/room") }}
                                 className="px-6 py-3 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors"
                             >
                                 {t('집으로...')}
                             </button>
+                            {inventory.filter(entry => entry.item.type === 'food').length === 0 && (
+                                <button
+                                    onClick={() => router.push('/superpet/shop')}
+                                    className="px-6 py-3 rounded-xl bg-blue-500 text-white font-bold hover:bg-blue-600 transition-colors flex items-center gap-2"
+                                >
+                                    <ShoppingCart className="h-4 w-4" /> {t('상점으로 가기')}
+                                </button>
+                            )}
                             <div className="px-3 py-1.5 rounded-xl bg-foreground/5 text-foreground/50 text-sm font-bold flex items-center gap-1.5">
                                 🍖 {t('무료 사료')} {feedCountdown}
                             </div>

@@ -61,7 +61,7 @@ export default function Room() {
     const [gemBalance, setGemBalance] = useState<number | null>(null);
     const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
     const [activeToast, setActiveToast] = useState<{ message: string; tone: 'success' | 'error'; key: number } | null>(null);
-    const [sellConfirm, setSellConfirm] = useState<{ itemId: string; sellAll: boolean } | null>(null);
+    const [sellConfirm, setSellConfirm] = useState<{ itemId: string; sellAll: boolean; instanceId?: string } | null>(null);
     const [searchName, setSearchName] = useState('');
     const [slotFilter, setSlotFilter] = useState<EquipmentSlot | 'all'>('all');
     const [isSharing, setIsSharing] = useState(false);
@@ -114,8 +114,8 @@ export default function Room() {
         setActiveToast({ message, tone, key: Date.now() });
     };
 
-    const handleSellRequest = (itemId: string, sellAll: boolean) => {
-        setSellConfirm({ itemId, sellAll });
+    const handleSellRequest = (itemId: string, sellAll: boolean, instanceId?: string) => {
+        setSellConfirm({ itemId, sellAll, instanceId });
     };
 
     // 일괄 선택 토글
@@ -276,12 +276,16 @@ export default function Room() {
 
     const handleSellConfirm = () => {
         if (!sellConfirm) return;
-        const { itemId, sellAll } = sellConfirm;
+        const { itemId, sellAll, instanceId } = sellConfirm;
 
         if (sellAll) {
-            const entry = inventory.find((e) => e.item.id === itemId);
-            if (!entry || entry.quantity <= 0) return;
-            const gold = ITEM_SELL_PRICE[entry.item.rarity] * entry.quantity;
+            // 전부 판매: instanceId가 있으면 같은 item.id를 가진 모든 장비 판매
+            const entries = instanceId
+                ? inventory.filter((e) => e.item.id === itemId)
+                : [inventory.find((e) => e.item.id === itemId)].filter(Boolean);
+            if (entries.length === 0) return;
+            const totalQuantity = entries.reduce((sum, e) => sum + (e?.quantity || 0), 0);
+            const gold = ITEM_SELL_PRICE[entries[0]!.item.rarity] * totalQuantity;
             const updated = inventory.filter((e) => e.item.id !== itemId);
             setInventory(updated);
             saveInventory(updated);
@@ -290,29 +294,47 @@ export default function Room() {
             setSelectedItem(null);
             showToast(
                 lang === 'ko'
-                    ? `${entry.item.name} ${entry.quantity}개를 ${gold}G에 판매했습니다!`
-                    : `Sold ${entry.quantity}x ${t(entry.item.name)} for ${gold}G!`,
+                    ? `${entries[0]!.item.name} ${totalQuantity}개를 ${gold}G에 판매했습니다!`
+                    : `Sold ${totalQuantity}x ${t(entries[0]!.item.name)} for ${gold}G!`,
                 'success'
             );
         } else {
-            const entry = inventory.find((e) => e.item.id === itemId);
+            // 1개 판매: instanceId가 있으면 해당 장비만 판매
+            const entry = instanceId
+                ? inventory.find((e) => e.instanceId === instanceId)
+                : inventory.find((e) => e.item.id === itemId);
             if (!entry || entry.quantity <= 0) return;
             const gold = ITEM_SELL_PRICE[entry.item.rarity];
-            const updated = inventory
-                .map((e) =>
-                    e.item.id === itemId
-                        ? { ...e, quantity: e.quantity - 1 }
-                        : e
-                )
-                .filter((e) => e.quantity > 0);
+
+            let updated;
+            if (instanceId) {
+                // 장비 아이템: instanceId로 특정 아이템만 제거
+                updated = inventory.filter((e) => e.instanceId !== instanceId);
+            } else {
+                // 소모품/재료: 수량 감소
+                updated = inventory
+                    .map((e) =>
+                        e.item.id === itemId
+                            ? { ...e, quantity: e.quantity - 1 }
+                            : e
+                    )
+                    .filter((e) => e.quantity > 0);
+            }
+
             setInventory(updated);
             saveInventory(updated);
             const updatedChar = addGoldToCharacter(gold);
             setCharacter(updatedChar);
-            if (selectedItem?.item.id === itemId) {
+
+            if (instanceId) {
+                // 장비: 같은 종류의 다른 장비가 있으면 선택
+                const remaining = updated.find((e) => e.item.id === itemId);
+                setSelectedItem(remaining ?? null);
+            } else if (selectedItem?.item.id === itemId) {
                 const remaining = updated.find((e) => e.item.id === itemId);
                 setSelectedItem(remaining ?? null);
             }
+
             showToast(
                 lang === 'ko'
                     ? `${entry.item.name}을(를) ${gold}G에 판매했습니다!`
@@ -1037,14 +1059,14 @@ export default function Room() {
                                     {selectedItem.quantity > 0 && (
                                         <div className="flex gap-2">
                                             <button
-                                                onClick={() => handleSellRequest(selectedItem.item.id, false)}
+                                                onClick={() => handleSellRequest(selectedItem.item.id, false, selectedItem.instanceId)}
                                                 className="flex-1 py-3 rounded-xl bg-amber-500/10 text-amber-600 font-semibold text-sm hover:bg-amber-500/20 transition-colors flex items-center justify-center gap-1.5"
                                             >
                                                 <Coins className="h-4 w-4" /> {t('1개 판매')} ({ITEM_SELL_PRICE[modalItem.rarity]}G)
                                             </button>
                                             {selectedItem.quantity > 1 && (
                                                 <button
-                                                    onClick={() => handleSellRequest(selectedItem.item.id, true)}
+                                                    onClick={() => handleSellRequest(selectedItem.item.id, true, selectedItem.instanceId)}
                                                     className="py-3 px-4 rounded-xl bg-amber-500/10 text-amber-600 font-semibold text-sm hover:bg-amber-500/20 transition-colors"
                                                 >
                                                     {t('전부 판매')} ({ITEM_SELL_PRICE[modalItem.rarity] * selectedItem.quantity}G)
@@ -1083,12 +1105,16 @@ export default function Room() {
             {/* 판매 확인 모달 */}
             <AnimatePresence>
                 {sellConfirm && (() => {
-                    const entry = inventory.find((e) => e.item.id === sellConfirm.itemId);
+                    const entry = sellConfirm.instanceId
+                        ? inventory.find((e) => e.instanceId === sellConfirm.instanceId)
+                        : inventory.find((e) => e.item.id === sellConfirm.itemId);
                     if (!entry) return null;
-                    const totalGold = sellConfirm.sellAll
-                        ? ITEM_SELL_PRICE[entry.item.rarity] * entry.quantity
-                        : ITEM_SELL_PRICE[entry.item.rarity];
-                    const quantityText = sellConfirm.sellAll ? `${entry.quantity}${lang === 'ko' ? '개' : 'x'}` : `1${lang === 'ko' ? '개' : 'x'}`;
+                    // 전부 판매 시 같은 item.id를 가진 모든 아이템의 수량 합계
+                    const totalQuantity = sellConfirm.sellAll
+                        ? inventory.filter((e) => e.item.id === sellConfirm.itemId).reduce((sum, e) => sum + e.quantity, 0)
+                        : 1;
+                    const totalGold = ITEM_SELL_PRICE[entry.item.rarity] * totalQuantity;
+                    const quantityText = `${totalQuantity}${lang === 'ko' ? '개' : 'x'}`;
 
                     return (
                         <motion.div

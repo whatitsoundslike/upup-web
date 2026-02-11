@@ -245,6 +245,8 @@ export const koToEn: Record<string, string> = {
     '집으로...': 'Go Home...',
     '배고파..?': 'Hungry..?',
     '먹이기': 'Feed',
+    '보유 중인 간식이 없습니다': 'No snacks found',
+    '상점으로 가기': 'Go to Shop',
 
     // === 전투 로그 메시지 ===
     '이(가) 나타났다!': ' appeared!',

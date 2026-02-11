@@ -578,7 +578,7 @@ export const GAME_ITEMS: Record<string, GameItem> = {
         stats: { hp: 0, attack: 0, defense: 0, speed: 0 },
         type: 'scroll',
         enhanceScrollType: 'weapon',
-        shopGoldPrice: 6000,
+        shopGoldPrice: 30000,
     },
     armor_enhance_scroll: {
         id: 'armor_enhance_scroll',
@@ -588,7 +588,7 @@ export const GAME_ITEMS: Record<string, GameItem> = {
         stats: { hp: 0, attack: 0, defense: 0, speed: 0 },
         type: 'scroll',
         enhanceScrollType: 'armor',
-        shopGoldPrice: 3000,
+        shopGoldPrice: 20000,
     },
     accessory_enhance_scroll: {
         id: 'accessory_enhance_scroll',
@@ -598,7 +598,7 @@ export const GAME_ITEMS: Record<string, GameItem> = {
         stats: { hp: 0, attack: 0, defense: 0, speed: 0 },
         type: 'scroll',
         enhanceScrollType: 'accessory',
-        shopGoldPrice: 10000,
+        shopGoldPrice: 50000,
     },
 
     // ========== 재화 아이템 ==========

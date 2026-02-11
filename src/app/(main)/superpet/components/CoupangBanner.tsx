@@ -11,7 +11,7 @@ export default function CoupangBanner({ className = '' }: CoupangBannerProps) {
         <div className={`flex justify-center items-center ${className}`}>
             <Link href="https://link.coupang.com/a/dDM4KV" target="_blank" rel="noreferrer">
                 <img
-                    src="/banner/superpet_banner.png"
+                    src="/banner/superpet_banner.webp"
                     alt="Coupang Ad"
                     className="rounded-lg shadow-md max-w-full h-auto"
                 />

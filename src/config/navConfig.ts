@@ -81,7 +81,7 @@ export const defaultNavItems: NavItem[] = [
 export const navRoomLogo: Record<string, string> = {
     tesla: '/room-icon/tesla.webp',
     baby: '/room-icon/baby.webp',
-    superpet: '/room-icon/superpet_icon.webp',
+    superpet: '/room-icon/superpet.webp',
     ai: '/room-icon/ai.webp',
     desk: '/room-icon/desk.webp',
 }

@@ -1198,19 +1198,27 @@ export default function SuperpetHome() {
                                         : 'Sign up to share with friends.\nJoin now and enjoy with your friends!'}
                                 </p>
                             </div>
-                            <div className="flex gap-3">
+                            <div className="flex flex-col gap-2">
+                                <div className="flex gap-2">
+                                    <Link
+                                        href="/login?callbackUrl=/superpet"
+                                        className="flex-1 py-3 rounded-xl bg-blue-500 text-white font-bold hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <LogIn className="h-4 w-4" /> {t('로그인')}
+                                    </Link>
+                                    <Link
+                                        href="/signup?callbackUrl=/superpet"
+                                        className="flex-1 py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <UserPlus className="h-4 w-4" /> {t('회원가입')}
+                                    </Link>
+                                </div>
                                 <button
                                     onClick={() => setShowShareLoginModal(false)}
-                                    className="flex-1 py-3 rounded-xl bg-foreground/10 text-foreground/60 font-bold hover:bg-foreground/20 transition-colors"
+                                    className="w-full py-3 rounded-xl bg-foreground/10 text-foreground/60 font-bold hover:bg-foreground/20 transition-colors"
                                 >
                                     {t('닫기')}
                                 </button>
-                                <Link
-                                    href="/signup"
-                                    className="flex-1 py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 transition-colors flex items-center justify-center gap-2"
-                                >
-                                    <UserPlus className="h-4 w-4" /> {t('회원가입')}
-                                </Link>
                             </div>
                         </motion.div>
                     </motion.div>
