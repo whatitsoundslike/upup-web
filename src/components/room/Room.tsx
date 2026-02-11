@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import MemoryOrb from './MemoryOrb';
 
@@ -35,13 +36,15 @@ interface RoomProps {
     onOrbClick?: (type: 'item' | 'record', data: Item | Record) => void;
 }
 
+// Hoisted constant (rendering-hoist-jsx)
+const ORB_SIZE = 64;
+
 export default function Room({ room, onOrbClick }: RoomProps) {
-    const allOrbs = [
+    // Memoized combined orbs array (rerender-derived-state)
+    const allOrbs = useMemo(() => [
         ...room.items.map((item) => ({ type: 'item' as const, data: item })),
         ...room.records.map((record) => ({ type: 'record' as const, data: record })),
-    ];
-
-    const orbSize = 64;
+    ], [room.items, room.records]);
 
     return (
         <div className="relative w-full min-h-[80vh] bg-gradient-to-b from-zinc-50 to-zinc-100 dark:from-zinc-900 dark:to-zinc-950">
@@ -101,7 +104,7 @@ export default function Room({ room, onOrbClick }: RoomProps) {
                                     <MemoryOrb
                                         type={orb.type}
                                         data={orb.data}
-                                        size={orbSize}
+                                        size={ORB_SIZE}
                                         onClick={() => onOrbClick?.(orb.type, orb.data)}
                                         delay={0}
                                     />

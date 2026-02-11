@@ -79,6 +79,7 @@ function LoginForm() {
             value={uid}
             onChange={(e) => setUid(e.target.value)}
             placeholder="아이디"
+            autoComplete="username"
             required
             className={cn(
               "w-full pl-10 pr-4 py-3 rounded-lg border dark:border-white/10",
@@ -95,6 +96,7 @@ function LoginForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="비밀번호"
+            autoComplete="current-password"
             required
             className={cn(
               "w-full pl-10 pr-4 py-3 rounded-lg border dark:border-white/10",

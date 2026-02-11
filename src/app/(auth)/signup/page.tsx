@@ -101,6 +101,7 @@ export default function SignupPage() {
             value={uid}
             onChange={(e) => setUid(e.target.value)}
             placeholder="아이디"
+            autoComplete="username"
             className={cn(
               "w-full pl-10 pr-4 py-3 rounded-lg border dark:border-white/10",
               "bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-tesla-red/50",
@@ -116,6 +117,7 @@ export default function SignupPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="닉네임"
+            autoComplete="off"
             className={cn(
               "w-full pl-10 pr-4 py-3 rounded-lg border dark:border-white/10",
               "bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-tesla-red/50",
@@ -124,6 +126,22 @@ export default function SignupPage() {
           />
         </div>
 
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-foreground/40" />
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="이메일"
+            autoComplete="off"
+            required
+            className={cn(
+              "w-full pl-10 pr-4 py-3 rounded-lg border dark:border-white/10",
+              "bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-tesla-red/50",
+              "transition-colors"
+            )}
+          />
+        </div>
 
         <div className="relative">
           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-foreground/40" />
@@ -132,6 +150,7 @@ export default function SignupPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="비밀번호 (6자 이상)"
+            autoComplete="new-password"
             required
             className={cn(
               "w-full pl-10 pr-4 py-3 rounded-lg border dark:border-white/10",
@@ -148,6 +167,7 @@ export default function SignupPage() {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="비밀번호 확인"
+            autoComplete="new-password"
             required
             className={cn(
               "w-full pl-10 pr-4 py-3 rounded-lg border dark:border-white/10",

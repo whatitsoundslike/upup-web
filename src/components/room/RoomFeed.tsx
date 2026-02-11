@@ -73,7 +73,8 @@ export default function RoomFeed({ category }: RoomFeedProps) {
         }
     }, [fetchFeed]);
 
-    const loadMore = async () => {
+    // Stable callback reference (rerender-functional-setstate)
+    const loadMore = useCallback(async () => {
         if (!nextCursor || loadingMore) return;
         setLoadingMore(true);
         try {
@@ -85,7 +86,7 @@ export default function RoomFeed({ category }: RoomFeedProps) {
         } finally {
             setLoadingMore(false);
         }
-    };
+    }, [nextCursor, loadingMore, fetchFeed]);
 
     useEffect(() => {
         if (!authLoading && user) {

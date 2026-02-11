@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback, useMemo, memo } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ShoppingBag, MessageSquare, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -13,26 +13,32 @@ interface FeedCardProps {
     category: string;
 }
 
-export default function FeedCard({ item, category }: FeedCardProps) {
+// Memoized component to prevent unnecessary re-renders (rerender-memo)
+const FeedCard = memo(function FeedCard({ item, category }: FeedCardProps) {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const hasMultipleImages = item.images.length > 1;
 
-    const nextImage = (e: React.MouseEvent) => {
+    // Stable callback references (rerender-functional-setstate)
+    const nextImage = useCallback((e: React.MouseEvent) => {
         e.stopPropagation();
         setCurrentImageIndex((prev) => (prev + 1) % item.images.length);
-    };
+    }, [item.images.length]);
 
-    const prevImage = (e: React.MouseEvent) => {
+    const prevImage = useCallback((e: React.MouseEvent) => {
         e.stopPropagation();
         setCurrentImageIndex((prev) => (prev - 1 + item.images.length) % item.images.length);
-    };
+    }, [item.images.length]);
 
-    const timeAgo = formatDistanceToNow(new Date(item.createdAt), { addSuffix: true, locale: ko });
+    // Memoized time calculation (rerender-derived-state)
+    const timeAgo = useMemo(() =>
+        formatDistanceToNow(new Date(item.createdAt), { addSuffix: true, locale: ko }),
+        [item.createdAt]
+    );
 
-    const handleBuyClick = (e: React.MouseEvent) => {
+    const handleBuyClick = useCallback((e: React.MouseEvent) => {
         e.stopPropagation();
         e.preventDefault();
-    };
+    }, []);
 
     return (
         <Link href={`/${category}/room/${item.roomId}?select=${item.type}&id=${item.id}`}>
@@ -137,4 +143,6 @@ export default function FeedCard({ item, category }: FeedCardProps) {
         </motion.div>
         </Link>
     );
-}
+});
+
+export default FeedCard;

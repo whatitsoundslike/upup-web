@@ -1,9 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, memo, useCallback } from 'react';
 import { get1HourVersion } from '@/lib/utils';
 import { AlertTriangle, Search } from 'lucide-react';
-
 
 interface City {
     locationName1: string;
@@ -15,6 +14,82 @@ interface City {
     etc: string;
 }
 
+// Set for O(1) lookups (js-set-map-lookups)
+const METRO_CITIES = new Set(['서울', '부산', '대구', '인천', '광주', '대전', '울산', '세종', '공단', '제주']);
+
+// Hoisted static JSX (rendering-hoist-jsx)
+const loadingSkeleton = (
+    <div className="max-w-7xl mx-auto px-4 py-16 flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-4 border-tesla-red/20 border-t-tesla-red rounded-full animate-spin" />
+            <p className="text-foreground/60 font-medium">데이터를 불러오는 중입니다...</p>
+        </div>
+    </div>
+);
+
+const emptyResultRow = (searchTerm: string) => (
+    <tr>
+        <td colSpan={7} className="px-6 py-20 text-center">
+            <div className="flex flex-col items-center gap-4">
+                <AlertTriangle className="h-8 w-8 text-foreground/20" />
+                <p className="text-foreground/40 font-medium italic uppercase tracking-widest text-sm">
+                    No results found for "{searchTerm}"
+                </p>
+            </div>
+        </td>
+    </tr>
+);
+
+// Memoized table row component (rerender-memo)
+interface CityRowProps {
+    city: City;
+}
+
+const CityRow = memo(function CityRow({ city }: CityRowProps) {
+    // Early exit for division by zero (js-early-exit)
+    const rate = city.totalCount > 0
+        ? Math.round((city.remainCount / city.totalCount) * 1000) / 10
+        : 0;
+
+    // O(1) lookup using Set (js-set-map-lookups)
+    const locationName = METRO_CITIES.has(city.locationName1)
+        ? city.locationName1
+        : `${city.locationName1} ${city.locationName2}`;
+
+    return (
+        <tr className="hover:bg-foreground/[0.02] transition-colors">
+            <td className="px-2 py-2 md:px-2 md:py-5 font-medium text-center text-xs md:text-sm w-[50px] md:w-auto">
+                {locationName}
+            </td>
+            <td className="px-2 py-2 md:px-6 md:py-5 font-mono text-xs md:text-sm text-foreground/60 text-right w-[50px] md:w-auto">
+                {city.totalCount.toLocaleString()}
+            </td>
+            <td className="px-2 py-2 md:px-6 md:py-5 font-mono text-xs md:text-sm text-foreground/60 text-right w-[50px] md:w-auto">
+                {city.recievedCount.toLocaleString()}
+            </td>
+            <td className="px-2 py-2 md:px-6 md:py-5 font-mono text-xs md:text-sm text-foreground/60 text-right w-[50px] md:w-auto">
+                {city.releaseCount.toLocaleString()}
+            </td>
+            <td className="px-2 py-2 md:px-6 md:py-5 font-mono text-xs md:text-sm text-right w-[50px] md:w-auto hidden md:table-cell">
+                {city.remainCount.toLocaleString()}
+            </td>
+            <td className="px-2 py-2 md:px-6 md:py-5 text-right hidden md:table-cell">
+                {/* Explicit ternary (rendering-conditional-render) */}
+                {city.totalCount > 0 ? (
+                    <span className="text-foreground/40">{rate}%</span>
+                ) : (
+                    <span className="text-foreground/20">-</span>
+                )}
+            </td>
+            <td className="px-2 py-2 md:px-6 md:py-5 text-right hidden md:table-cell max-w-[300px] break-words">
+                <span className="text-xs text-foreground/50 font-medium whitespace-pre-line">
+                    {city.etc || '-'}
+                </span>
+            </td>
+        </tr>
+    );
+});
+
 export default function TeslaSubsidy() {
     const [cities, setCities] = useState<City[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -23,7 +98,10 @@ export default function TeslaSubsidy() {
     useEffect(() => {
         const fetchCities = async () => {
             try {
-                const response = await fetch('https://raw.githubusercontent.com/whatitsoundslike/upup-admin/refs/heads/main/data/electriccar_subside.json?v=' + get1HourVersion(), { cache: "no-store" });
+                const response = await fetch(
+                    'https://raw.githubusercontent.com/whatitsoundslike/upup-admin/refs/heads/main/data/electriccar_subside.json?v=' + get1HourVersion(),
+                    { cache: "no-store" }
+                );
                 const data = await response.json();
                 setCities(data);
             } catch (error) {
@@ -35,20 +113,25 @@ export default function TeslaSubsidy() {
         fetchCities();
     }, []);
 
-    const filteredCities = cities.filter((city) =>
-        city.locationName1.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        city.locationName2.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Memoized filtered cities (rerender-derived-state)
+    const filteredCities = useMemo(() => {
+        if (!searchTerm) return cities;
 
-    if (isLoading) {
-        return (
-            <div className="max-w-7xl mx-auto px-4 py-16 flex items-center justify-center min-h-[60vh]">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 border-4 border-tesla-red/20 border-t-tesla-red rounded-full animate-spin" />
-                    <p className="text-foreground/60 font-medium">데이터를 불러오는 중입니다...</p>
-                </div>
-            </div>
+        const lowerSearchTerm = searchTerm.toLowerCase();
+        return cities.filter((city) =>
+            city.locationName1.toLowerCase().includes(lowerSearchTerm) ||
+            city.locationName2.toLowerCase().includes(lowerSearchTerm)
         );
+    }, [cities, searchTerm]);
+
+    // Stable callback reference (rerender-functional-setstate)
+    const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchTerm(e.target.value);
+    }, []);
+
+    // Early return for loading state (js-early-exit)
+    if (isLoading) {
+        return loadingSkeleton;
     }
 
     return (
@@ -67,7 +150,7 @@ export default function TeslaSubsidy() {
                             placeholder="지역명을 검색하세요 (예: 서울, 수원, 경기)"
                             className="w-full bg-foreground/5 border border-foreground/10 h-14 pl-12 pr-4 rounded-2xl outline-none focus:border-tesla-red/50 focus:ring-4 focus:ring-tesla-red/5 transition-all text-lg font-medium"
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={handleSearchChange}
                         />
                     </div>
 
@@ -84,55 +167,16 @@ export default function TeslaSubsidy() {
                                     <th className="px-1 py-2.5 text-[11px] md:text-xs font-bold uppercase tracking-tight text-foreground/50 text-right hidden md:table-cell">비고</th>
                                 </tr>
                             </thead>
-                            <tbody className="">
-                                {filteredCities.map((city) => {
-                                    const rate = Math.round((city.remainCount / city.totalCount) * 1000) / 10;
-                                    return (
-                                        <tr key={`${city.locationName1}-${city.locationName2}`} className="">
-                                            <td className="px-2 py-2 md:px-2 md:py-5 font-medium text-center text-xs md:text-sm w-[50px] md:w-auto">
-                                                {city.locationName1}
-                                                {!['서울', '부산', '대구', '인천', '광주', '대전', '울산', '세종', '공단', '제주'].includes(city.locationName1) && ` ${city.locationName2}`}
-                                            </td>
-                                            <td className="px-2 py-2 md:px-6 md:py-5 font-mono text-xs md:text-sm text-foreground/60 text-right w-[50px] md:w-auto">
-                                                {city.totalCount.toLocaleString()}
-                                            </td>
-                                            <td className="px-2 py-2 md:px-6 md:py-5 font-mono text-xs md:text-sm text-foreground/60 text-right w-[50px] md:w-auto">
-                                                {city.recievedCount.toLocaleString()}
-                                            </td>
-                                            <td className="px-2 py-2 md:px-6 md:py-5 font-mono text-xs md:text-sm text-foreground/60 text-right w-[50px] md:w-auto">
-                                                {city.releaseCount.toLocaleString()}
-                                            </td>
-                                            <td className="px-2 py-2 md:px-6 md:py-5 font-mono text-xs md:text-sm text-right w-[50px] md:w-auto hidden md:table-cell">
-                                                {city.remainCount.toLocaleString()}
-                                            </td>
-                                            <td className="px-2 py-2 md:px-6 md:py-5 text-right hidden md:table-cell">
-                                                {city.totalCount > 0 ? (
-                                                    <span className="text-foreground/40">
-                                                        {rate}%
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-foreground/20">-</span>
-                                                )}
-                                            </td>
-                                            <td className="px-2 py-2 md:px-6 md:py-5 text-right hidden md:table-cell max-w-[300px] break-words">
-                                                <span className="text-xs text-foreground/50 font-medium whitespace-pre-line">
-                                                    {city.etc || '-'}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                                {filteredCities.length === 0 && (
-                                    <tr>
-                                        <td colSpan={5} className="px-6 py-20 text-center">
-                                            <div className="flex flex-col items-center gap-4">
-                                                <AlertTriangle className="h-8 w-8 text-foreground/20" />
-                                                <p className="text-foreground/40 font-medium italic uppercase tracking-widest text-sm">
-                                                    No results found for "{searchTerm}"
-                                                </p>
-                                            </div>
-                                        </td>
-                                    </tr>
+                            <tbody>
+                                {filteredCities.length > 0 ? (
+                                    filteredCities.map((city) => (
+                                        <CityRow
+                                            key={`${city.locationName1}-${city.locationName2}`}
+                                            city={city}
+                                        />
+                                    ))
+                                ) : (
+                                    emptyResultRow(searchTerm)
                                 )}
                             </tbody>
                         </table>

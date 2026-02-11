@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Lock, Pencil, Loader2, ArrowLeft, User, IdCard } from 'lucide-react';
+import { Lock, Pencil, Loader2, ArrowLeft, User, IdCard, Mail } from 'lucide-react';
 import { useAuth } from '@/components/AuthProvider';
 import { cn } from '@/lib/utils';
 import { koToEn } from '@/app/(main)/superpet/i18n/translations';
@@ -15,6 +15,7 @@ export default function ProfilePage() {
   const { user, loading: authLoading, refreshUser } = useAuth();
 
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -48,6 +49,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (user?.name) setName(user.name);
+    if (user?.email) setEmail(user.email);
   }, [user]);
 
   if (authLoading || !user) return null;
@@ -80,7 +82,7 @@ export default function ProfilePage() {
     setLoading(true);
 
     try {
-      const body: Record<string, string> = { name };
+      const body: Record<string, string> = { name, email };
       if (newPassword) {
         body.currentPassword = currentPassword;
         body.newPassword = newPassword;
@@ -143,6 +145,8 @@ export default function ProfilePage() {
             type="text"
             value={user.uid}
             disabled
+            autoComplete="username"
+            required
             className={cn(
               "w-full px-4 py-3 rounded-lg border dark:border-white/10",
               "bg-foreground/5 text-foreground/40 cursor-not-allowed"
@@ -159,8 +163,29 @@ export default function ProfilePage() {
           <input
             type="text"
             value={name}
+            required
             onChange={(e) => setName(e.target.value)}
             placeholder={t('닉네임')}
+            className={cn(
+              "w-full px-4 py-3 rounded-lg border dark:border-white/10",
+              "bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-tesla-red/50",
+              "transition-colors"
+            )}
+          />
+        </div>
+
+        {/* 이메일 */}
+        <div>
+          <label className="flex items-center gap-1.5 text-sm font-medium text-foreground/60 mb-1.5">
+            <Mail className="h-4 w-4" />
+            {t('이메일')}
+          </label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder={t('이메일')}
+            required
             className={cn(
               "w-full px-4 py-3 rounded-lg border dark:border-white/10",
               "bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-tesla-red/50",

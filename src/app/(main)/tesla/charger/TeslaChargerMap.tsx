@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { APIProvider, Map, AdvancedMarker, InfoWindow, useMap } from '@vis.gl/react-google-maps';
+import { useEffect, useState, useMemo, useCallback, memo } from 'react';
+import { APIProvider, Map, AdvancedMarker, useMap } from '@vis.gl/react-google-maps';
 
 // 한국 내 테슬라 슈퍼차저 위치 데이터 (테슬라 공식 웹사이트 기준)
 const SUPERCHARGERS = [
@@ -204,8 +204,25 @@ interface SuperchargerLocation {
     distance?: number;
 }
 
-// MapController component to handle programmatic map movements
-function MapController({ center, zoom }: { center: { lat: number; lng: number } | null; zoom: number | null }) {
+// Hoisted outside component to prevent recreation (js-cache-function-results)
+const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // 지구 반지름 (km)
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+};
+
+// Default map center (Seoul)
+const DEFAULT_CENTER = { lat: 37.5665, lng: 126.9780 };
+const DEFAULT_ZOOM = 11;
+
+// MapController component to handle programmatic map movements (memoized)
+const MapController = memo(function MapController({ center, zoom }: { center: { lat: number; lng: number } | null; zoom: number | null }) {
     const map = useMap();
 
     useEffect(() => {
@@ -217,7 +234,7 @@ function MapController({ center, zoom }: { center: { lat: number; lng: number } 
     }, [map, center, zoom]);
 
     return null;
-}
+});
 
 interface TeslaChargerMapProps {
     embedded?: boolean;
@@ -227,41 +244,23 @@ export default function TeslaChargerMap({ embedded = false }: TeslaChargerMapPro
     const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
     const [selectedCharger, setSelectedCharger] = useState<SuperchargerLocation | null>(null);
     const [sortedChargers, setSortedChargers] = useState<SuperchargerLocation[]>(SUPERCHARGERS);
-    const [filteredChargers, setFilteredChargers] = useState<SuperchargerLocation[]>(SUPERCHARGERS);
-    const [initialCenter] = useState({ lat: 37.5665, lng: 126.9780 }); // 서울 기본 위치
-    const [initialZoom] = useState(11);
     const [targetCenter, setTargetCenter] = useState<{ lat: number; lng: number } | null>(null);
     const [targetZoom, setTargetZoom] = useState<number | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-    // Google Maps API 키 (환경변수에서 가져오거나 직접 설정)
+    // Google Maps API 키
     const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
-    // 두 지점 간 거리 계산 (Haversine formula)
-    const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-        const R = 6371; // 지구 반지름 (km)
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a =
-            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-            Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c;
-    };
+    // useMemo for filtered chargers instead of useEffect + state (rerender-derived-state-no-effect)
+    const filteredChargers = useMemo(() => {
+        if (!searchQuery.trim()) return sortedChargers;
 
-    // 검색 필터링
-    useEffect(() => {
-        if (searchQuery.trim() === '') {
-            setFilteredChargers(sortedChargers);
-        } else {
-            const filtered = sortedChargers.filter(charger =>
-                charger.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                charger.address.toLowerCase().includes(searchQuery.toLowerCase())
-            );
-            setFilteredChargers(filtered);
-        }
+        const lowerQuery = searchQuery.toLowerCase();
+        return sortedChargers.filter(charger =>
+            charger.name.toLowerCase().includes(lowerQuery) ||
+            charger.address.toLowerCase().includes(lowerQuery)
+        );
     }, [searchQuery, sortedChargers]);
 
     // 사용자 위치 가져오기
@@ -281,7 +280,6 @@ export default function TeslaChargerMap({ embedded = false }: TeslaChargerMapPro
                     })).sort((a, b) => (a.distance || 0) - (b.distance || 0));
 
                     setSortedChargers(chargersWithDistance);
-                    setFilteredChargers(chargersWithDistance);
                 },
                 (error) => {
                     console.error('위치 정보를 가져올 수 없습니다:', error);
@@ -303,7 +301,8 @@ export default function TeslaChargerMap({ embedded = false }: TeslaChargerMapPro
         );
     }
 
-    const handleChargerClick = (charger: SuperchargerLocation) => {
+    // Stable callback references (rerender-functional-setstate)
+    const handleChargerClick = useCallback((charger: SuperchargerLocation) => {
         setSelectedCharger(charger);
         setTargetCenter(charger.position);
         setTargetZoom(15);
@@ -311,14 +310,34 @@ export default function TeslaChargerMap({ embedded = false }: TeslaChargerMapPro
         if (window.innerWidth < 768) {
             setIsSidebarOpen(false);
         }
-    };
+    }, []);
 
-    const handleReturnToLocation = () => {
+    const handleReturnToLocation = useCallback(() => {
         if (userLocation) {
             setTargetCenter(userLocation);
             setTargetZoom(12);
         }
-    };
+    }, [userLocation]);
+
+    const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchQuery(e.target.value);
+    }, []);
+
+    const handleSearchFocus = useCallback(() => {
+        setIsSidebarOpen(true);
+    }, []);
+
+    const toggleSidebar = useCallback(() => {
+        setIsSidebarOpen(prev => !prev);
+    }, []);
+
+    const closeSidebar = useCallback(() => {
+        setIsSidebarOpen(false);
+    }, []);
+
+    const clearSelectedCharger = useCallback(() => {
+        setSelectedCharger(null);
+    }, []);
 
     return (
         <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
@@ -328,7 +347,7 @@ export default function TeslaChargerMap({ embedded = false }: TeslaChargerMapPro
                     <div className="md:hidden fixed top-0 left-0 right-0 w-full bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 z-50">
                         <div className="flex items-center gap-2 mb-3">
                             <button
-                                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                                onClick={toggleSidebar}
                                 className="p-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
                                 aria-label="Toggle sidebar"
                             >
@@ -343,8 +362,8 @@ export default function TeslaChargerMap({ embedded = false }: TeslaChargerMapPro
                                 type="text"
                                 placeholder="충전소 이름 또는 주소 검색..."
                                 value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                onFocus={() => setIsSidebarOpen(true)}
+                                onChange={handleSearchChange}
+                                onFocus={handleSearchFocus}
                                 className="w-full px-4 py-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
                             />
                             <svg
@@ -384,7 +403,7 @@ export default function TeslaChargerMap({ embedded = false }: TeslaChargerMapPro
                                 type="text"
                                 placeholder="충전소 이름 또는 주소 검색..."
                                 value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onChange={handleSearchChange}
                                 className="w-full px-4 py-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500"
                             />
                             <svg
@@ -434,15 +453,15 @@ export default function TeslaChargerMap({ embedded = false }: TeslaChargerMapPro
                 {isSidebarOpen && (
                     <div
                         className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-20"
-                        onClick={() => setIsSidebarOpen(false)}
+                        onClick={closeSidebar}
                     />
                 )}
 
                 {/* Map */}
                 <div className={`flex-1 relative ${embedded ? 'pt-0' : 'pt-[60px]'} md:pt-0 ${embedded ? 'h-full' : 'h-screen'} md:h-full`}>
                     <Map
-                        defaultCenter={initialCenter}
-                        defaultZoom={initialZoom}
+                        defaultCenter={DEFAULT_CENTER}
+                        defaultZoom={DEFAULT_ZOOM}
                         gestureHandling={'greedy'}
                         disableDefaultUI={false}
                         mapTypeControl={false}
@@ -518,7 +537,7 @@ export default function TeslaChargerMap({ embedded = false }: TeslaChargerMapPro
                                 <div className="relative bg-white rounded-lg shadow-xl border-2 border-gray-200 p-4 min-w-[280px] max-w-[320px]">
                                     {/* 닫기 버튼 */}
                                     <button
-                                        onClick={() => setSelectedCharger(null)}
+                                        onClick={clearSelectedCharger}
                                         className="absolute top-2 right-2 p-1.5 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
                                         aria-label="닫기"
                                     >

@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { ShoppingBag, MessageSquare } from 'lucide-react';
 
@@ -30,7 +31,8 @@ interface MemoryOrbProps {
     delay?: number;
 }
 
-export default function MemoryOrb({ type, data, size = 64, onClick, delay = 0 }: MemoryOrbProps) {
+// Memoized component to prevent unnecessary re-renders (rerender-memo)
+const MemoryOrb = memo(function MemoryOrb({ type, data, size = 64, onClick, delay = 0 }: MemoryOrbProps) {
     const hasImage = data.images && data.images.length > 0;
     const imageUrl = hasImage ? data.images[0] : null;
 
@@ -87,4 +89,6 @@ export default function MemoryOrb({ type, data, size = 64, onClick, delay = 0 }:
             </div>
         </motion.div>
     );
-}
+});
+
+export default MemoryOrb;

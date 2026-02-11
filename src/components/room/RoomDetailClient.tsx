@@ -122,12 +122,13 @@ export default function RoomDetailClient({ roomId, category }: RoomDetailClientP
         }
     }, [room, searchParams, autoSelectDone]);
 
-    const handleOrbClick = (type: 'item' | 'record', data: Item | Record) => {
+    // Stable callback references (rerender-functional-setstate)
+    const handleOrbClick = useCallback((type: 'item' | 'record', data: Item | Record) => {
         setSelectedOrb({ type, data });
         setIsEditing(false);
-    };
+    }, []);
 
-    const startEditing = () => {
+    const startEditing = useCallback(() => {
         if (!selectedOrb) return;
 
         // 이미지 초기화 (기존 이미지가 있으면 사용, 없으면 빈 입력 필드 하나)
@@ -147,13 +148,13 @@ export default function RoomDetailClient({ roomId, category }: RoomDetailClientP
             setEditText(record.text || '');
         }
         setIsEditing(true);
-    };
+    }, [selectedOrb]);
 
-    const cancelEditing = () => {
+    const cancelEditing = useCallback(() => {
         setIsEditing(false);
-    };
+    }, []);
 
-    const handleSave = async () => {
+    const handleSave = useCallback(async () => {
         if (!selectedOrb) return;
 
         setSaving(true);
@@ -186,9 +187,9 @@ export default function RoomDetailClient({ roomId, category }: RoomDetailClientP
         } finally {
             setSaving(false);
         }
-    };
+    }, [selectedOrb, editImages, editName, editDescription, editPrice, editBuyUrl, editSale, editPurchasedAt, editText, fetchRoom]);
 
-    const handleDelete = async () => {
+    const handleDelete = useCallback(async () => {
         if (!selectedOrb) return;
         if (!confirm('정말 삭제하시겠습니까?')) return;
 
@@ -210,23 +211,23 @@ export default function RoomDetailClient({ roomId, category }: RoomDetailClientP
         } finally {
             setSaving(false);
         }
-    };
+    }, [selectedOrb, fetchRoom]);
 
     // 룸 수정 시작
-    const startEditingRoom = () => {
+    const startEditingRoom = useCallback(() => {
         if (!room) return;
         setEditRoomName(room.name || '');
         setEditRoomDescription(room.description || '');
         setIsEditingRoom(true);
-    };
+    }, [room]);
 
     // 룸 수정 취소
-    const cancelEditingRoom = () => {
+    const cancelEditingRoom = useCallback(() => {
         setIsEditingRoom(false);
-    };
+    }, []);
 
     // 룸 저장
-    const handleSaveRoom = async () => {
+    const handleSaveRoom = useCallback(async () => {
         if (!room) return;
 
         setSavingRoom(true);
@@ -250,7 +251,7 @@ export default function RoomDetailClient({ roomId, category }: RoomDetailClientP
         } finally {
             setSavingRoom(false);
         }
-    };
+    }, [room, editRoomName, editRoomDescription]);
 
     // 인증 로딩 중
     if (authLoading) {

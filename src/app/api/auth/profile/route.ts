@@ -11,7 +11,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
     }
 
-    const { name, currentPassword, newPassword } = await request.json();
+    const { name, email, currentPassword, newPassword } = await request.json();
 
     const member = await prisma.member.findUnique({
       where: { id: BigInt(session.sub) },
@@ -40,8 +40,9 @@ export async function PATCH(request: Request) {
     }
 
     // 업데이트
-    const updateData: { name?: string; password?: string } = {};
+    const updateData: { name?: string; email?: string | null; password?: string } = {};
     if (name !== undefined && name !== null) updateData.name = name;
+    if (email !== undefined) updateData.email = email || null;
     if (newPassword) updateData.password = await bcrypt.hash(newPassword, 10);
 
     const updated = await prisma.member.update({
