@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import Shop from '@/components/Shop';
+import ShopListClient from '@/components/ShopListClient';
+import { fetchShopData } from '@/components/shopData';
 
 export const metadata: Metadata = {
     title: "테슬라 라이프스타일 굿즈 - ZROOM Tesla Shop",
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
     },
 };
 
-
-export default function TeslaShopPage() {
-    return <Shop category="tesla" />;
+export default async function TeslaShopPage() {
+    const products = await fetchShopData('tesla');
+    return <ShopListClient products={products} category="tesla" />;
 }

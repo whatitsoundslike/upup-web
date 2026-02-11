@@ -79,11 +79,11 @@ export const defaultNavItems: NavItem[] = [
 ];
 
 export const navRoomLogo: Record<string, string> = {
-    tesla: '/room-icon/tesla.png',
-    baby: '/room-icon/baby.png',
-    superpet: '/room-icon/superpet_icon.png',
-    ai: '/room-icon/ai.png',
-    desk: '/room-icon/desk.png',
+    tesla: '/room-icon/tesla.webp',
+    baby: '/room-icon/baby.webp',
+    superpet: '/room-icon/superpet_icon.webp',
+    ai: '/room-icon/ai.webp',
+    desk: '/room-icon/desk.webp',
 }
 
 export const navRoomDescription: Record<string, string> = {

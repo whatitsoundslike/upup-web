@@ -15,7 +15,7 @@ export function Footer() {
         return null;
     }
 
-    const logoSrc: string = navRoomLogo[firstSegment] || '/room-icon/logo.png';
+    const logoSrc: string = navRoomLogo[firstSegment];
     const navItems: NavItem[] = navConfigs[firstSegment] || defaultNavItems;
 
     return (

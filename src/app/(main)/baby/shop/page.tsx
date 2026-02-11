@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import Shop from '@/components/Shop';
+import ShopListClient from '@/components/ShopListClient';
+import { fetchShopData } from '@/components/shopData';
 
 export const metadata: Metadata = {
     title: "똑똑한 엄마들의 육아템 쇼핑 - ZROOM Baby Shop",
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
     },
 };
 
-export default function BabyShopPage() {
-    return <Shop category="baby" />;
+export default async function BabyShopPage() {
+    const products = await fetchShopData('baby');
+    return <ShopListClient products={products} category="baby" />;
 }
-

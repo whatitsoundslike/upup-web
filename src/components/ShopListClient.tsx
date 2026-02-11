@@ -1,12 +1,11 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ShoppingBag, Tag, Heart, Search, X } from 'lucide-react';
+import { Tag, Heart, Search, X } from 'lucide-react';
 import Link from 'next/link';
-import React, { useEffect, useState } from 'react';
-import { get1HourVersion } from '@/lib/utils';
+import { useState } from 'react';
 
-interface Product {
+export interface Product {
     id: string;
     name: string;
     price: string;
@@ -14,66 +13,43 @@ interface Product {
     thumbnail: string | null;
 }
 
-// 1시간 단위 버전 값 생성
+export type ShopCategory = 'tesla' | 'baby' | 'ai' | 'desk';
 
-interface ShopPageProps {
-    category: 'tesla' | 'baby' | 'ai' | 'desk';
+interface ShopListClientProps {
+    products: Product[];
+    category: ShopCategory;
 }
 
-export default function Shop({ category }: ShopPageProps) {
-    const categoryTitles = {
-        tesla: {
-            title: 'Tesla Accessory Store',
-            subtitle: '당신의 테슬라를 더욱 특별하게 만드는 최고의 선택.',
-        },
-        baby: {
-            title: 'Baby Shop',
-            subtitle: '우리 아이를 위한 최고의 육아용품을 만나보세요.',
-        },
-        ai: {
-            title: 'AI Shop',
-            subtitle: 'AI기술과 함께 활용할 제품들을 만나보세요.',
-        },
-        desk: {
-            title: 'Desk Shop',
-            subtitle: '데스크테리어를 위한 최고의 선택.',
-        },
-    };
+const categoryConfigs: Record<ShopCategory, { title: string; subtitle: string; accentColor: string }> = {
+    tesla: {
+        title: 'Tesla Accessory Store',
+        subtitle: '당신의 테슬라를 더욱 특별하게 만드는 최고의 선택.',
+        accentColor: 'group-hover:text-tesla-red',
+    },
+    baby: {
+        title: 'Baby Shop',
+        subtitle: '우리 아이를 위한 최고의 육아용품을 만나보세요.',
+        accentColor: 'group-hover:text-pink-500',
+    },
+    ai: {
+        title: 'AI Shop',
+        subtitle: 'AI기술과 함께 활용할 제품들을 만나보세요.',
+        accentColor: 'group-hover:text-cyan-500',
+    },
+    desk: {
+        title: 'Desk Shop',
+        subtitle: '데스크테리어를 위한 최고의 선택.',
+        accentColor: 'group-hover:text-orange-500',
+    },
+};
 
-    const config = categoryTitles[category];
-    const [products, setProducts] = useState<Product[]>([]);
+export default function ShopListClient({ products, category }: ShopListClientProps) {
+    const config = categoryConfigs[category];
     const [searchQuery, setSearchQuery] = useState('');
-    const [isLoading, setIsLoading] = useState(true);
 
     const filteredProducts = searchQuery
         ? products.filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
         : products;
-    useEffect(() => {
-        const fetchNews = async () => {
-            try {
-                const response = await fetch('https://raw.githubusercontent.com/whatitsoundslike/upup-admin/refs/heads/main/data/' + category + '_shop.json?v=' + get1HourVersion());
-                const data = await response.json();
-                setProducts(data);
-            } catch (error) {
-                console.error('Failed to fetch news:', error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchNews();
-    }, []);
-
-    if (isLoading) {
-        return (
-            <div className="max-w-7xl mx-auto px-4 py-16 flex items-center justify-center min-h-[60vh]">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 border-4 border-tesla-red/20 border-t-tesla-red rounded-full animate-spin" />
-                    <p className="text-foreground/60 font-medium">상품을 불러오는 중입니다...</p>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-16">
@@ -132,7 +108,7 @@ export default function Shop({ category }: ShopPageProps) {
                             </div>
 
                             <div className="space-y-2 px-2 pb-2">
-                                <h3 className="text-lg font-bold group-hover:text-tesla-red transition-colors line-clamp-2">
+                                <h3 className={`text-lg font-bold transition-colors line-clamp-2 ${config.accentColor}`}>
                                     {product.name}
                                 </h3>
                                 <div className="flex items-center gap-2">

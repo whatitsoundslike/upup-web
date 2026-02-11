@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import DeskNews from './DeskNews';
+import NewsListClient from '@/components/NewsListClient';
+import { fetchNewsData } from '@/components/newsData';
 
 export const metadata: Metadata = {
     title: "데스크 셋업 최신 뉴스 & 트렌드 - ZROOM Desk News",
@@ -18,6 +19,7 @@ export const metadata: Metadata = {
     },
 };
 
-export default function Page() {
-    return <DeskNews />;
+export default async function Page() {
+    const news = await fetchNewsData('desk');
+    return <NewsListClient news={news} category="desk" />;
 }

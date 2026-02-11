@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import TeslaNews from './TeslaNews';
+import NewsListClient from '@/components/NewsListClient';
+import { fetchNewsData } from '@/components/newsData';
 
 export const metadata: Metadata = {
     title: "테슬라 최신 뉴스 & 업데이트 - ZROOM Tesla News",
@@ -18,6 +19,7 @@ export const metadata: Metadata = {
     },
 };
 
-export default function Page() {
-    return <TeslaNews />;
+export default async function Page() {
+    const news = await fetchNewsData('tesla');
+    return <NewsListClient news={news} category="tesla" />;
 }

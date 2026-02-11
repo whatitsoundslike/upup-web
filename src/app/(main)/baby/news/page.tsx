@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import BabyNews from './BabyNews';
+import NewsListClient from '@/components/NewsListClient';
+import { fetchNewsData } from '@/components/newsData';
 
 export const metadata: Metadata = {
     title: "육아 최신 뉴스 & 정보 - ZROOM Baby News",
@@ -18,6 +19,7 @@ export const metadata: Metadata = {
     },
 };
 
-export default function Page() {
-    return <BabyNews />;
+export default async function Page() {
+    const news = await fetchNewsData('baby');
+    return <NewsListClient news={news} category="baby" />;
 }

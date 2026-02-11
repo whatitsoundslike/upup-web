@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import AINews from './AINews';
+import NewsListClient from '@/components/NewsListClient';
+import { fetchNewsData } from '@/components/newsData';
 
 export const metadata: Metadata = {
     title: "AI 최신 뉴스 & 트렌드 - ZROOM AI News",
@@ -18,6 +19,7 @@ export const metadata: Metadata = {
     },
 };
 
-export default function Page() {
-    return <AINews />;
+export default async function Page() {
+    const news = await fetchNewsData('ai');
+    return <NewsListClient news={news} category="ai" />;
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import Shop from '@/components/Shop';
+import ShopListClient from '@/components/ShopListClient';
+import { fetchShopData } from '@/components/shopData';
 
 export const metadata: Metadata = {
     title: "데스크 셋업 필수템 쇼핑 - ZROOM Desk Shop",
@@ -18,6 +19,7 @@ export const metadata: Metadata = {
     },
 };
 
-export default function DeskShopPage() {
-    return <Shop category="desk" />;
+export default async function DeskShopPage() {
+    const products = await fetchShopData('desk');
+    return <ShopListClient products={products} category="desk" />;
 }

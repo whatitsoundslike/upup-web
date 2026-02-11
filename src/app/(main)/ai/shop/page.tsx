@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import Shop from '@/components/Shop';
+import ShopListClient from '@/components/ShopListClient';
+import { fetchShopData } from '@/components/shopData';
 
 export const metadata: Metadata = {
     title: "AI 도구 & 서비스 쇼핑 - ZROOM AI Shop",
@@ -18,6 +19,7 @@ export const metadata: Metadata = {
     },
 };
 
-export default function AIShopPage() {
-    return <Shop category="ai" />;
+export default async function AIShopPage() {
+    const products = await fetchShopData('ai');
+    return <ShopListClient products={products} category="ai" />;
 }
