@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import TeslaSubsidy from './TeslaSubsidy';
+import { prisma } from '@/lib/prisma';
+import SubsidyTable from './SubsidyTable';
 
 export const metadata: Metadata = {
     title: "2026 전기차 보조금 실시간 현황 - ZROOM Tesla",
@@ -18,6 +19,38 @@ export const metadata: Metadata = {
     },
 };
 
-export default function Page() {
-    return <TeslaSubsidy />;
+// ISR: 1시간마다 재검증
+export const revalidate = 3600;
+
+async function getSubsidies() {
+    const subsidies = await prisma.subsidy.findMany({
+        select: {
+            locationName1: true,
+            locationName2: true,
+            totalCount: true,
+            recievedCount: true,
+            releaseCount: true,
+            remainCount: true,
+            etc: true,
+        },
+    });
+
+    return subsidies;
+}
+
+export default async function Page() {
+    const subsidies = await getSubsidies();
+
+    return (
+        <div className="max-w-7xl mx-auto px-4 py-16">
+            <div className="mb-12">
+                <h1 className="text-4xl font-black tracking-tighter mb-4 uppercase italic">SUBSIDY STATUS</h1>
+                <p className="text-foreground/60 text-lg">2026년 지자체별 전기차 보조금 실시간 접수 현황 (전기승용 기준)</p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <SubsidyTable initialData={subsidies} />
+            </div>
+        </div>
+    );
 }

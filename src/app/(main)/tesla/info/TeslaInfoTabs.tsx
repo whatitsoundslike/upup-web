@@ -3,7 +3,7 @@
 import { useState, memo, useCallback } from 'react';
 import { Zap, Wallet } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import TeslaSubsidy from '../subsidy/TeslaSubsidy';
+import SubsidyClient from '../subsidy/SubsidyClient';
 
 // Dynamic import for heavy Google Maps component (bundle-dynamic-imports)
 const TeslaChargerMap = dynamic(
@@ -82,7 +82,7 @@ export default function TeslaInfoTabs() {
                     </div>
                 ) : (
                     <div className="h-full overflow-auto">
-                        <TeslaSubsidy />
+                        <SubsidyClient />
                     </div>
                 )}
             </div>

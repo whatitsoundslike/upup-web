@@ -27,29 +27,25 @@ model Room {
   images      Json
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now())
-  category    String   @db.VarChar(50)
   items       Item[]
   records     Record[]
   member      Member   @relation(fields: [memberId], references: [id])
 
   @@index([memberId], map: "Room_memberId_fkey")
-  @@index([category])
 }
 
 model Item {
-  id          BigInt    @id @default(autoincrement())
-  roomId      BigInt
-  memberId    BigInt
-  name        String?
-  description String?   @db.Text
-  images      Json
-  sale        Boolean
-  price       BigInt
-  buyUrl      String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @default(now())
-  purchasedAt DateTime?
-  room        Room      @relation(fields: [roomId], references: [id])
+  id        BigInt   @id @default(autoincrement())
+  roomId    BigInt
+  memberId  BigInt
+  name      String?
+  images    Json
+  sale      Boolean
+  price     BigInt
+  buyUrl    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  room      Room     @relation(fields: [roomId], references: [id])
 
   @@index([roomId], map: "Item_roomId_fkey")
 }
@@ -97,15 +93,93 @@ model GemTransaction {
 }
 
 model Tip {
+  id           BigInt   @id @default(autoincrement())
+  category     String   @db.VarChar(50)
+  title        String   @db.VarChar(200)
+  summary      String?  @db.Text
+  keyword      Json?
+  content      String   @db.LongText
+  thumbnail    String?  @db.VarChar(500)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now())
+  dislikeCount Int      @default(0)
+  likeCount    Int      @default(0)
+  aiVerified   Boolean  @default(false)
+
+  @@index([category])
+}
+
+model AdminUser {
+  id          BigInt   @id @default(autoincrement())
+  username    String   @unique @db.VarChar(50)
+  password    String   @db.VarChar(255)
+  name        String?  @db.VarChar(100)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+  isSuper     Boolean  @default(false)
+  permissions Json?
+}
+
+model Category {
   id        BigInt   @id @default(autoincrement())
-  category  String   @db.VarChar(50)
-  title     String   @db.VarChar(200)
-  summary   String?  @db.Text
-  keyword   Json?
-  content   String   @db.LongText
-  thumbnail String?  @db.VarChar(500)
+  value     String   @unique @db.VarChar(50)
+  label     String   @db.VarChar(100)
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
 
+  @@index([sortOrder])
+}
+
+model News {
+  id           BigInt    @id @default(autoincrement())
+  category     String    @db.VarChar(50)
+  source       String    @db.VarChar(200)
+  title        String    @unique @db.VarChar(500)
+  link         String    @db.VarChar(1000)
+  thumbnail    String?   @db.VarChar(1000)
+  description  String?   @db.Text
+  publishedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @default(now())
+  dislikeCount Int       @default(0)
+  likeCount    Int       @default(0)
+  aiVerified   Boolean   @default(false)
+
   @@index([category])
+  @@index([category, publishedAt])
+  @@index([publishedAt])
+}
+
+model Product {
+  id          BigInt   @id @default(autoincrement())
+  category    String   @db.VarChar(50)
+  name        String   @db.VarChar(500)
+  price       String   @db.VarChar(100)
+  thumbnail   String   @db.VarChar(1000)
+  deliverType String?  @db.VarChar(100)
+  link        String   @db.VarChar(1000)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+
+  @@index([category])
+  @@index([category, sortOrder])
+}
+
+model Subsidy {
+  id            BigInt   @id @default(autoincrement())
+  locationName1 String   @db.VarChar(50)
+  locationName2 String   @db.VarChar(100)
+  totalCount    Int      @default(0)
+  recievedCount Int      @default(0)
+  releaseCount  Int      @default(0)
+  remainCount   Int      @default(0)
+  etc           String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now())
+
+  @@unique([locationName1, locationName2])
+  @@index([locationName1])
 }

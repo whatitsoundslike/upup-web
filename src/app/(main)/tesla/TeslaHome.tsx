@@ -3,8 +3,6 @@
 import { motion } from 'framer-motion';
 import { Zap, ArrowRight, ShoppingBag, Newspaper, Warehouse, Lightbulb } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { get1HourVersion } from '@/lib/utils';
 
 const features = [
     {
@@ -53,27 +51,11 @@ interface NewsItem {
     published_at: string | null;
 }
 
+interface TeslaHomeProps {
+    newsData: NewsItem[];
+}
 
-export default function TeslaHome() {
-    const [newsData, setNewsData] = useState<NewsItem[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchNews = async () => {
-            try {
-                const response = await fetch('https://raw.githubusercontent.com/whatitsoundslike/upup-admin/refs/heads/main/data/tesla_news.json?v=' + get1HourVersion());
-                const data = await response.json();
-                const shuffled = [...data].sort(() => Math.random() - 0.5);
-                setNewsData(shuffled.slice(0, 3));
-            } catch (error) {
-                console.error('Failed to fetch news:', error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchNews();
-    }, []);
-
+export default function TeslaHome({ newsData }: TeslaHomeProps) {
     return (
         <div className="relative overflow-hidden">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-gradient-to-b -z-10" />
