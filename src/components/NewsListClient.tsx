@@ -3,17 +3,7 @@
 import { motion } from 'framer-motion';
 import { Calendar, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
-
-export interface NewsItem {
-    source: string;
-    title: string;
-    link: string;
-    thumbnail: string | null;
-    description?: string;
-    published_at: string | null;
-}
-
-export type NewsCategory = 'tesla' | 'baby' | 'ai' | 'desk';
+import type { NewsItem, NewsCategory } from './newsData';
 
 interface NewsListClientProps {
     news: NewsItem[];

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { prisma } from '@/lib/prisma';
+import { fetchSubsidyData } from '@/components/subsidy/subsidyData';
 import SubsidyTable from './SubsidyTable';
 
 export const metadata: Metadata = {
@@ -19,27 +19,8 @@ export const metadata: Metadata = {
     },
 };
 
-// ISR: 1시간마다 재검증
-export const revalidate = 3600;
-
-async function getSubsidies() {
-    const subsidies = await prisma.subsidy.findMany({
-        select: {
-            locationName1: true,
-            locationName2: true,
-            totalCount: true,
-            recievedCount: true,
-            releaseCount: true,
-            remainCount: true,
-            etc: true,
-        },
-    });
-
-    return subsidies;
-}
-
 export default async function Page() {
-    const subsidies = await getSubsidies();
+    const subsidies = await fetchSubsidyData();
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-16">

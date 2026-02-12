@@ -3,7 +3,8 @@
 import { useState, memo, useCallback } from 'react';
 import { Zap, Wallet } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import SubsidyClient from '../subsidy/SubsidyClient';
+import SubsidyTable from '../subsidy/SubsidyTable';
+import type { SubsidyItem } from '@/components/subsidy/subsidyData';
 
 // Dynamic import for heavy Google Maps component (bundle-dynamic-imports)
 const TeslaChargerMap = dynamic(
@@ -47,7 +48,11 @@ const TabButton = memo(function TabButton({ isActive, onClick, icon, label }: Ta
     );
 });
 
-export default function TeslaInfoTabs() {
+interface TeslaInfoTabsProps {
+    subsidies: SubsidyItem[];
+}
+
+export default function TeslaInfoTabs({ subsidies }: TeslaInfoTabsProps) {
     const [activeTab, setActiveTab] = useState<TabType>('subsidy');
 
     // Stable callback references (rerender-functional-setstate)
@@ -82,7 +87,15 @@ export default function TeslaInfoTabs() {
                     </div>
                 ) : (
                     <div className="h-full overflow-auto">
-                        <SubsidyClient />
+                        <div className="max-w-7xl mx-auto px-4 py-16">
+                            <div className="mb-12">
+                                <h1 className="text-4xl font-black tracking-tighter mb-4 uppercase italic">SUBSIDY STATUS</h1>
+                                <p className="text-foreground/60 text-lg">2026년 지자체별 전기차 보조금 실시간 접수 현황 (전기승용 기준)</p>
+                            </div>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                <SubsidyTable initialData={subsidies} />
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>

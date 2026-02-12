@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { fetchSubsidyData } from '@/components/subsidy/subsidyData';
 import TeslaInfoTabs from './TeslaInfoTabs';
 
 export const metadata: Metadata = {
@@ -18,6 +19,8 @@ export const metadata: Metadata = {
     },
 };
 
-export default function TeslaInfoPage() {
-    return <TeslaInfoTabs />;
+export default async function TeslaInfoPage() {
+    const subsidies = await fetchSubsidyData();
+
+    return <TeslaInfoTabs subsidies={subsidies} />;
 }

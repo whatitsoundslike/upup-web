@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { Zap, ArrowRight, ShoppingBag, Newspaper, Warehouse, Lightbulb } from 'lucide-react';
 import Link from 'next/link';
+import type { NewsItem } from '@/components/newsData';
 
 const features = [
     {
@@ -41,15 +42,6 @@ const features = [
         color: 'text-emerald-500'
     },
 ];
-
-interface NewsItem {
-    source: string;
-    title: string;
-    link: string;
-    thumbnail: string | null;
-    description?: string;
-    published_at: string | null;
-}
 
 interface TeslaHomeProps {
     newsData: NewsItem[];

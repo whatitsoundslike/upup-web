@@ -358,6 +358,7 @@ export const koToEn: Record<string, string> = {
     '시즌 안내': 'Season Info',
     '이 게임은 시즌제로 운영되며 시즌 종료시의 게임 데이터는 명예의 전당에 기록됩니다.': 'This game runs on a seasonal basis. Game data at the end of each season will be recorded in the Hall of Fame.',
     '매주 새로운 시즌이 시작됩니다.': 'A new season starts every week.',
+    '현재 베타 테스트 중입니다.': 'Currently in beta testing.',
     '캐릭터 저장 기능이 추가되었습니다!': 'Character save function has been added!',
     '랭킹 기능이 추가되었습니다!': 'Ranking function has been added!',
     '무료 사료 배달 기능이 추가되었습니다! 웹 접속시 10분 마다 사료가 지급됩니다.': 'Free feed delivery function has been added! You will receive feed every 10 minutes when you access the web.',

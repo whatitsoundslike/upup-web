@@ -993,6 +993,7 @@ export default function SuperpetHome() {
                                 <div className="text-5xl mb-4">🏆</div>
                                 <h3 className="text-xl font-black mb-3">{t('시즌 안내')}</h3>
                                 <p className="text-sm text-foreground/70 leading-relaxed text-left">
+                                    - {t('현재 베타 테스트 중입니다.')} <br />
                                     - {t('캐릭터 저장 기능이 추가되었습니다!')} <br />
                                     - {t('랭킹 기능이 추가되었습니다!')} <br />
                                     - {t('무료 사료 배달 기능이 추가되었습니다! 웹 접속시 30분 마다 사료가 지급됩니다.')} <br />
