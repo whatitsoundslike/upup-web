@@ -71,6 +71,7 @@ export const defaultNavItems: NavItem[] = [
 ];
 
 export const navRoomLogo: Record<string, string> = {
+    '': '/room-icon/zroom_icon.webp',
     tesla: '/room-icon/tesla.webp',
     baby: '/room-icon/baby.webp',
     superpet: '/room-icon/superpet.webp',
@@ -79,6 +80,7 @@ export const navRoomLogo: Record<string, string> = {
 }
 
 export const navRoomDescription: Record<string, string> = {
+    '': '취미 기반 커뮤니티 플랫폼',
     tesla: '테슬라 관련 정보 및 커뮤니티',
     baby: '육아 정보 및 커뮤니티',
     superpet: '반려동물 RPG 게임 및 커뮤니티',

@@ -59,10 +59,10 @@ function LoginForm() {
       <div className="flex justify-center mb-8">
         <Link href="/">
           <Image
-            src="/zroom_logo.webp"
+            src="/room-icon/zroom_icon.webp"
             alt="ZROOM"
-            width={128}
-            height={48}
+            width={200}
+            height={200}
             className="object-contain"
             priority
           />

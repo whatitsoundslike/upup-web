@@ -4,11 +4,11 @@ import Image from 'next/image';
 import { defaultNavItems, navRoomLogo, navRoomDescription } from '@/config/navConfig';
 
 export const metadata: Metadata = {
-  title: 'ZROOM - 관심사 기반 커뮤니티 플랫폼',
-  description: '테슬라, 육아, 반려동물 RPG, AI, 데스크테리어 등 다양한 관심사 커뮤니티를 만나보세요.',
+  title: 'ZROOM - 취미 기반 커뮤니티 플랫폼',
+  description: '테슬라, 육아, 반려동물 RPG, AI, 데스크테리어 등 다양한 취미 커뮤니티를 만나보세요.',
   openGraph: {
-    title: 'ZROOM - 관심사 기반 커뮤니티 플랫폼',
-    description: '테슬라, 육아, 반려동물 RPG, AI, 데스크테리어 등 다양한 관심사 커뮤니티를 만나보세요.',
+    title: 'ZROOM - 취미 기반 커뮤니티 플랫폼',
+    description: '테슬라, 육아, 반려동물 RPG, AI, 데스크테리어 등 다양한 취미 커뮤니티를 만나보세요.',
     url: 'https://zroom.io',
     siteName: 'ZROOM',
     locale: 'ko_KR',
@@ -37,7 +37,7 @@ export default function Home() {
             ZROOM
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-300">
-            관심사 기반 커뮤니티 플랫폼
+            취미 기반 커뮤니티 플랫폼
           </p>
         </div>
 

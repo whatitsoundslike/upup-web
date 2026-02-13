@@ -44,6 +44,7 @@ next-env.d.ts
 .venv/
 .env*.local
 .claude/
+.vscode/
 
 public/superpet-sw.js
 public/workbox-*.js

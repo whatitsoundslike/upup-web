@@ -102,17 +102,17 @@ export function Navbar() {
         return item.name;
     };
 
-    const logoSrc: string = navRoomLogo[firstSegment] || '/room-icon/tesla.png';
+    const logoSrc: string = navRoomLogo[firstSegment] || '/zroom_logo.webp';
 
     return (
         <nav className="sticky top-0 z-50 w-full border-b dark:border-white/10 mdmax-w-[500px] mx-auto" style={{ backgroundColor: 'var(--background-hex)' }}>
             <div className="md:mx-auto sm:px-6 lg:px-8">
                 <div className="flex h-16 items-center justify-between">
                     <div className="flex items-center">
-                        <Link href={firstSegment ? `/${firstSegment}` : '/'} className="flex items-center gap-2 group">
-                            <div className="relative h-12 w-32">
+                        <Link href='/' className="flex items-center gap-2 group">
+                            <div className="relative h-15 w-15 ml-2">
                                 <Image
-                                    src={logoSrc}
+                                    src="/room-icon/zroom_icon.webp"
                                     alt="Logo"
                                     fill
                                     className="object-contain transition-transform group-hover:scale-105"
