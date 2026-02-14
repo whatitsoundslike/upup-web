@@ -27,25 +27,29 @@ model Room {
   images      Json
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now())
+  category    String   @default("tesla") @db.VarChar(50)
   items       Item[]
   records     Record[]
   member      Member   @relation(fields: [memberId], references: [id])
 
   @@index([memberId], map: "Room_memberId_fkey")
+  @@index([category])
 }
 
 model Item {
-  id        BigInt   @id @default(autoincrement())
-  roomId    BigInt
-  memberId  BigInt
-  name      String?
-  images    Json
-  sale      Boolean
-  price     BigInt
-  buyUrl    String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now())
-  room      Room     @relation(fields: [roomId], references: [id])
+  id          BigInt    @id @default(autoincrement())
+  roomId      BigInt
+  memberId    BigInt
+  name        String?
+  images      Json
+  sale        Boolean   @default(false)
+  price       BigInt    @default(0)
+  buyUrl      String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now())
+  description String?   @db.Text
+  purchasedAt DateTime?
+  room        Room      @relation(fields: [roomId], references: [id])
 
   @@index([roomId], map: "Item_roomId_fkey")
 }
