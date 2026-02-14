@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
+import { getSession } from "@/lib/auth";
 
 export type FeedItem = {
     id: string;
@@ -25,6 +27,7 @@ export async function GET(request: NextRequest) {
         const category = searchParams.get('category');
         const cursor = searchParams.get('cursor');
         const limit = parseInt(searchParams.get('limit') || '20');
+        const keyFeed = searchParams.get('keyFeed') === 'true';
 
         if (!category) {
             return NextResponse.json(
@@ -33,9 +36,40 @@ export async function GET(request: NextRequest) {
             );
         }
 
-        // 해당 카테고리의 룸 ID들 조회
+        // 룸 where 조건 결정
+        let roomWhere: Prisma.RoomWhereInput;
+
+        if (keyFeed) {
+            const session = await getSession();
+            if (!session) {
+                return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            }
+            const member = await prisma.member.findUnique({ where: { uid: session.uid } });
+            if (!member) {
+                return NextResponse.json({ error: "Member not found" }, { status: 404 });
+            }
+
+            const registrations = await prisma.roomKeyRegistration.findMany({
+                where: { memberId: member.id },
+                include: { roomKey: { select: { roomId: true } } },
+            });
+            const keyRoomIds = registrations.map(r => r.roomKey.roomId);
+
+            const ownedLockedRooms = await prisma.room.findMany({
+                where: { memberId: member.id, isLocked: true },
+                select: { id: true },
+            });
+            const allKeyRoomIds: bigint[] = [...new Map(
+                [...keyRoomIds, ...ownedLockedRooms.map(r => r.id)].map(id => [id.toString(), id])
+            ).values()];
+
+            roomWhere = { id: { in: allKeyRoomIds } };
+        } else {
+            roomWhere = { category, isLocked: false };
+        }
+
         const rooms = await prisma.room.findMany({
-            where: { category },
+            where: roomWhere,
             select: { id: true, name: true, memberId: true, member: { select: { name: true } } },
         });
 

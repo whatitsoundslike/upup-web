@@ -4,9 +4,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, X, ArrowLeft, ShoppingBag, MessageSquare, ExternalLink, Lock, LogIn, UserPlus, Plus, Pencil, Trash2, Save, Settings, ImagePlus } from 'lucide-react';
+import { Loader2, X, ArrowLeft, ShoppingBag, MessageSquare, ExternalLink, Lock, LogIn, UserPlus, Plus, Pencil, Trash2, Save, Settings, ImagePlus, Copy, KeyRound } from 'lucide-react';
 import { format } from 'date-fns';
 import Room from './Room';
+import RoomFloatingButtons from './RoomFloatingButtons';
 import { useAuth } from '@/components/AuthProvider';
 import DatePicker from '@/components/ui/DatePicker';
 
@@ -35,9 +36,17 @@ interface Room {
     description: string | null;
     category: string;
     images: string[];
+    isLocked: boolean;
     items: Item[];
     records: Record[];
     member: { id: string; name: string | null; email: string | null };
+}
+
+interface RoomKeyData {
+    id: string;
+    code: string;
+    createdAt: string;
+    _count: { registrations: number };
 }
 
 interface RoomDetailClientProps {
@@ -71,7 +80,13 @@ export default function RoomDetailClient({ roomId, category }: RoomDetailClientP
     const [isEditingRoom, setIsEditingRoom] = useState(false);
     const [editRoomName, setEditRoomName] = useState('');
     const [editRoomDescription, setEditRoomDescription] = useState('');
+    const [editIsLocked, setEditIsLocked] = useState(false);
     const [savingRoom, setSavingRoom] = useState(false);
+
+    // 룸 키 상태
+    const [roomKeys, setRoomKeys] = useState<RoomKeyData[]>([]);
+    const [loadingKeys, setLoadingKeys] = useState(false);
+    const [creatingKey, setCreatingKey] = useState(false);
 
     const isOwner = user && room && user.id === room.member.id;
 
@@ -81,6 +96,10 @@ export default function RoomDetailClient({ roomId, category }: RoomDetailClientP
             if (!res.ok) {
                 if (res.status === 404) {
                     throw new Error('룸을 찾을 수 없습니다.');
+                }
+                if (res.status === 403) {
+                    const data = await res.json();
+                    throw new Error(data.error || '이 룸은 잠겨있습니다. 룸 키가 필요합니다.');
                 }
                 throw new Error('룸을 불러오는데 실패했습니다.');
             }
@@ -93,11 +112,61 @@ export default function RoomDetailClient({ roomId, category }: RoomDetailClientP
         }
     }, [roomId]);
 
+    const fetchRoomKeys = useCallback(async (id: string) => {
+        setLoadingKeys(true);
+        try {
+            const res = await fetch(`/api/rooms/${id}/keys`);
+            if (res.ok) {
+                const data = await res.json();
+                setRoomKeys(data);
+            }
+        } catch { /* ignore */ } finally {
+            setLoadingKeys(false);
+        }
+    }, []);
+
+    const handleCreateKey = useCallback(async () => {
+        if (!room) return;
+        setCreatingKey(true);
+        try {
+            const res = await fetch(`/api/rooms/${room.id}/keys`, { method: 'POST' });
+            if (!res.ok) throw new Error('키 생성에 실패했습니다.');
+            await fetchRoomKeys(room.id);
+        } catch (err) {
+            alert(err instanceof Error ? err.message : '오류가 발생했습니다.');
+        } finally {
+            setCreatingKey(false);
+        }
+    }, [room, fetchRoomKeys]);
+
+    const handleDeleteKey = useCallback(async (keyId: string) => {
+        if (!room || !confirm('이 키를 삭제하시겠습니까? 등록된 사용자의 접근이 해제됩니다.')) return;
+        try {
+            const res = await fetch(`/api/rooms/keys/${keyId}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('키 삭제에 실패했습니다.');
+            await fetchRoomKeys(room.id);
+        } catch (err) {
+            alert(err instanceof Error ? err.message : '오류가 발생했습니다.');
+        }
+    }, [room, fetchRoomKeys]);
+
+    const copyToClipboard = useCallback((text: string) => {
+        navigator.clipboard.writeText(text);
+    }, []);
+
     useEffect(() => {
         if (!authLoading && user) {
             fetchRoom();
         }
     }, [fetchRoom, authLoading, user]);
+
+    // 모달 열림 시 배경 스크롤 잠금
+    useEffect(() => {
+        if (selectedOrb || isEditingRoom) {
+            document.body.style.overflow = 'hidden';
+            return () => { document.body.style.overflow = ''; };
+        }
+    }, [selectedOrb, isEditingRoom]);
 
     // 쿼리 파라미터로 전달된 아이템/기록 자동 선택
     useEffect(() => {
@@ -218,8 +287,10 @@ export default function RoomDetailClient({ roomId, category }: RoomDetailClientP
         if (!room) return;
         setEditRoomName(room.name || '');
         setEditRoomDescription(room.description || '');
+        setEditIsLocked(room.isLocked);
         setIsEditingRoom(true);
-    }, [room]);
+        fetchRoomKeys(room.id);
+    }, [room, fetchRoomKeys]);
 
     // 룸 수정 취소
     const cancelEditingRoom = useCallback(() => {
@@ -238,6 +309,7 @@ export default function RoomDetailClient({ roomId, category }: RoomDetailClientP
                 body: JSON.stringify({
                     name: editRoomName,
                     description: editRoomDescription,
+                    isLocked: editIsLocked,
                 }),
             });
 
@@ -251,7 +323,7 @@ export default function RoomDetailClient({ roomId, category }: RoomDetailClientP
         } finally {
             setSavingRoom(false);
         }
-    }, [room, editRoomName, editRoomDescription]);
+    }, [room, editRoomName, editRoomDescription, editIsLocked]);
 
     // 인증 로딩 중
     if (authLoading) {
@@ -326,36 +398,13 @@ export default function RoomDetailClient({ roomId, category }: RoomDetailClientP
 
     return (
         <div className="min-h-screen">
-            {/* 피드로 돌아가기 버튼 */}
-            <Link
-                href={`/${category}/room`}
-                className="fixed bottom-24 md:bottom-8 left-4 md:left-8 z-30 w-12 h-12 flex items-center justify-center bg-white dark:bg-zinc-800 rounded-full text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors shadow-lg"
-            >
-                <ArrowLeft className="w-5 h-5" />
-            </Link>
-
-            {/* 내 룸일 때 우측 하단 버튼들 */}
-            {isOwner && (
-                <div className="fixed bottom-24 md:bottom-8 right-4 md:right-8 z-30 flex items-center gap-2">
-                    {/* 룸 설정 버튼 */}
-                    <button
-                        onClick={startEditingRoom}
-                        className="w-12 h-12 flex items-center justify-center bg-white dark:bg-zinc-800 rounded-full text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors shadow-lg"
-                    >
-                        <Settings className="w-5 h-5" />
-                    </button>
-                    {/* 아이템/기록 추가 버튼 */}
-                    <Link
-                        href={`/${category}/room/new`}
-                        className="w-12 h-12 flex items-center justify-center bg-tesla-red rounded-full text-white hover:bg-red-600 transition-colors shadow-lg"
-                    >
-                        <Plus className="w-6 h-6" />
-                    </Link>
-                </div>
-            )}
+            <RoomFloatingButtons
+                backHref={`/${category}/room`}
+                addHref={isOwner ? `/${category}/room/new` : undefined}
+            />
 
             {/* 2D 룸 */}
-            <Room room={room} onOrbClick={handleOrbClick} />
+            <Room room={room} isOwner={!!isOwner} onOrbClick={handleOrbClick} onSettingsClick={startEditingRoom} />
 
             {/* 구슬 상세 모달 */}
             <AnimatePresence>
@@ -658,7 +707,7 @@ export default function RoomDetailClient({ roomId, category }: RoomDetailClientP
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
                             onClick={e => e.stopPropagation()}
-                            className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden shadow-2xl"
+                            className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden shadow-2xl max-h-[85vh] overflow-y-auto"
                         >
                             {/* 모달 헤더 */}
                             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-zinc-800">
@@ -696,6 +745,77 @@ export default function RoomDetailClient({ roomId, category }: RoomDetailClientP
                                         className="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 resize-none"
                                     />
                                 </div>
+
+                                {/* 잠금 토글 */}
+                                <div className="flex items-center justify-between py-3 border-t border-gray-200 dark:border-zinc-800">
+                                    <div>
+                                        <label className="block text-sm font-medium">룸 잠금</label>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                                            잠금 시 공개 피드에 노출되지 않습니다
+                                        </p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditIsLocked(!editIsLocked)}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${editIsLocked ? 'bg-tesla-red' : 'bg-gray-300 dark:bg-zinc-600'}`}
+                                    >
+                                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${editIsLocked ? 'translate-x-6' : 'translate-x-1'}`} />
+                                    </button>
+                                </div>
+
+                                {/* 키 관리 (잠금 ON일 때만) */}
+                                {editIsLocked && (
+                                    <div className="space-y-3 pt-3 border-t border-gray-200 dark:border-zinc-800">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-1.5">
+                                                <KeyRound className="w-4 h-4 text-zinc-500" />
+                                                <label className="text-sm font-medium">룸 키 관리</label>
+                                            </div>
+                                            <button
+                                                onClick={handleCreateKey}
+                                                disabled={creatingKey}
+                                                className="text-sm text-tesla-red flex items-center gap-1 disabled:opacity-50"
+                                            >
+                                                {creatingKey ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                                                키 생성
+                                            </button>
+                                        </div>
+                                        {loadingKeys ? (
+                                            <div className="flex justify-center py-4">
+                                                <Loader2 className="w-5 h-5 animate-spin text-zinc-400" />
+                                            </div>
+                                        ) : roomKeys.length === 0 ? (
+                                            <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-3">
+                                                생성된 키가 없습니다
+                                            </p>
+                                        ) : (
+                                            roomKeys.map(key => (
+                                                <div key={key.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-zinc-800 rounded-lg">
+                                                    <div>
+                                                        <code className="text-sm font-mono font-bold">{key.code}</code>
+                                                        <p className="text-xs text-gray-500 dark:text-gray-400">{key._count.registrations}명 등록</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-1">
+                                                        <button
+                                                            onClick={() => copyToClipboard(key.code)}
+                                                            className="p-2 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-gray-200 dark:hover:bg-zinc-700 rounded-lg transition-colors"
+                                                            title="복사"
+                                                        >
+                                                            <Copy className="w-4 h-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteKey(key.id)}
+                                                            className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                                            title="삭제"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                )}
 
                                 {/* 버튼 */}
                                 <div className="flex gap-2 pt-2">

@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { Lock, Settings } from 'lucide-react';
 import MemoryOrb from './MemoryOrb';
 
 interface Item {
@@ -29,17 +30,20 @@ interface RoomProps {
         name: string | null;
         description: string | null;
         images: string[];
+        isLocked?: boolean;
         items: Item[];
         records: Record[];
         member: { name: string | null };
     };
+    isOwner?: boolean;
     onOrbClick?: (type: 'item' | 'record', data: Item | Record) => void;
+    onSettingsClick?: () => void;
 }
 
 // Hoisted constant (rendering-hoist-jsx)
 const ORB_SIZE = 64;
 
-export default function Room({ room, onOrbClick }: RoomProps) {
+export default function Room({ room, isOwner, onOrbClick, onSettingsClick }: RoomProps) {
     // Memoized combined orbs array (rerender-derived-state)
     const allOrbs = useMemo(() => [
         ...room.items.map((item) => ({ type: 'item' as const, data: item })),
@@ -55,9 +59,20 @@ export default function Room({ room, onOrbClick }: RoomProps) {
                     animate={{ opacity: 1, y: 0 }}
                     className="max-w-2xl mx-auto"
                 >
-                    <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
-                        {room.name || 'My Room'}
-                    </h1>
+                    <div className="flex items-center gap-2">
+                        <h1 className="text-2xl font-bold text-zinc-900 dark:text-white flex items-center gap-1.5">
+                            {room.isLocked && <Lock className="w-5 h-5 text-zinc-400" />}
+                            {room.name || 'My Room'}
+                        </h1>
+                        {isOwner && onSettingsClick && (
+                            <button
+                                onClick={onSettingsClick}
+                                className="p-1.5 text-black hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-full transition-colors"
+                            >
+                                <Settings className="w-5 h-5" />
+                            </button>
+                        )}
+                    </div>
                     <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
                         {room.member.name || '익명'}
                     </p>

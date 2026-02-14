@@ -4,8 +4,10 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, RefreshCw, Inbox, Plus, LogIn, UserPlus, Lock, Home, ArrowLeft } from 'lucide-react';
+import { Loader2, RefreshCw, Inbox, Plus, LogIn, UserPlus, Lock, KeyRound } from 'lucide-react';
 import FeedCard from './FeedCard';
+import RoomFloatingButtons from './RoomFloatingButtons';
+import RoomKeyRegisterModal from './RoomKeyRegisterModal';
 import { useAuth } from '@/components/AuthProvider';
 import type { FeedItem } from '@/app/api/rooms/feed/route';
 
@@ -16,17 +18,22 @@ interface RoomFeedProps {
 export default function RoomFeed({ category }: RoomFeedProps) {
     const pathname = usePathname();
     const { user, loading: authLoading } = useAuth();
+    const [feedMode, setFeedMode] = useState<'public' | 'key'>('public');
     const [items, setItems] = useState<FeedItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [nextCursor, setNextCursor] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [myRoomId, setMyRoomId] = useState<string | null>(null);
+    const [keyModalOpen, setKeyModalOpen] = useState(false);
 
     const fetchFeed = useCallback(async (cursor?: string) => {
         try {
             const url = new URL('/api/rooms/feed', window.location.origin);
             url.searchParams.set('category', category);
+            if (feedMode === 'key') {
+                url.searchParams.set('keyFeed', 'true');
+            }
             if (cursor) {
                 url.searchParams.set('cursor', cursor);
             }
@@ -39,7 +46,7 @@ export default function RoomFeed({ category }: RoomFeedProps) {
         } catch (err) {
             throw err;
         }
-    }, [category]);
+    }, [category, feedMode]);
 
     const fetchMyRoom = useCallback(async () => {
         try {
@@ -94,6 +101,11 @@ export default function RoomFeed({ category }: RoomFeedProps) {
             fetchMyRoom();
         }
     }, [loadInitial, fetchMyRoom, authLoading, user]);
+
+    const handleTabChange = useCallback((mode: 'public' | 'key') => {
+        if (mode === feedMode) return;
+        setFeedMode(mode);
+    }, [feedMode]);
 
     // 무한 스크롤
     useEffect(() => {
@@ -183,109 +195,133 @@ export default function RoomFeed({ category }: RoomFeedProps) {
         );
     }
 
+    const tabBar = (
+        <div className="max-w-lg mx-auto px-4 pt-4 pb-2">
+            <div className="flex bg-gray-100 dark:bg-zinc-800 rounded-full p-1">
+                <button
+                    onClick={() => handleTabChange('public')}
+                    className={`flex-1 py-2 text-sm font-semibold rounded-full transition-colors ${
+                        feedMode === 'public'
+                            ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm'
+                            : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300'
+                    }`}
+                >
+                    피드
+                </button>
+                <button
+                    onClick={() => handleTabChange('key')}
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-semibold rounded-full transition-colors ${
+                        feedMode === 'key'
+                            ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm'
+                            : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300'
+                    }`}
+                >
+                    <KeyRound className="w-3.5 h-3.5" />
+                    키 피드
+                </button>
+            </div>
+        </div>
+    );
+
     if (items.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4 text-gray-500 dark:text-gray-400">
-                <Inbox className="w-16 h-16" />
-                <p className="text-lg font-medium">아직 등록된 콘텐츠가 없습니다</p>
-                <p className="text-sm mb-4">첫 번째 아이템이나 기록을 등록해보세요!</p>
-                {!myRoomId && (
-                    <Link
-                        href={`/${category}/room/new`}
-                        className="flex items-center gap-2 px-6 py-3 bg-tesla-red text-white rounded-full font-semibold hover:bg-red-600 transition-colors"
-                    >
-                        <Plus className="w-5 h-5" />
-                        새 콘텐츠 등록
-                    </Link>
-                )}
-
-                {/* 좌측 하단 - 뒤로가기 */}
-                <Link
-                    href={`/${category}`}
-                    className="fixed bottom-24 md:bottom-8 left-4 md:left-8 w-12 h-12 bg-white dark:bg-zinc-800 rounded-full shadow-lg flex items-center justify-center text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors z-40"
-                >
-                    <ArrowLeft className="w-5 h-5" />
-                </Link>
-
-                {/* 우측 하단 버튼들 */}
-                <div className="fixed bottom-24 md:bottom-8 right-4 md:right-8 flex items-center gap-2 z-40">
-                    {/* 내 룸 가기 버튼 */}
-                    {myRoomId && (
-                        <Link
-                            href={`/${category}/room/${myRoomId}`}
-                            className="w-12 h-12 bg-white dark:bg-zinc-800 rounded-full shadow-lg flex items-center justify-center text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
-                        >
-                            <Home className="w-5 h-5" />
-                        </Link>
-                    )}
-
-                    {/* 새 콘텐츠 등록 버튼 */}
-                    {!myRoomId && (
-                        <Link
-                            href={`/${category}/room/new`}
-                            className="w-12 h-12 bg-tesla-red text-white rounded-full shadow-lg flex items-center justify-center hover:bg-red-600 transition-colors"
-                        >
-                            <Plus className="w-5 h-5" />
-                        </Link>
+            <>
+                {tabBar}
+                <div className="flex flex-col items-center justify-center min-h-[40vh] gap-4 text-gray-500 dark:text-gray-400">
+                    {feedMode === 'key' ? (
+                        <>
+                            <KeyRound className="w-16 h-16" />
+                            <p className="text-lg font-medium">등록된 키가 없습니다</p>
+                            <p className="text-sm mb-4">룸 키 코드를 입력하여 등록해보세요!</p>
+                            <button
+                                onClick={() => setKeyModalOpen(true)}
+                                className="flex items-center gap-2 px-6 py-3 bg-tesla-red text-white rounded-full font-semibold hover:bg-red-600 transition-colors"
+                            >
+                                <KeyRound className="w-5 h-5" />
+                                키 등록
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <Inbox className="w-16 h-16" />
+                            <p className="text-lg font-medium">아직 등록된 콘텐츠가 없습니다</p>
+                            <p className="text-sm mb-4">첫 번째 아이템이나 기록을 등록해보세요!</p>
+                            {!myRoomId && (
+                                <Link
+                                    href={`/${category}/room/new`}
+                                    className="flex items-center gap-2 px-6 py-3 bg-tesla-red text-white rounded-full font-semibold hover:bg-red-600 transition-colors"
+                                >
+                                    <Plus className="w-5 h-5" />
+                                    새 콘텐츠 등록
+                                </Link>
+                            )}
+                        </>
                     )}
                 </div>
-            </div>
+
+                <RoomFloatingButtons
+                    backHref={`/${category}`}
+                    myRoomHref={myRoomId ? `/${category}/room/${myRoomId}` : undefined}
+                    addHref={!myRoomId ? `/${category}/room/new` : undefined}
+                />
+
+                <RoomKeyRegisterModal
+                    isOpen={keyModalOpen}
+                    onClose={() => setKeyModalOpen(false)}
+                    onSuccess={loadInitial}
+                />
+            </>
         );
     }
 
     return (
-        <div className="max-w-lg mx-auto px-4 py-6 pb-24 space-y-6">
-            <AnimatePresence>
-                {items.map((item) => (
-                    <FeedCard key={`${item.type}-${item.id}`} item={item} category={category} />
-                ))}
-            </AnimatePresence>
+        <>
+            {tabBar}
+            <div className="max-w-lg mx-auto px-4 py-4 pb-24 space-y-6">
+                <AnimatePresence>
+                    {items.map((item) => (
+                        <FeedCard key={`${item.type}-${item.id}`} item={item} category={category} />
+                    ))}
+                </AnimatePresence>
 
-            {loadingMore && (
-                <div className="flex justify-center py-4">
-                    <Loader2 className="w-6 h-6 animate-spin text-tesla-red" />
-                </div>
-            )}
-
-            {!nextCursor && items.length > 0 && (
-                <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-center text-sm text-gray-500 dark:text-gray-400 py-8"
-                >
-                    모든 콘텐츠를 불러왔습니다
-                </motion.p>
-            )}
-
-            {/* 좌측 하단 - 뒤로가기 */}
-            <Link
-                href={`/${category}`}
-                className="fixed bottom-24 md:bottom-8 left-4 md:left-8 w-12 h-12 bg-white dark:bg-zinc-800 rounded-full shadow-lg flex items-center justify-center text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors z-40"
-            >
-                <ArrowLeft className="w-5 h-5" />
-            </Link>
-
-
-            {/* 우측 하단 버튼들 */}
-            <div className="fixed bottom-24 md:bottom-8 right-4 md:right-8 flex items-center gap-2 z-40">
-                {/* 내 룸 가기 버튼 */}
-                {myRoomId && (
-                    <Link
-                        href={`/${category}/room/${myRoomId}`}
-                        className="w-12 h-12 bg-white dark:bg-zinc-800 rounded-full shadow-lg flex items-center justify-center text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
-                    >
-                        <Home className="w-5 h-5" />
-                    </Link>
+                {loadingMore && (
+                    <div className="flex justify-center py-4">
+                        <Loader2 className="w-6 h-6 animate-spin text-tesla-red" />
+                    </div>
                 )}
 
-                {/* 새 콘텐츠 등록 버튼 */}
-                {!myRoomId && <Link
-                    href={`/${category}/room/new`}
-                    className="w-12 h-12 bg-tesla-red text-white rounded-full shadow-lg flex items-center justify-center hover:bg-red-600 transition-colors"
+                {!nextCursor && items.length > 0 && (
+                    <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="text-center text-sm text-gray-500 dark:text-gray-400 py-8"
+                    >
+                        모든 콘텐츠를 불러왔습니다
+                    </motion.p>
+                )}
+
+                <RoomFloatingButtons
+                    backHref={`/${category}`}
+                    myRoomHref={myRoomId ? `/${category}/room/${myRoomId}` : undefined}
+                    addHref={!myRoomId ? `/${category}/room/new` : undefined}
                 >
-                    <Plus className="w-5 h-5" />
-                </Link>}
+                    {feedMode === 'key' && (
+                        <button
+                            onClick={() => setKeyModalOpen(true)}
+                            className="pointer-events-auto flex items-center gap-1.5 px-4 py-2.5 bg-tesla-red text-white rounded-full shadow-lg hover:bg-red-600 transition-colors font-semibold text-sm"
+                        >
+                            <KeyRound className="w-4 h-4" />
+                            키 등록
+                        </button>
+                    )}
+                </RoomFloatingButtons>
+
+                <RoomKeyRegisterModal
+                    isOpen={keyModalOpen}
+                    onClose={() => setKeyModalOpen(false)}
+                    onSuccess={loadInitial}
+                />
             </div>
-        </div>
+        </>
     );
 }

@@ -10,8 +10,8 @@ export function Footer() {
     const pathname = usePathname();
     const firstSegment = pathname.split('/')[1] || '';
 
-    // Hide footer on charger page
-    if (pathname === '/tesla/charger') {
+    // Hide footer on charger and room pages
+    if (pathname === '/tesla/charger' || pathname.includes('/room')) {
         return null;
     }
 

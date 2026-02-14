@@ -21,6 +21,9 @@ export async function GET(request: NextRequest) {
             }
             const member = await prisma.member.findUnique({ where: { uid: session.uid } });
             if (member) where.memberId = member.id;
+        } else {
+            // 공개 목록에서 잠긴 룸 제외
+            where.isLocked = false;
         }
 
         const rooms = await prisma.room.findMany({
