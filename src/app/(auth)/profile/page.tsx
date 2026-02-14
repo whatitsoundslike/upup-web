@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { Lock, Pencil, Loader2, ArrowLeft, User, IdCard, Mail } from 'lucide-react';
+import { Lock, Pencil, Loader2, ArrowLeft, User, IdCard, Mail, UserX } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/components/AuthProvider';
 import { cn } from '@/lib/utils';
 import { koToEn } from '@/app/(main)/superpet/i18n/translations';
@@ -22,6 +23,8 @@ export default function ProfilePage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showWithdraw, setShowWithdraw] = useState(false);
+  const [withdrawLoading, setWithdrawLoading] = useState(false);
   const [lang, setLang] = useState<'ko' | 'en'>('ko');
 
   const t = useCallback((korean: string): string => {
@@ -283,12 +286,93 @@ export default function ProfilePage() {
         </button>
       </form>
 
-      <p className="text-center mt-6 text-sm mb-10">
+      <p className="text-center mt-6 text-sm">
         <Link href="/" className="text-foreground/50 hover:text-foreground flex items-center justify-center gap-1">
           <ArrowLeft className="h-4 w-4" />
           {t('돌아가기')}
         </Link>
       </p>
+
+      {/* 회원탈퇴 */}
+      <div className="mt-8 mb-10 pt-4 border-t dark:border-white/10">
+        <button
+          type="button"
+          onClick={() => setShowWithdraw(true)}
+          className="w-full py-2.5 text-sm text-foreground/40 hover:text-red-500 transition-colors flex items-center justify-center gap-1.5"
+        >
+          <UserX className="h-4 w-4" />
+          {t('회원탈퇴')}
+        </button>
+      </div>
+
+      {/* 탈퇴 확인 모달 */}
+      <AnimatePresence>
+        {showWithdraw && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6"
+            onClick={() => !withdrawLoading && setShowWithdraw(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white dark:bg-zinc-900 rounded-2xl p-6 w-full max-w-sm shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-bold text-center mb-2">{t('회원탈퇴')}</h3>
+              <p className="text-sm text-foreground/60 text-center mb-1">
+                {t('정말로 탈퇴하시겠습니까?')}
+              </p>
+              <p className="text-xs text-red-500 text-center mb-6">
+                {t('탈퇴 후 계정 복구가 불가능합니다.')}
+              </p>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  disabled={withdrawLoading}
+                  onClick={() => setShowWithdraw(false)}
+                  className="flex-1 py-2.5 rounded-lg border dark:border-white/10 text-sm font-medium hover:bg-foreground/5 transition-colors"
+                >
+                  {t('취소')}
+                </button>
+                <button
+                  type="button"
+                  disabled={withdrawLoading}
+                  onClick={async () => {
+                    setWithdrawLoading(true);
+                    try {
+                      const res = await fetch('/api/auth/withdraw', { method: 'POST' });
+                      if (res.ok) {
+                        window.location.href = '/';
+                      } else {
+                        const data = await res.json();
+                        setError(data.error || t('서버 오류가 발생했습니다.'));
+                        setShowWithdraw(false);
+                      }
+                    } catch {
+                      setError(t('서버 오류가 발생했습니다.'));
+                      setShowWithdraw(false);
+                    } finally {
+                      setWithdrawLoading(false);
+                    }
+                  }}
+                  className="flex-1 py-2.5 rounded-lg bg-red-500 text-white text-sm font-medium hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
+                >
+                  {withdrawLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <UserX className="h-4 w-4" />
+                  )}
+                  {t('탈퇴하기')}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

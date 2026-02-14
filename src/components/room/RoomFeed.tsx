@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, RefreshCw, Inbox, Plus, LogIn, UserPlus, Lock, KeyRound } from 'lucide-react';
+import { Loader2, RefreshCw, Inbox, Plus, LogIn, UserPlus, Lock, KeyRound, X, ShoppingBag, MessageSquare, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
 import FeedCard from './FeedCard';
 import RoomFloatingButtons from './RoomFloatingButtons';
 import RoomKeyRegisterModal from './RoomKeyRegisterModal';
@@ -26,6 +26,8 @@ export default function RoomFeed({ category }: RoomFeedProps) {
     const [error, setError] = useState<string | null>(null);
     const [myRoomId, setMyRoomId] = useState<string | null>(null);
     const [keyModalOpen, setKeyModalOpen] = useState(false);
+    const [selectedFeedItem, setSelectedFeedItem] = useState<FeedItem | null>(null);
+    const [modalImageIndex, setModalImageIndex] = useState(0);
 
     const fetchFeed = useCallback(async (cursor?: string) => {
         try {
@@ -106,6 +108,23 @@ export default function RoomFeed({ category }: RoomFeedProps) {
         if (mode === feedMode) return;
         setFeedMode(mode);
     }, [feedMode]);
+
+    const handleFeedItemClick = useCallback((item: FeedItem) => {
+        setSelectedFeedItem(item);
+        setModalImageIndex(0);
+    }, []);
+
+    const closeFeedModal = useCallback(() => {
+        setSelectedFeedItem(null);
+    }, []);
+
+    // 모달 스크롤 잠금
+    useEffect(() => {
+        if (selectedFeedItem) {
+            document.body.style.overflow = 'hidden';
+            return () => { document.body.style.overflow = ''; };
+        }
+    }, [selectedFeedItem]);
 
     // 무한 스크롤
     useEffect(() => {
@@ -262,7 +281,8 @@ export default function RoomFeed({ category }: RoomFeedProps) {
                 <RoomFloatingButtons
                     backHref={`/${category}`}
                     myRoomHref={myRoomId ? `/${category}/room/${myRoomId}` : undefined}
-                    addHref={!myRoomId ? `/${category}/room/new` : undefined}
+                    addRoomHref={!myRoomId ? `/${category}/room/new` : undefined}
+                    addItemHref={myRoomId ? `/${category}/room/new` : undefined}
                 />
 
                 <RoomKeyRegisterModal
@@ -280,7 +300,7 @@ export default function RoomFeed({ category }: RoomFeedProps) {
             <div className="max-w-lg mx-auto px-4 py-4 pb-24 space-y-6">
                 <AnimatePresence>
                     {items.map((item) => (
-                        <FeedCard key={`${item.type}-${item.id}`} item={item} category={category} />
+                        <FeedCard key={`${item.type}-${item.id}`} item={item} category={category} onItemClick={handleFeedItemClick} />
                     ))}
                 </AnimatePresence>
 
@@ -303,7 +323,8 @@ export default function RoomFeed({ category }: RoomFeedProps) {
                 <RoomFloatingButtons
                     backHref={`/${category}`}
                     myRoomHref={myRoomId ? `/${category}/room/${myRoomId}` : undefined}
-                    addHref={!myRoomId ? `/${category}/room/new` : undefined}
+                    addRoomHref={!myRoomId ? `/${category}/room/new` : undefined}
+                    addItemHref={myRoomId ? `/${category}/room/new` : undefined}
                 >
                     {feedMode === 'key' && (
                         <button
@@ -322,6 +343,124 @@ export default function RoomFeed({ category }: RoomFeedProps) {
                     onSuccess={loadInitial}
                 />
             </div>
+
+            {/* 피드 상세 모달 */}
+            <AnimatePresence>
+                {selectedFeedItem && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4"
+                        onClick={closeFeedModal}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            onClick={e => e.stopPropagation()}
+                            className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden shadow-2xl max-h-[85vh] overflow-y-auto"
+                        >
+                            {/* 모달 헤더 - 룸 이름 */}
+                            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-zinc-800">
+                                <Link
+                                    href={`/${category}/room/${selectedFeedItem.roomId}`}
+                                    className="flex items-center gap-2 hover:opacity-70 transition-opacity"
+                                >
+                                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-tesla-red to-red-600 flex items-center justify-center text-white text-xs font-bold">
+                                        {selectedFeedItem.roomName?.[0] || '?'}
+                                    </div>
+                                    <span className="font-semibold text-sm">{selectedFeedItem.roomName}</span>
+                                    <span className="text-xs text-gray-400">&rsaquo;</span>
+                                </Link>
+                                <button
+                                    onClick={closeFeedModal}
+                                    className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-full transition-colors"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            {/* 이미지 */}
+                            {selectedFeedItem.images.length > 0 && (
+                                <div className="relative aspect-square bg-gray-100 dark:bg-zinc-800">
+                                    <img
+                                        src={selectedFeedItem.images[modalImageIndex]}
+                                        alt=""
+                                        className="w-full h-full object-cover"
+                                    />
+                                    {selectedFeedItem.images.length > 1 && (
+                                        <>
+                                            <button
+                                                onClick={() => setModalImageIndex(prev => (prev - 1 + selectedFeedItem.images.length) % selectedFeedItem.images.length)}
+                                                className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                                            >
+                                                <ChevronLeft className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => setModalImageIndex(prev => (prev + 1) % selectedFeedItem.images.length)}
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                                            >
+                                                <ChevronRight className="w-5 h-5" />
+                                            </button>
+                                            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                                                {selectedFeedItem.images.map((_, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className={`w-1.5 h-1.5 rounded-full transition-colors ${idx === modalImageIndex ? 'bg-white' : 'bg-white/50'}`}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* 컨텐츠 */}
+                            <div className="p-4">
+                                <div className="flex items-center gap-1.5 mb-3">
+                                    {selectedFeedItem.type === 'item' ? (
+                                        <ShoppingBag className="w-4 h-4 text-tesla-red" />
+                                    ) : (
+                                        <MessageSquare className="w-4 h-4 text-blue-500" />
+                                    )}
+                                    <span className="text-xs font-medium text-gray-500">
+                                        {selectedFeedItem.type === 'item' ? '아이템' : '기록'}
+                                    </span>
+                                </div>
+
+                                {selectedFeedItem.type === 'item' ? (
+                                    <div>
+                                        <h3 className="text-xl font-bold mb-2">
+                                            {selectedFeedItem.name || '이름 없음'}
+                                        </h3>
+                                        {selectedFeedItem.sale && selectedFeedItem.price && (
+                                            <p className="text-2xl font-bold text-tesla-red mb-4">
+                                                ₩{Number(selectedFeedItem.price).toLocaleString()}
+                                            </p>
+                                        )}
+                                        {selectedFeedItem.buyUrl && (
+                                            <a
+                                                href={selectedFeedItem.buyUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                                            >
+                                                <ExternalLink className="w-4 h-4" />
+                                                구매 링크
+                                            </a>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                                        {selectedFeedItem.text || ''}
+                                    </p>
+                                )}
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </>
     );
 }

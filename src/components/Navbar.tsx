@@ -20,13 +20,14 @@ import {
     Settings,
     MoreHorizontal,
     Download,
+    MessageSquareText,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { navConfigs, defaultNavItems, type NavItem, navRoomLogo } from '@/config/navConfig';
 import { Globe } from 'lucide-react';
-import { useAuth } from '@/components/AuthProvider';
+import { isLoggedIn, useAuth } from '@/components/AuthProvider';
 import { saveToServer } from '@/app/(main)/superpet/gameSync';
 import ProgressModal from '@/app/(main)/superpet/components/ProgressModal';
 
@@ -109,8 +110,8 @@ export function Navbar() {
             <div className="md:mx-auto sm:px-6 lg:px-8">
                 <div className="flex h-16 items-center justify-between">
                     <div className="flex items-center">
-                        <Link href='/' className="flex items-center gap-2 group">
-                            <div className="relative h-15 w-15 ml-2">
+                        <Link href='/' className="flex items-center gap-1 group ml-2">
+                            <div className="relative h-15 w-15">
                                 <Image
                                     src="/room-icon/zroom_icon.webp"
                                     alt="Logo"
@@ -119,6 +120,19 @@ export function Navbar() {
                                     priority
                                 />
                             </div>
+                            {firstSegment && navRoomLogo[firstSegment] && (
+                                <>
+                                    <div>x</div>
+                                    <div className="relative h-10 w-10">
+                                        <Image
+                                            src={navRoomLogo[firstSegment]}
+                                            alt={firstSegment}
+                                            fill
+                                            className="object-contain"
+                                        />
+                                    </div>
+                                </>
+                            )}
                             <span className="sr-only">{firstSegment ? firstSegment.toUpperCase() : 'HOME'}</span>
                         </Link>
                     </div>
@@ -149,34 +163,17 @@ export function Navbar() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                        {/* Desktop: inline buttons */}
-                        {mounted && isSuperpet && (
-                            <button
-                                onClick={toggleLang}
-                                className="hidden md:flex items-center gap-1 px-2.5 py-1.5 rounded-full hover:bg-foreground/5 transition-colors text-sm font-semibold"
-                                aria-label="Toggle language"
+                        {mounted && !authLoading && !user && (
+                            <Link
+                                href={`/login?callbackUrl=${encodeURIComponent(pathname)}`}
+                                className="p-2 rounded-full hover:bg-foreground/5 transition-colors"
+                                aria-label="로그인"
                             >
-                                <Globe className="h-4 w-4" />
-                                <span>{lang === 'ko' ? 'EN' : 'KO'}</span>
-                            </button>
-                        )}
-                        {mounted && (
-                            <button
-                                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                                className="hidden md:block p-2 rounded-full hover:bg-foreground/5 transition-colors"
-                                aria-label="Toggle theme"
-                            >
-                                {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-                            </button>
-                        )}
-                        {mounted && (
-                            <button
-                                onClick={() => location.href = `/profile`}
-                                className="hidden md:block p-2 rounded-full hover:bg-foreground/5 transition-colors"
-                                aria-label="Toggle theme"
-                            >
-                                <UserCog className="h-5 w-5" />
-                            </button>
+                                <div className="flex items-center gap-1">
+                                    <span className="inline">{lang === 'ko' ? '로그인' : 'LogIn'}</span>
+                                    <LogIn className="h-4 w-4" />
+                                </div>
+                            </Link>
                         )}
 
                         {/* PWA 설치 버튼 (superpet 모바일만, 미설치 상태에서만) */}
@@ -190,33 +187,9 @@ export function Navbar() {
                             </button>
                         )}
 
-                        {mounted && !authLoading && (
-                            user ? (
-                                <div className="flex items-center">
-                                    <button
-                                        onClick={logout}
-                                        className="p-2 rounded-full hover:bg-foreground/5 transition-colors"
-                                        aria-label="로그아웃"
-                                    >
-                                        <LogOut className="h-4 w-4" />
-                                    </button>
-                                </div>
-                            ) : (
-                                <Link
-                                    href={`/login?callbackUrl=${encodeURIComponent(pathname)}`}
-                                    className="p-2 rounded-full hover:bg-foreground/5 transition-colors"
-                                    aria-label="로그인"
-                                >
-                                    <div className="flex items-center gap-1">
-                                        <span className="inline">{lang === 'ko' ? '로그인' : 'LogIn'}</span>
-                                        <LogIn className="h-4 w-4" />
-                                    </div>
-                                </Link>
-                            )
-                        )}
-                        {/* Mobile: dropdown menu */}
+                        {/* Dropdown menu (PC + Mobile 공용) */}
                         {mounted && (
-                            <div className="relative md:hidden" ref={menuRef}>
+                            <div className="relative" ref={menuRef}>
                                 <button
                                     onClick={() => setMenuOpen(!menuOpen)}
                                     className="p-2 rounded-full hover:bg-foreground/5 transition-colors"
@@ -235,14 +208,24 @@ export function Navbar() {
                                             style={{ backgroundColor: 'var(--background-hex)' }}
                                         >
                                             {!authLoading && user && (
-                                                <Link
-                                                    href="/profile"
-                                                    onClick={() => setMenuOpen(false)}
-                                                    className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-foreground/5 transition-colors"
-                                                >
-                                                    <UserCog className="h-4 w-4" />
-                                                    <span>{lang === 'ko' ? '내 정보' : 'My Profile'}</span>
-                                                </Link>
+                                                <>
+                                                    <Link
+                                                        href="/profile"
+                                                        onClick={() => setMenuOpen(false)}
+                                                        className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-foreground/5 transition-colors"
+                                                    >
+                                                        <UserCog className="h-4 w-4" />
+                                                        <span>{lang === 'ko' ? '내 정보' : 'My Profile'}</span>
+                                                    </Link>
+                                                    <Link
+                                                        href="/inquiry"
+                                                        onClick={() => setMenuOpen(false)}
+                                                        className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-foreground/5 transition-colors"
+                                                    >
+                                                        <MessageSquareText className="h-4 w-4" />
+                                                        <span>{lang === 'ko' ? '문의하기' : 'Contact'}</span>
+                                                    </Link>
+                                                </>
                                             )}
                                             {isSuperpet && (
                                                 <>
@@ -271,6 +254,15 @@ export function Navbar() {
                                                 {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                                                 <span>{theme === 'dark' ? (lang === 'ko' ? '라이트 모드' : 'Light Mode') : (lang === 'ko' ? '다크 모드' : 'Dark Mode')}</span>
                                             </button>
+                                            {!authLoading && user && (
+                                                <button
+                                                    onClick={() => { setMenuOpen(false); logout(); }}
+                                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-foreground/5 transition-colors text-red-500"
+                                                >
+                                                    <LogOut className="h-4 w-4" />
+                                                    <span>{lang === 'ko' ? '로그아웃' : 'Logout'}</span>
+                                                </button>
+                                            )}
                                         </motion.div>
                                     )}
                                 </AnimatePresence>

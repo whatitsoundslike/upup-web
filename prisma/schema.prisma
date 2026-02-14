@@ -15,8 +15,10 @@ model Member {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now())
   uid       String    @unique
+  isDeleted Boolean   @default(false)
   gameSave  GameSave?
   rooms     Room[]
+  inquiries Inquiry[]
 }
 
 model Room {
@@ -209,5 +211,19 @@ model RoomKeyRegistration {
   roomKey   RoomKey  @relation(fields: [roomKeyId], references: [id], onDelete: Cascade)
 
   @@unique([roomKeyId, memberId])
+  @@index([memberId])
+}
+
+model Inquiry {
+  id        BigInt   @id @default(autoincrement())
+  memberId  BigInt
+  title     String   @db.VarChar(200)
+  content   String   @db.Text
+  answer    String?  @db.Text
+  status    String   @default("pending") @db.VarChar(20)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  member    Member   @relation(fields: [memberId], references: [id])
+
   @@index([memberId])
 }

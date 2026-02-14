@@ -3,16 +3,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
-    Plus,
     X,
     ShoppingBag,
     MessageSquare,
     Loader2,
     ImagePlus,
-    Check,
-    ChevronDown,
     Lock,
     LogIn,
     UserPlus,
@@ -34,19 +31,24 @@ interface RoomCreateFormProps {
 
 type FormType = 'item' | 'record';
 
+const categoryMeta: Record<string, { label: string; color: string }> = {
+    tesla: { label: 'Tesla', color: 'text-tesla-red' },
+    baby: { label: 'Baby', color: 'text-pink-500' },
+    ai: { label: 'AI', color: 'text-cyan-500' },
+    desk: { label: 'Desk', color: 'text-orange-500' },
+    superpet: { label: 'Superpet', color: 'text-purple-500' },
+};
+
 export default function RoomCreateForm({ category }: RoomCreateFormProps) {
     const router = useRouter();
     const pathname = usePathname();
     const { user, loading: authLoading } = useAuth();
-    const [rooms, setRooms] = useState<Room[]>([]);
-    const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
-    const [showRoomDropdown, setShowRoomDropdown] = useState(false);
+    const [myRoom, setMyRoom] = useState<Room | null>(null);
     const [formType, setFormType] = useState<FormType>('item');
     const [loading, setLoading] = useState(false);
     const [loadingRooms, setLoadingRooms] = useState(true);
 
     // 룸 생성 폼
-    const [showCreateRoom, setShowCreateRoom] = useState(false);
     const [newRoomName, setNewRoomName] = useState('');
     const [newRoomDescription, setNewRoomDescription] = useState('');
 
@@ -63,14 +65,13 @@ export default function RoomCreateForm({ category }: RoomCreateFormProps) {
     const [recordText, setRecordText] = useState('');
     const [recordImages, setRecordImages] = useState<string[]>(['']);
 
-    const fetchMyRooms = useCallback(async () => {
+    const fetchMyRoom = useCallback(async () => {
         try {
             const res = await fetch(`/api/rooms?category=${category}&my=true`);
             if (res.ok) {
                 const data = await res.json();
-                setRooms(data);
                 if (data.length > 0) {
-                    setSelectedRoom(data[0]);
+                    setMyRoom(data[0]);
                 }
             }
         } catch (err) {
@@ -82,9 +83,9 @@ export default function RoomCreateForm({ category }: RoomCreateFormProps) {
 
     useEffect(() => {
         if (!authLoading && user) {
-            fetchMyRooms();
+            fetchMyRoom();
         }
-    }, [fetchMyRooms, authLoading, user]);
+    }, [fetchMyRoom, authLoading, user]);
 
     const handleCreateRoom = async () => {
         if (!newRoomName.trim()) return;
@@ -102,9 +103,7 @@ export default function RoomCreateForm({ category }: RoomCreateFormProps) {
             });
             if (res.ok) {
                 const room = await res.json();
-                setRooms(prev => [room, ...prev]);
-                setSelectedRoom(room);
-                setShowCreateRoom(false);
+                setMyRoom(room);
                 setNewRoomName('');
                 setNewRoomDescription('');
             }
@@ -116,7 +115,7 @@ export default function RoomCreateForm({ category }: RoomCreateFormProps) {
     };
 
     const handleSubmitItem = async () => {
-        if (!selectedRoom || !itemName.trim()) return;
+        if (!myRoom || !itemName.trim()) return;
         setLoading(true);
         try {
             const images = itemImages.filter(url => url.trim());
@@ -124,7 +123,7 @@ export default function RoomCreateForm({ category }: RoomCreateFormProps) {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    roomId: selectedRoom.id,
+                    roomId: myRoom.id,
                     name: itemName,
                     description: itemDescription || null,
                     images,
@@ -146,7 +145,7 @@ export default function RoomCreateForm({ category }: RoomCreateFormProps) {
     };
 
     const handleSubmitRecord = async () => {
-        if (!selectedRoom || (!recordText.trim() && recordImages.every(url => !url.trim()))) return;
+        if (!myRoom || (!recordText.trim() && recordImages.every(url => !url.trim()))) return;
         setLoading(true);
         try {
             const images = recordImages.filter(url => url.trim());
@@ -154,7 +153,7 @@ export default function RoomCreateForm({ category }: RoomCreateFormProps) {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    roomId: selectedRoom.id,
+                    roomId: myRoom.id,
                     text: recordText,
                     images,
                 }),
@@ -253,7 +252,7 @@ export default function RoomCreateForm({ category }: RoomCreateFormProps) {
 
     return (
         <div className="max-w-lg mx-auto px-4 py-6 pb-24">
-    
+
             {/* 뒤로가기 버튼 */}
             <Link
                 href={`/${category}/room`}
@@ -262,149 +261,70 @@ export default function RoomCreateForm({ category }: RoomCreateFormProps) {
                 <ArrowLeft className="w-5 h-5" />
             </Link>
 
-            {/* 룸 선택 */}
-            <div className="mb-6">
-                <label className="block text-sm font-medium mb-2">룸 선택</label>
-                {rooms.length === 0 && !showCreateRoom ? (
-                    <button
-                        onClick={() => setShowCreateRoom(true)}
-                        className="w-full p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl text-gray-500 hover:border-tesla-red hover:text-tesla-red transition-colors flex items-center justify-center gap-2"
-                    >
-                        <Plus className="w-5 h-5" />
-                        첫 번째 룸 만들기
-                    </button>
-                ) : (
-                    <div className="relative">
-                        <button
-                            onClick={() => setShowRoomDropdown(!showRoomDropdown)}
-                            className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl flex items-center justify-between bg-white dark:bg-zinc-900"
-                        >
-                            <span>{selectedRoom?.name || '룸을 선택하세요'}</span>
-                            <ChevronDown className={`w-5 h-5 transition-transform ${showRoomDropdown ? 'rotate-180' : ''}`} />
-                        </button>
-                        <AnimatePresence>
-                            {showRoomDropdown && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-zinc-900 border border-gray-300 dark:border-gray-600 rounded-xl shadow-lg z-10 overflow-hidden"
-                                >
-                                    {rooms.map(room => (
-                                        <button
-                                            key={room.id}
-                                            onClick={() => {
-                                                setSelectedRoom(room);
-                                                setShowRoomDropdown(false);
-                                            }}
-                                            className="w-full p-3 text-left hover:bg-gray-100 dark:hover:bg-zinc-800 flex items-center justify-between"
-                                        >
-                                            <span>{room.name || '이름 없는 룸'}</span>
-                                            {selectedRoom?.id === room.id && <Check className="w-4 h-4 text-tesla-red" />}
-                                        </button>
-                                    ))}
-                                    <button
-                                        onClick={() => {
-                                            setShowCreateRoom(true);
-                                            setShowRoomDropdown(false);
-                                        }}
-                                        className="w-full p-3 text-left hover:bg-gray-100 dark:hover:bg-zinc-800 text-tesla-red flex items-center gap-2 border-t border-gray-200 dark:border-gray-700"
-                                    >
-                                        <Plus className="w-4 h-4" />
-                                        새 룸 만들기
-                                    </button>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+            {/* 룸이 없으면 → 룸 생성 폼 */}
+            {!myRoom ? (
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="space-y-4"
+                >
+                    <h2 className="text-xl font-bold">
+                        나의 <span className={categoryMeta[category]?.color}>{categoryMeta[category]?.label ?? category}</span> 룸 만들기
+                    </h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                        아이템과 기록을 등록하려면 먼저 룸을 만들어야 합니다.
+                    </p>
+                    <div>
+                        <label className="block text-sm font-medium mb-1">룸 이름 *</label>
+                        <input
+                            type="text"
+                            value={newRoomName}
+                            onChange={e => setNewRoomName(e.target.value)}
+                            placeholder="예: 작고 소중한 내 방"
+                            className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-transparent"
+                        />
                     </div>
-                )}
-            </div>
-
-            {/* 새 룸 만들기 모달 */}
-            <AnimatePresence>
-                {showCreateRoom && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-                        onClick={() => setShowCreateRoom(false)}
+                    <div>
+                        <label className="block text-sm font-medium mb-1">설명 (선택)</label>
+                        <textarea
+                            value={newRoomDescription}
+                            onChange={e => setNewRoomDescription(e.target.value)}
+                            placeholder="룸에 대한 간단한 설명"
+                            rows={3}
+                            className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-transparent resize-none"
+                        />
+                    </div>
+                    <button
+                        onClick={handleCreateRoom}
+                        disabled={!newRoomName.trim() || loading}
+                        className="w-full p-4 bg-tesla-red text-white rounded-xl font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
                     >
-                        <motion.div
-                            initial={{ scale: 0.95 }}
-                            animate={{ scale: 1 }}
-                            exit={{ scale: 0.95 }}
-                            onClick={e => e.stopPropagation()}
-                            className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl p-6"
-                        >
-                            <h2 className="text-xl font-bold mb-4">새 룸 만들기</h2>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">룸 이름 *</label>
-                                    <input
-                                        type="text"
-                                        value={newRoomName}
-                                        onChange={e => setNewRoomName(e.target.value)}
-                                        placeholder="예: 작고 소중한 내 방"
-                                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-transparent"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">설명 (선택)</label>
-                                    <textarea
-                                        value={newRoomDescription}
-                                        onChange={e => setNewRoomDescription(e.target.value)}
-                                        placeholder="룸에 대한 간단한 설명"
-                                        rows={3}
-                                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-transparent resize-none"
-                                    />
-                                </div>
-                            </div>
-                            <div className="flex gap-3 mt-6">
-                                <button
-                                    onClick={() => setShowCreateRoom(false)}
-                                    className="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-xl"
-                                >
-                                    취소
-                                </button>
-                                <button
-                                    onClick={handleCreateRoom}
-                                    disabled={!newRoomName.trim() || loading}
-                                    className="flex-1 p-3 bg-tesla-red text-white rounded-xl disabled:opacity-50 flex items-center justify-center gap-2"
-                                >
-                                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                                    만들기
-                                </button>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* 콘텐츠 타입 선택 */}
-            {selectedRoom && (
+                        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
+                        룸 만들기
+                    </button>
+                </motion.div>
+            ) : (
                 <>
+                    {/* 룸이 있으면 → 콘텐츠 등록 */}
                     <div className="mb-6">
                         <label className="block text-sm font-medium mb-2">등록 유형</label>
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setFormType('item')}
-                                className={`flex-1 p-4 rounded-xl border-2 transition-colors flex items-center justify-center gap-2 ${
-                                    formType === 'item'
+                                className={`flex-1 p-4 rounded-xl border-2 transition-colors flex items-center justify-center gap-2 ${formType === 'item'
                                         ? 'border-tesla-red bg-tesla-red/10 text-tesla-red'
                                         : 'border-gray-300 dark:border-gray-600'
-                                }`}
+                                    }`}
                             >
                                 <ShoppingBag className="w-5 h-5" />
                                 아이템
                             </button>
                             <button
                                 onClick={() => setFormType('record')}
-                                className={`flex-1 p-4 rounded-xl border-2 transition-colors flex items-center justify-center gap-2 ${
-                                    formType === 'record'
+                                className={`flex-1 p-4 rounded-xl border-2 transition-colors flex items-center justify-center gap-2 ${formType === 'record'
                                         ? 'border-blue-500 bg-blue-500/10 text-blue-500'
                                         : 'border-gray-300 dark:border-gray-600'
-                                }`}
+                                    }`}
                             >
                                 <MessageSquare className="w-5 h-5" />
                                 기록

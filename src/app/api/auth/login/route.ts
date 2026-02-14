@@ -31,6 +31,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (member.isDeleted) {
+      return NextResponse.json(
+        { error: '탈퇴한 계정입니다.' },
+        { status: 403 }
+      );
+    }
+
     const token = await signToken({
       sub: member.id.toString(),
       uid: member.uid,

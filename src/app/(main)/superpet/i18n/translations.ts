@@ -382,6 +382,27 @@ export const koToEn: Record<string, string> = {
     '수정 중...': 'Updating...',
     '수정하기': 'Update',
     '돌아가기': 'Go Back',
+    '회원탈퇴': 'Delete Account',
+    '정말로 탈퇴하시겠습니까?': 'Are you sure you want to delete your account?',
+    '탈퇴 후 계정 복구가 불가능합니다.': 'Account recovery is not possible after deletion.',
+    '탈퇴하기': 'Delete Account',
+
+    // === 문의하기 ===
+    '문의하기': 'Contact',
+    '새 문의': 'New Inquiry',
+    '문의 내역이 없습니다.': 'No inquiries yet.',
+    '제목': 'Title',
+    '내용': 'Content',
+    '문의 제목을 입력하세요': 'Enter inquiry title',
+    '문의 내용을 입력하세요': 'Enter inquiry content',
+    '제목을 입력해주세요.': 'Please enter a title.',
+    '내용을 입력해주세요.': 'Please enter content.',
+    '등록 중...': 'Submitting...',
+    '문의 등록': 'Submit Inquiry',
+    '문의 상세': 'Inquiry Detail',
+    '답변완료': 'Answered',
+    '대기중': 'Pending',
+    '답변': 'Answer',
 
     // === 랭킹 ===
     '랭킹 불러오는 중...': 'Loading rankings...',

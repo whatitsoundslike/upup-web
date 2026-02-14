@@ -400,7 +400,7 @@ export default function RoomDetailClient({ roomId, category }: RoomDetailClientP
         <div className="min-h-screen">
             <RoomFloatingButtons
                 backHref={`/${category}/room`}
-                addHref={isOwner ? `/${category}/room/new` : undefined}
+                addItemHref={isOwner ? `/${category}/room/new` : undefined}
             />
 
             {/* 2D 룸 */}
