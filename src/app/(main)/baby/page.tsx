@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import BabyHome from './BabyHome';
+import { fetchLatestNews } from '@/components/newsData';
+import CategoryHome from '@/components/CategoryHome';
 
 export const metadata: Metadata = {
     title: "육아 고민 해결 & 정보 공유 - ZROOM Baby",
@@ -18,6 +19,8 @@ export const metadata: Metadata = {
     },
 };
 
-export default function Page() {
-    return <BabyHome />;
+export default async function Page() {
+    const newsData = await fetchLatestNews('baby', 3);
+
+    return <CategoryHome category="baby" newsData={newsData} />;
 }

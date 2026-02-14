@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Lightbulb, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
@@ -46,6 +47,22 @@ interface Props {
     theme: TipsTheme;
 }
 
+const FALLBACK_IMG = '/room-icon/zroom_icon.webp';
+
+function TipThumbnail({ src, alt }: { src: string | null; alt: string }) {
+    const [failed, setFailed] = useState(false);
+    const onError = useCallback(() => setFailed(true), []);
+
+    return (
+        <img
+            src={src && !failed ? src : FALLBACK_IMG}
+            alt={alt}
+            onError={onError}
+            className={`w-full h-full transition-transform duration-500 group-hover:scale-105 ${src && !failed ? 'object-cover' : 'object-contain p-6'}`}
+        />
+    );
+}
+
 export default function TipsList({ tips, theme }: Props) {
     const config = themeConfigs[theme];
 
@@ -72,17 +89,7 @@ export default function TipsList({ tips, theme }: Props) {
                             className="glass group rounded-2xl overflow-hidden flex flex-col shadow-lg hover:shadow-xl transition-all h-full cursor-pointer"
                         >
                             <div className="relative h-48 overflow-hidden">
-                                {tip.thumbnail ? (
-                                    <img
-                                        src={tip.thumbnail}
-                                        alt={tip.title}
-                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full bg-foreground/10 flex items-center justify-center">
-                                        <Lightbulb className="w-12 h-12 text-foreground/20" />
-                                    </div>
-                                )}
+                                <TipThumbnail src={tip.thumbnail} alt={tip.title} />
                             </div>
 
                             <div className="p-6 flex flex-col flex-grow">

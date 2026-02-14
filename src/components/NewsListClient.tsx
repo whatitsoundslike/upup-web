@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
@@ -52,6 +53,22 @@ const categoryConfigs: Record<NewsCategory, {
     },
 };
 
+const FALLBACK_IMG = '/room-icon/zroom_icon.webp';
+
+function NewsThumbnail({ src, alt }: { src: string | null; alt: string }) {
+    const [failed, setFailed] = useState(false);
+    const onError = useCallback(() => setFailed(true), []);
+
+    return (
+        <img
+            src={src && !failed ? src : FALLBACK_IMG}
+            alt={alt}
+            onError={onError}
+            className={`w-full h-full transition-transform duration-500 group-hover:scale-105 ${src && !failed ? 'object-cover' : 'object-contain p-6'}`}
+        />
+    );
+}
+
 export default function NewsListClient({ news, category }: NewsListClientProps) {
     const config = categoryConfigs[category];
 
@@ -73,23 +90,10 @@ export default function NewsListClient({ news, category }: NewsListClientProps) 
                                 className="flex flex-col md:flex-row gap-6 p-4 rounded-2xl hover:bg-foreground/5 transition-colors group cursor-pointer border border-transparent hover:border-foreground/10"
                             >
                                 <div className="w-full md:w-48 h-48 md:h-32 flex-shrink-0 bg-foreground/5 rounded-xl overflow-hidden relative">
-                                    {item.thumbnail ? (
-                                        <img
-                                            src={item.thumbnail}
-                                            alt={item.title}
-                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                        />
-                                    ) : config.defaultThumbnail ? (
-                                        <img
-                                            src={config.defaultThumbnail}
-                                            alt="Default Thumbnail"
-                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-foreground/10 to-foreground/5">
-                                            <span className="text-4xl">{config.emoji}</span>
-                                        </div>
-                                    )}
+                                    <NewsThumbnail
+                                        src={item.thumbnail}
+                                        alt={item.title}
+                                    />
                                 </div>
 
                                 <div className="flex flex-col justify-center flex-grow">

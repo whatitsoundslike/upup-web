@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { fetchLatestNews } from '@/components/newsData';
-import TeslaHome from './TeslaHome';
+import CategoryHome from '@/components/CategoryHome';
 
 export const metadata: Metadata = {
   title: "테슬라 오너들의 리얼 소통 공간 - ZROOM Tesla",
@@ -30,5 +30,5 @@ export const metadata: Metadata = {
 export default async function Page() {
   const newsData = await fetchLatestNews('tesla', 3);
 
-  return <TeslaHome newsData={newsData} />;
+  return <CategoryHome category="tesla" newsData={newsData} />;
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Share2, Lightbulb } from 'lucide-react';
 import Link from 'next/link';
@@ -35,6 +36,22 @@ interface Props {
     tip: TipItem;
     relatedTips: TipItem[];
     theme: TipsTheme;
+}
+
+const FALLBACK_IMG = '/room-icon/zroom_icon.webp';
+
+function RelatedTipThumbnail({ src, alt }: { src: string | null; alt: string }) {
+    const [failed, setFailed] = useState(false);
+    const onError = useCallback(() => setFailed(true), []);
+
+    return (
+        <img
+            src={src && !failed ? src : FALLBACK_IMG}
+            alt={alt}
+            onError={onError}
+            className={`w-full h-full transition-transform duration-500 group-hover:scale-105 ${src && !failed ? 'object-cover' : 'object-contain p-6'}`}
+        />
+    );
 }
 
 export default function TipDetail({ tip, relatedTips, theme }: Props) {
@@ -122,17 +139,7 @@ export default function TipDetail({ tip, relatedTips, theme }: Props) {
                                     className="bg-white dark:bg-zinc-900 rounded-xl overflow-hidden group hover:shadow-xl transition-all border border-zinc-200 dark:border-zinc-800"
                                 >
                                     <div className="relative h-40 overflow-hidden">
-                                        {relatedTip.thumbnail ? (
-                                            <img
-                                                src={relatedTip.thumbnail}
-                                                alt={relatedTip.title}
-                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full bg-foreground/10 flex items-center justify-center">
-                                                <Lightbulb className="w-12 h-12 text-foreground/20" />
-                                            </div>
-                                        )}
+                                        <RelatedTipThumbnail src={relatedTip.thumbnail} alt={relatedTip.title} />
                                     </div>
                                     <div className="p-4">
                                         <h3 className={`font-bold mb-2 text-zinc-900 dark:text-white group-hover:${config.accentColor} transition-colors line-clamp-2`}>

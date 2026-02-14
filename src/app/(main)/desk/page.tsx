@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import DeskHome from './DeskHome';
+import { fetchLatestNews } from '@/components/newsData';
+import CategoryHome from '@/components/CategoryHome';
 
 export const metadata: Metadata = {
     title: "데스크 셋업 & 인테리어 - ZROOM Desk",
@@ -18,6 +19,8 @@ export const metadata: Metadata = {
     },
 };
 
-export default function Page() {
-    return <DeskHome />;
+export default async function Page() {
+    const newsData = await fetchLatestNews('desk', 3);
+
+    return <CategoryHome category="desk" newsData={newsData} />;
 }

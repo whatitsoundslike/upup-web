@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import AIHome from './AIHome';
+import { fetchLatestNews } from '@/components/newsData';
+import CategoryHome from '@/components/CategoryHome';
 
 export const metadata: Metadata = {
     title: "AI 트렌드 & 정보 공유 - ZROOM AI",
@@ -18,6 +19,8 @@ export const metadata: Metadata = {
     },
 };
 
-export default function Page() {
-    return <AIHome />;
+export default async function Page() {
+    const newsData = await fetchLatestNews('ai', 3);
+
+    return <CategoryHome category="ai" newsData={newsData} />;
 }
