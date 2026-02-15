@@ -13,6 +13,7 @@ import {
     Sparkles,
     LampDesk,
     Lightbulb,
+    Dog,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -59,6 +60,12 @@ export const navConfigs: NavConfig = {
         { name: 'Shop', href: '/desk/shop', icon: ShoppingBag },
         { name: 'Room', href: '/desk/room', icon: Warehouse },
     ],
+    pet: [
+        { name: '뉴스', href: '/pet/news', icon: Newspaper },
+        { name: '팁', href: '/pet/tips', icon: Lightbulb },
+        { name: 'Shop', href: '/pet/shop', icon: ShoppingBag },
+        { name: 'Room', href: '/pet/room', icon: Warehouse },
+    ],
 };
 
 // 기본 네비게이션 (루트 경로일 때)
@@ -68,6 +75,7 @@ export const defaultNavItems: NavItem[] = [
     { name: 'Superpet', href: '/superpet', icon: PawPrint },
     { name: 'AI', href: '/ai', icon: Sparkles },
     { name: 'Desk', href: '/desk', icon: LampDesk },
+    { name: 'Pet', href: '/pet', icon: Dog },
 ];
 
 export const navRoomLogo: Record<string, string> = {
@@ -77,6 +85,7 @@ export const navRoomLogo: Record<string, string> = {
     superpet: '/room-icon/superpet.webp',
     ai: '/room-icon/ai.webp',
     desk: '/room-icon/desk.webp',
+    pet: '/room-icon/pet.webp',
 }
 
 export const navRoomDescription: Record<string, string> = {
@@ -86,4 +95,5 @@ export const navRoomDescription: Record<string, string> = {
     superpet: '반려동물 RPG 게임 및 커뮤니티',
     ai: 'AI 팁 및 커뮤니티',
     desk: '데스크테리어 커뮤니티',
+    pet: '반려동물 정보 및 커뮤니티',
 }

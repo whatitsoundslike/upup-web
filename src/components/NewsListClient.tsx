@@ -51,6 +51,14 @@ const categoryConfigs: Record<NewsCategory, {
         defaultThumbnail: null,
         emoji: '🖥️',
     },
+    pet: {
+        title: 'Pet News',
+        description: '반려동물과 펫 케어 관련 최신 뉴스와 정보를 전해드립니다.',
+        accentColor: 'group-hover:text-amber-500',
+        badgeColor: 'text-amber-500 bg-amber-500/10',
+        defaultThumbnail: null,
+        emoji: '🐾',
+    },
 };
 
 const FALLBACK_IMG = '/room-icon/zroom_icon.webp';

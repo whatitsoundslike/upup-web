@@ -13,7 +13,7 @@ export interface Product {
     thumbnail: string | null;
 }
 
-export type ShopCategory = 'tesla' | 'baby' | 'ai' | 'desk';
+export type ShopCategory = 'tesla' | 'baby' | 'ai' | 'desk' | 'pet';
 
 interface ShopListClientProps {
     products: Product[];
@@ -40,6 +40,11 @@ const categoryConfigs: Record<ShopCategory, { title: string; subtitle: string; a
         title: 'Desk Shop',
         subtitle: '데스크테리어를 위한 최고의 선택.',
         accentColor: 'group-hover:text-orange-500',
+    },
+    pet: {
+        title: 'Pet Shop',
+        subtitle: '반려동물을 위한 최고의 아이템을 만나보세요.',
+        accentColor: 'group-hover:text-amber-500',
     },
 };
 

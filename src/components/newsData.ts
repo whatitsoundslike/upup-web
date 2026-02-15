@@ -10,7 +10,7 @@ export interface NewsItem {
     published_at: string | null;
 }
 
-export type NewsCategory = 'tesla' | 'baby' | 'ai' | 'desk';
+export type NewsCategory = 'tesla' | 'baby' | 'ai' | 'desk' | 'pet';
 
 const CACHE_REVALIDATE = 3600; // 1시간
 const isDev = process.env.NODE_ENV === 'development';

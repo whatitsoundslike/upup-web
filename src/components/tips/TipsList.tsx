@@ -6,7 +6,7 @@ import { Lightbulb, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import type { TipItem } from './tipData';
 
-export type TipsTheme = 'tesla' | 'baby' | 'ai' | 'desk';
+export type TipsTheme = 'tesla' | 'baby' | 'ai' | 'desk' | 'pet';
 
 interface ThemeConfig {
     title: string;
@@ -39,6 +39,12 @@ const themeConfigs: Record<TipsTheme, ThemeConfig> = {
         description: '생산성을 높이는 데스크 셋업 꿀팁과 인테리어 가이드를 공유합니다.',
         accentColor: 'group-hover:text-orange-500',
         basePath: '/desk/tips',
+    },
+    pet: {
+        title: 'Pet Tips',
+        description: '반려동물 건강, 훈련, 돌봄 꿀팁과 가이드를 공유합니다.',
+        accentColor: 'group-hover:text-amber-500',
+        basePath: '/pet/tips',
     },
 };
 

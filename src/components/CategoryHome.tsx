@@ -23,7 +23,7 @@ interface CategoryConfig {
     newsSubtitle: string;
 }
 
-export type CategoryKey = 'tesla' | 'desk' | 'ai' | 'baby';
+export type CategoryKey = 'tesla' | 'desk' | 'ai' | 'baby' | 'pet';
 
 const categoryConfigs: Record<CategoryKey, CategoryConfig> = {
     tesla: {
@@ -74,6 +74,18 @@ const categoryConfigs: Record<CategoryKey, CategoryConfig> = {
         hoverColor: 'hover:text-pink-500',
         newsLink: '/baby/news',
         newsSubtitle: '육아와 아이 관련 가장 빠른 소식',
+    },
+    pet: {
+        features: [
+            { title: '뉴스', desc: '반려동물 관련 최신 뉴스와 트렌드를 확인하세요.', icon: Newspaper, href: '/pet/news', color: 'text-amber-500' },
+            { title: '팁', desc: '반려동물 건강, 훈련, 돌봄 꿀팁과 가이드.', icon: Lightbulb, href: '/pet/tips', color: 'text-lime-500' },
+            { title: '샵', desc: '사료, 간식, 장난감 등 반려동물 필수템 모음.', icon: ShoppingBag, href: '/pet/shop', color: 'text-emerald-500' },
+            { title: '룸', desc: '반려동물과의 일상을 공유하고 소통해보세요.', icon: Warehouse, href: '/pet/room', color: 'text-blue-500' },
+        ],
+        groupHoverColor: 'group-hover:text-amber-500',
+        hoverColor: 'hover:text-amber-500',
+        newsLink: '/pet/news',
+        newsSubtitle: '반려동물과 펫 케어의 가장 빠른 소식',
     },
 };
 
