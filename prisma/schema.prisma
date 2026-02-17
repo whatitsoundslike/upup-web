@@ -176,21 +176,6 @@ model Product {
   @@index([category, sortOrder])
 }
 
-model Subsidy {
-  id            BigInt   @id @default(autoincrement())
-  locationName1 String   @db.VarChar(50)
-  locationName2 String   @db.VarChar(100)
-  totalCount    Int      @default(0)
-  recievedCount Int      @default(0)
-  releaseCount  Int      @default(0)
-  remainCount   Int      @default(0)
-  etc           String?  @db.Text
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @default(now())
-
-  @@unique([locationName1, locationName2])
-  @@index([locationName1])
-}
 
 model RoomKey {
   id            BigInt                @id @default(autoincrement())

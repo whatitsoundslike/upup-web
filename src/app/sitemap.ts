@@ -6,9 +6,7 @@ const BASE_URL = 'https://zroom.io';
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const staticRoutes: MetadataRoute.Sitemap = [
         { url: `${BASE_URL}/tesla`, priority: 1.0, changeFrequency: 'daily' },
-        { url: `${BASE_URL}/tesla/subsidy`, priority: 0.9, changeFrequency: 'daily' },
         { url: `${BASE_URL}/tesla/shop`, priority: 0.8, changeFrequency: 'daily' },
-        { url: `${BASE_URL}/tesla/charger`, priority: 0.8, changeFrequency: 'weekly' },
         { url: `${BASE_URL}/tesla/news`, priority: 0.8, changeFrequency: 'daily' },
         { url: `${BASE_URL}/tesla/tips`, priority: 0.8, changeFrequency: 'weekly' },
 

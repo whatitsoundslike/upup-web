@@ -31,7 +31,6 @@ export const navConfigs: NavConfig = {
     tesla: [
         { name: '뉴스', href: '/tesla/news', icon: Newspaper },
         { name: '팁', href: '/tesla/tips', icon: Lightbulb },
-        { name: '충전&보조금', href: '/tesla/info', icon: Zap },
         { name: 'Shop', href: '/tesla/shop', icon: ShoppingBag },
         { name: 'Room', href: '/tesla/room', icon: Warehouse },
     ],
