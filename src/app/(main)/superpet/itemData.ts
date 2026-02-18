@@ -96,7 +96,7 @@ export const GAME_ITEMS: Record<string, GameItem> = {
         rarity: '일반',
         stats: { hp: 50, attack: 0, defense: 0, speed: 0 },
         type: 'food',
-        shopGoldPrice: 50,
+        shopGoldPrice: 200,
     },
     dubai_cookie: {
         id: 'dubai_cookie',
