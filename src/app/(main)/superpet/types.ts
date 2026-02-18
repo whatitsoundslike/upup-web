@@ -59,17 +59,25 @@ export interface Character {
     videoUrl?: string;
 }
 
-// 레벨별 필요 경험치 (레벨 1→2: 100, 2→3: 150, ...)
+// 레벨별 필요 경험치 (3구간 설계)
+// 목표: 하루 50전투 × 90일(3개월) = 약 4,500전투로 레벨 100 달성
+// - 레벨 1~20: 선형 구간 (빠른 성장)
+// - 레벨 21~50: 완만한 성장 구간
+// - 레벨 51~99: 지수적 성장 구간 (엔드게임)
 export function getExpForNextLevel(level: number): number {
-    return 100 + (level - 1) * 50;
-}
+    if (level < 1 || level >= 100) return 0;
 
-// 던전 난이도별 경험치
-export const DUNGEON_EXP: Record<string, number> = {
-    '쉬움': 30,
-    '보통': 60,
-    '어려움': 120,
-};
+    if (level <= 20) {
+        // 선형 구간: 약 5~22전투/레벨
+        return 100 + (level - 1) * 50;
+    } else if (level <= 50) {
+        // 완만 구간: 약 23~42전투/레벨 (레벨 20에서 연속)
+        return Math.floor(4.95 * level * level + 211 * level - 1588);
+    } else {
+        // 지수 구간: 약 42~107전투/레벨 (레벨 50에서 연속)
+        return Math.floor(21337 * Math.exp(0.021 * (level - 50)));
+    }
+}
 
 // 기존 단일 캐릭터 데이터 로드 (마이그레이션용)
 function _loadSingleCharacterMigration(): Character | null {

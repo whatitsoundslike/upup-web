@@ -260,7 +260,7 @@ export default function Dungeon() {
         const totalStats = getTotalStats(character);
 
         const doubleAttackChance = Math.min(totalStats.speed / 500, 0.5);
-        const dodgeChance = Math.min(totalStats.speed / 500, 0.4);
+        const dodgeChance = Math.min(totalStats.speed / 500, 0.3);
 
         const newLog: ReactNode[] = [];
 
@@ -295,14 +295,18 @@ export default function Dungeon() {
                         </span>
                     );
                 }
-                // 희귀 등급 이상의 장비/주문서 획득 시 축하 모달
-                const rareDrops = ['희귀', '에픽', '전설'];
-                const rareItem = drops.find(d =>
-                    rareDrops.includes(d.item.rarity) &&
+                // 희귀 등급 이상의 장비/주문서 획득 시 축하 모달 (가장 높은 등급 우선)
+                const rarityOrder = ['희귀', '에픽', '전설'] as const;
+                const rareItems = drops.filter(d =>
+                    rarityOrder.includes(d.item.rarity as typeof rarityOrder[number]) &&
                     (d.item.type === 'equipment' || d.item.type === 'scroll')
                 );
-                if (rareItem) {
-                    setTimeout(() => setRareItemModal(rareItem.item), 500);
+                if (rareItems.length > 0) {
+                    const best = rareItems.reduce((a, b) =>
+                        rarityOrder.indexOf(a.item.rarity as typeof rarityOrder[number]) >=
+                        rarityOrder.indexOf(b.item.rarity as typeof rarityOrder[number]) ? a : b
+                    );
+                    setTimeout(() => setRareItemModal(best.item), 500);
                 }
             } else {
                 newLog.push(t('드롭된 아이템이 없다...'));
@@ -334,7 +338,7 @@ export default function Dungeon() {
         } else {
             const monsterDmg = Math.max(
                 Math.floor((selectedMonster.attack - totalStats.defense) * (0.8 + Math.random() * 0.4)),
-                5
+                10
             );
             const newPlayerHp = Math.max(playerHp - monsterDmg, 0);
             setPlayerHp(newPlayerHp);
