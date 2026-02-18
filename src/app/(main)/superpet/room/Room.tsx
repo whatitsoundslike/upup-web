@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Swords, Coins, Gem, X, Heart, Shield, Zap, Gauge, Search, Sword, Feather, Loader2, UserPlus, Copy, CheckSquare, Square, Trash2, Hammer } from 'lucide-react';
+import { Package, Swords, Coins, Gem, X, Heart, Shield, Zap, Gauge, Sword, Feather, Loader2, UserPlus, Copy, CheckSquare, Square, Trash2, Hammer } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import {
@@ -9,7 +9,6 @@ import {
     type Character,
     type GameItem,
     type EquipmentSlot,
-    type EquippedItem,
     type EnhanceResult,
     type EnhanceScrollType,
     type ItemRarity,
@@ -51,7 +50,20 @@ const STAT_ICONS = {
     speed: { icon: Feather, color: 'text-green-500' },
 };
 
-const SLOT_OPTIONS: (EquipmentSlot | 'all')[] = ['all', '투구', '갑옷', '장갑', '부츠', '망토', '무기', '방패', '목걸이', '반지'];
+const TYPE_FILTER_OPTIONS: { key: string; label: string; emoji: string }[] = [
+    { key: 'all', label: '전체', emoji: '📦' },
+    { key: 'equipment', label: '장비', emoji: '⚔️' },
+    { key: 'food', label: '소모품', emoji: '🥫' },
+    { key: 'scroll', label: '주문서', emoji: '📜' },
+    { key: 'material', label: '재료', emoji: '✨' },
+];
+
+const LEFT_EQUIP_SLOTS: EquipmentSlot[] = ['투구', '망토', '무기', '부츠'];
+const RIGHT_EQUIP_SLOTS: EquipmentSlot[] = ['갑옷', '장갑', '방패', '목걸이', '반지'];
+const SLOT_ICONS: Record<EquipmentSlot, string> = {
+    '투구': '🪖', '갑옷': '🛡️', '망토': '🧣', '무기': '⚔️', '방패': '🔰',
+    '장갑': '🧤', '부츠': '👢', '목걸이': '📿', '반지': '💍',
+};
 
 export default function Room() {
     const { t, lang } = useLanguage();
@@ -62,9 +74,9 @@ export default function Room() {
     const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
     const [activeToast, setActiveToast] = useState<{ message: string; tone: 'success' | 'error'; key: number } | null>(null);
     const [sellConfirm, setSellConfirm] = useState<{ itemId: string; sellAll: boolean; instanceId?: string } | null>(null);
-    const [searchName, setSearchName] = useState('');
-    const [slotFilter, setSlotFilter] = useState<EquipmentSlot | 'all'>('all');
+    const [typeFilter, setTypeFilter] = useState<string>('all');
     const [isSharing, setIsSharing] = useState(false);
+    const [charInfoTab, setCharInfoTab] = useState<'equipment' | 'stats'>('equipment');
     const [showShareLoginModal, setShowShareLoginModal] = useState(false);
     const [showLinkCopiedModal, setShowLinkCopiedModal] = useState(false);
     const [enhanceModal, setEnhanceModal] = useState<{
@@ -507,193 +519,240 @@ export default function Room() {
         }
     };
 
-    const totalItems = inventory.reduce((sum, e) => sum + e.quantity, 0);
-    const equippedEntries = character
-        ? (Object.entries(character.equipment) as [EquipmentSlot, EquippedItem | null][])
-        : [];
-
     const filteredInventory = inventory.filter((entry) => {
-        if (searchName && !entry.item.name.includes(searchName) && !t(entry.item.name).toLowerCase().includes(searchName.toLowerCase())) return false;
-        if (slotFilter !== 'all') {
-            if (entry.item.type !== 'equipment' || entry.item.equipmentSlot !== slotFilter) return false;
-        }
+        if (typeFilter !== 'all' && entry.item.type !== typeFilter) return false;
         return true;
     });
 
     return (
         <div className="max-w-4xl mx-auto px-4 py-2 lg:p-12">
-            {/* 캐릭터 프로필 카드 */}
+            {/* 캐릭터 정보 (탭: 장비 정보 / 캐릭터 정보) */}
             {character && (() => {
                 const nextExp = getExpForNextLevel(character.level);
                 const expPct = Math.min((character.exp / nextExp) * 100, 100);
                 const equipmentStats = calculateEquipmentStats(character);
+
+                const renderEquipSlot = (slot: EquipmentSlot) => {
+                    const equipped = character.equipment[slot];
+                    const item = equipped?.item;
+                    const enhanceLevel = equipped?.enhanceLevel ?? 0;
+
+                    return (
+                        <button
+                            key={slot}
+                            onClick={() => {
+                                if (item && equipped) {
+                                    const inventoryFormat: InventoryItem = {
+                                        item,
+                                        instanceId: equipped.instanceId,
+                                        enhanceLevel: equipped.enhanceLevel,
+                                        quantity: 0,
+                                        stats: enhanceLevel > 0 ? getEnhancedStats(item.stats, enhanceLevel, slot, item.rarity) : { ...item.stats },
+                                        equipedItem: [item]
+                                    };
+                                    setSelectedItem(inventoryFormat);
+                                }
+                            }}
+                            disabled={!item}
+                            className={`relative w-15 h-15 md:w-16 md:h-16 rounded-lg border-2 flex items-center justify-center transition-all ${
+                                item
+                                    ? ITEM_RARITY_BORDER[item.rarity] + ' bg-black/20 dark:bg-black/40 hover:scale-110 cursor-pointer'
+                                    : 'border-foreground/15 bg-foreground/5 cursor-default'
+                            }`}
+                            title={t(slot)}
+                        >
+                            <span className={item ? 'text-2xl md:text-3xl' : 'text-lg md:text-xl opacity-30'}>
+                                {item?.emoji ?? SLOT_ICONS[slot]}
+                            </span>
+                            {item && enhanceLevel > 0 && (
+                                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[9px] text-amber-400 font-bold bg-black/70 px-1 rounded">
+                                    +{enhanceLevel}
+                                </span>
+                            )}
+                        </button>
+                    );
+                };
+
                 return (
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.15 }}
-                        className="p-5 rounded-xl bg-white/5 shadow-xl border border-foreground/10"
+                        className="rounded-xl bg-white/5 shadow-xl border border-foreground/10 overflow-hidden mb-6"
                     >
-                        <div className="flex items-center  gap-4 mb-3">
-                            <div className="flex items-center flex-col gap-2">
-                                {character.image ? (
-                                    <img src={character.image} alt={character.name} className="w-23 h-40 object-cover rounded-xl border border-amber-500" />
-                                ) : (
-                                    <div className="text-3xl">🐾</div>
-                                )}
-                                <p className="text-xs text-foreground/50">{t(character.className)} / {t(character.element)}</p>
-                            </div>
+                        {/* Tabs */}
+                        <div className="flex border-b border-foreground/10">
+                            <button
+                                onClick={() => setCharInfoTab('equipment')}
+                                className={`flex-1 py-3 text-sm font-bold transition-colors ${
+                                    charInfoTab === 'equipment'
+                                        ? 'text-amber-500 border-b-2 border-amber-500 bg-amber-500/5'
+                                        : 'text-foreground/40 hover:text-foreground/60'
+                                }`}
+                            >
+                                {t('장비 정보')}
+                            </button>
+                            <button
+                                onClick={() => setCharInfoTab('stats')}
+                                className={`flex-1 py-3 text-sm font-bold transition-colors ${
+                                    charInfoTab === 'stats'
+                                        ? 'text-amber-500 border-b-2 border-amber-500 bg-amber-500/5'
+                                        : 'text-foreground/40 hover:text-foreground/60'
+                                }`}
+                            >
+                                {t('캐릭터 정보')}
+                            </button>
+                        </div>
 
-                            <div className="flex flex-col">
-                                <div className="flex items-center gap-2">
-                                    <h3 className="font-bold">{character.name}</h3>
-                                    <span className="px-2 py-0.5 rounded-full bg-amber-500 text-white text-xs font-bold shrink-0">
-                                        Lv.{character.level}
-                                    </span>
-                                </div>
-                                <div>
-                                    {(Object.entries(STAT_ICONS) as [keyof typeof STAT_ICONS, (typeof STAT_ICONS)[keyof typeof STAT_ICONS]][]).map(([key, { icon: Icon, color }]) => {
-                                        const bonus = equipmentStats[key];
-                                        const baseValue = character[key];
-                                        if (key === 'hp') {
-                                            const totalHp = character.hp + bonus;
-                                            return (
-                                                <span key={key} className="flex items-center gap-0.5">
-                                                    <Icon className={`h-3 w-3 ${color}`} />
-                                                    {character.currentHp}/{totalHp}{' '}
-                                                    <span className={bonus > 0 ? 'text-emerald-500' : 'text-foreground/40'}>
-                                                        {`(+${bonus})`}
-                                                    </span>
-                                                </span>
-                                            );
-                                        }
-                                        return (
-                                            <span key={key} className="flex items-center gap-0.5">
-                                                <Icon className={`h-3 w-3 ${color}`} />
-                                                {baseValue}{' '}
-                                                <span className={bonus > 0 ? 'text-emerald-500' : 'text-foreground/40'}>
-                                                    {`(+${bonus})`}
-                                                </span>
+                        <div className="p-4 md:p-5">
+                            {charInfoTab === 'equipment' ? (
+                                /* 장비 탭 - 리니지 스타일 좌우 배치 */
+                                <div className="flex items-center justify-center gap-2 md:gap-4">
+                                    {/* Left: 투구, 망토, 무기, 부츠 */}
+                                    <div className="flex flex-col items-center gap-1.5 md:gap-2">
+                                        {LEFT_EQUIP_SLOTS.map(slot => (
+                                            <div key={slot} className="flex flex-col items-center">
+                                                {renderEquipSlot(slot)}
+                                                <span className="text-[12px] md:text-[14px] text-foreground/30 mt-0.5">{t(slot)}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Center: 캐릭터 이미지 */}
+                                    <div className="flex flex-col items-center flex-shrink-0 mx-1 md:mx-3">
+                                        {character.image ? (
+                                            <img
+                                                src={character.image}
+                                                alt={character.name}
+                                                className="w-28 h-44 md:w-36 md:h-56 object-cover rounded-xl border-2 border-amber-500/60 shadow-lg"
+                                            />
+                                        ) : (
+                                            <div className="w-28 h-44 md:w-36 md:h-56 rounded-xl border-2 border-amber-500/60 bg-foreground/5 flex items-center justify-center text-5xl shadow-lg">
+                                                🐾
+                                            </div>
+                                        )}
+                                        <h3 className="font-bold mt-2 text-sm md:text-base">{character.name}</h3>
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="px-2 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold">
+                                                Lv.{character.level}
                                             </span>
-                                        );
-                                    })}
+                                            <span className="text-[10px] md:text-xs text-foreground/50">{t(character.className)}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Right: 갑옷, 장갑, 방패, 목걸이, 반지 */}
+                                    <div className="flex flex-col items-center gap-1.5 md:gap-2">
+                                        {RIGHT_EQUIP_SLOTS.map(slot => (
+                                            <div key={slot} className="flex flex-col items-center">
+                                                {renderEquipSlot(slot)}
+                                                <span className="text-[9px] md:text-[10px] text-foreground/30 mt-0.5">{t(slot)}</span>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
+                            ) : (
+                                /* 캐릭터 정보 탭 - 레벨, 경험치, 스탯, 재화 */
+                                <div>
+                                    {/* 캐릭터 요약 */}
+                                    <div className="flex items-center gap-3 mb-4">
+                                        {character.image ? (
+                                            <img src={character.image} alt={character.name} className="w-12 h-12 object-cover rounded-lg border border-amber-500" />
+                                        ) : (
+                                            <div className="text-2xl">🐾</div>
+                                        )}
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <h3 className="font-bold">{character.name}</h3>
+                                                <span className="px-2 py-0.5 rounded-full bg-amber-500 text-white text-xs font-bold">
+                                                    Lv.{character.level}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-foreground/50">{t(character.className)} / {t(character.element)}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* 경험치 바 */}
+                                    <div className="mb-4">
+                                        <div className="flex gap-2 text-xs mb-1">
+                                            <span className="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 font-bold text-[10px]">EXP</span>
+                                            <span className="text-foreground/60 font-medium">{character.exp} / {nextExp}</span>
+                                        </div>
+                                        <div className="h-2.5 rounded-full bg-foreground/10 overflow-hidden border border-amber-500">
+                                            <motion.div
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${expPct}%` }}
+                                                transition={{ duration: 0.8, ease: 'easeOut' }}
+                                                className="h-full rounded-full bg-amber-500"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* 스탯 */}
+                                    <div className="grid grid-cols-2 gap-2 mb-4">
+                                        {(Object.entries(STAT_ICONS) as [keyof typeof STAT_ICONS, (typeof STAT_ICONS)[keyof typeof STAT_ICONS]][]).map(([key, { icon: Icon, color }]) => {
+                                            const bonus = equipmentStats[key];
+                                            const baseValue = character[key];
+                                            return (
+                                                <div key={key} className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-foreground/5">
+                                                    <Icon className={`h-4 w-4 flex-shrink-0 ${color}`} />
+                                                    <span className="text-xs text-foreground/50">
+                                                        {key === 'hp' ? 'HP' : key === 'attack' ? t('공격') : key === 'defense' ? t('방어') : t('속도')}
+                                                    </span>
+                                                    <span className="ml-auto font-bold text-sm">
+                                                        {key === 'hp' ? `${character.currentHp}/${character.hp + bonus}` : baseValue}
+                                                    </span>
+                                                    {bonus > 0 && (
+                                                        <span className="text-xs text-emerald-500 font-bold">+{bonus}</span>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {/* 재화 */}
+                                    <div className="flex gap-3">
+                                        <div className="flex-1 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-amber-500/10 text-sm">
+                                            <Coins className="h-4 w-4 text-amber-500" />
+                                            <span className="font-bold text-amber-600">{character.gold.toLocaleString()}</span>
+                                            <span className="text-foreground/40 text-xs">{t('골드')}</span>
+                                        </div>
+                                        <div className="flex-1 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-purple-500/10 text-sm">
+                                            <Gem className="h-4 w-4 text-purple-500" />
+                                            <span className="font-bold text-purple-600">
+                                                {(user && gemBalance !== null ? gemBalance : character.gem).toLocaleString()}
+                                            </span>
+                                            <span className="text-foreground/40 text-xs">{t('젬')}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* 공유 버튼 */}
+                            <div className="mt-4 flex gap-2">
+                                <button
+                                    onClick={handleShare}
+                                    disabled={isSharing}
+                                    className="flex-1 py-3 rounded-xl bg-black text-white font-bold text-sm hover:bg-zinc-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-40 border border-transparent dark:border-white/30"
+                                >
+                                    {isSharing ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+                                    )}
+                                    {t('트위터')}
+                                </button>
+                                <button
+                                    onClick={handleCopyLink}
+                                    className="flex-1 py-3 rounded-xl bg-zinc-700 text-white font-bold text-sm hover:bg-zinc-600 transition-colors flex items-center justify-center gap-2 border border-transparent dark:border-white/30"
+                                >
+                                    <Copy className="h-4 w-4" />
+                                    {t('카드 공유')}
+                                </button>
                             </div>
-                        </div>
-                        {/* 재화 표시 */}
-                        <div className="flex gap-3 mb-3">
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 text-sm">
-                                <Coins className="h-4 w-4 text-amber-500" />
-                                <span className="font-bold text-amber-600">{character.gold.toLocaleString()}</span>
-                                <span className="text-foreground/40 text-xs">{t('골드')}</span>
-                            </div>
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/10 text-sm">
-                                <Gem className="h-4 w-4 text-purple-500" />
-                                <span className="font-bold text-purple-600">
-                                    {(user && gemBalance !== null ? gemBalance : character.gem).toLocaleString()}
-                                </span>
-                                <span className="text-foreground/40 text-xs">{t('젬')}</span>
-                            </div>
-                        </div>
-                        {/* 경험치 바 */}
-                        <div>
-                            <div className="flex gap-2 text-xs mb-1">
-                                <span className="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 font-bold text-[10px]">EXP</span>
-                                <span className="text-foreground/60 font-medium">{character.exp} / {nextExp}</span>
-                            </div>
-                            <div className="h-2.5 rounded-full bg-foreground/10 overflow-hidden border border-amber-500">
-                                <motion.div
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${expPct}%` }}
-                                    transition={{ duration: 0.8, ease: 'easeOut' }}
-                                    className="h-full rounded-full bg-amber-500"
-                                />
-                            </div>
-                        </div>
-                        {/* 공유 버튼 */}
-                        <div className="mt-3 flex gap-2">
-                            <button
-                                onClick={handleShare}
-                                disabled={isSharing}
-                                className="flex-1 py-3 rounded-xl bg-black text-white font-bold text-sm hover:bg-zinc-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-40 border border-transparent dark:border-white/30"
-                            >
-                                {isSharing ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
-                                )}
-                                {t('트위터')}
-                            </button>
-                            <button
-                                onClick={handleCopyLink}
-                                className="flex-1 py-3 rounded-xl bg-zinc-700 text-white font-bold text-sm hover:bg-zinc-600 transition-colors flex items-center justify-center gap-2 border border-transparent dark:border-white/30"
-                            >
-                                <Copy className="h-4 w-4" />
-                                {t('카드 공유')}
-                            </button>
                         </div>
                     </motion.div>
                 );
             })()}
-
-            {/* 장착 장비 */}
-            {character && (
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.22 }}
-                    className="glass p-5 rounded-xl bg-white/5 mb-8 shadow-lg"
-                >
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-bold">{t('장착 장비')}</h3>
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        {equippedEntries.map(([slot, equipped]) => {
-                            const item = equipped?.item;
-                            const enhanceLevel = equipped?.enhanceLevel ?? 0;
-                            return (
-                                <button
-                                    key={slot}
-                                    onClick={() => {
-                                        if (item && equipped) {
-                                            const inventoryFormat: InventoryItem = {
-                                                item: item,
-                                                instanceId: equipped.instanceId,
-                                                enhanceLevel: equipped.enhanceLevel,
-                                                quantity: 0,
-                                                stats: enhanceLevel > 0 ? getEnhancedStats(item.stats, enhanceLevel, slot, item.rarity) : { ...item.stats },
-                                                equipedItem: [item]
-                                            };
-                                            setSelectedItem(inventoryFormat);
-                                        }
-                                    }}
-                                    disabled={!item}
-                                    className={`flex items-center gap-3 rounded-xl border-1 px-3 py-2 text-left transition-all ${item?.rarity ? ITEM_RARITY_COLORS[item.rarity] : 'border-foreground/10 bg-white/5'
-                                        } ${item ? 'hover:scale-[1.02] cursor-pointer' : 'cursor-default'}`}
-                                >
-                                    <div className="text-2xl">{item?.emoji ?? '—'}</div>
-                                    <div className="min-w-0 flex-1">
-                                        <div className="text-xs text-foreground/50">{t(slot)}</div>
-                                        <div className="text-sm font-semibold truncate">
-                                            {item ? t(item.name) : t('비어있음')}
-                                            {item && enhanceLevel > 0 && (
-                                                <span className="text-amber-500 ml-1">+{enhanceLevel}</span>
-                                            )}
-                                        </div>
-                                        {item && (
-                                            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] leading-tight text-foreground/60">
-                                                <span className={`rounded-full px-2 py-0.5 font-semibold bg-foreground/5 ring-1 ring-foreground/10 ${ITEM_RARITY_TEXT[item.rarity]}`}>
-                                                    {t(item.rarity)}
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </button>
-                            );
-                        })}
-                    </div>
-                </motion.div>
-            )}
 
             {/* 빈 인벤토리 */}
             {inventory.length === 0 && (
@@ -724,28 +783,23 @@ export default function Room() {
                     transition={{ delay: 0.25 }}
                     className="flex flex-col gap-3 mb-6"
                 >
-                    <div className="flex gap-3">
-                        <select
-                            value={slotFilter}
-                            onChange={(e) => setSlotFilter(e.target.value as EquipmentSlot | 'all')}
-                            className="px-3 py-2.5 rounded-xl bg-foreground/5 border border-foreground/10 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50"
-                        >
-                            {SLOT_OPTIONS.map((slot) => (
-                                <option key={slot} value={slot}>{slot === 'all' ? t('전체 부위') : t(slot)}</option>
-                            ))}
-                        </select>
-                        <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/40" />
-                            <input
-                                type="text"
-                                placeholder={t('아이템 이름 검색')}
-                                value={searchName}
-                                onChange={(e) => setSearchName(e.target.value)}
-                                className="w-50 pl-9 pr-3 py-2.5 rounded-xl bg-foreground/5 border border-foreground/10 text-sm placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
-                            />
-                        </div>
+                    {/* 타입 필터 칩 */}
+                    <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
+                        {TYPE_FILTER_OPTIONS.map((opt) => (
+                            <button
+                                key={opt.key}
+                                onClick={() => setTypeFilter(opt.key)}
+                                className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold transition-colors flex items-center gap-1 ${
+                                    typeFilter === opt.key
+                                        ? 'bg-amber-500 text-white'
+                                        : 'bg-foreground/5 text-foreground/50 hover:bg-foreground/10'
+                                }`}
+                            >
+                                <span>{opt.emoji}</span>
+                                {t(opt.label)}
+                            </button>
+                        ))}
                     </div>
-
                     {/* 일괄 선택 모드 토글 */}
                     <div className="flex items-center gap-2">
                         {bulkSelectMode ? (
@@ -790,7 +844,7 @@ export default function Room() {
 
             {/* 아이템 그리드 */}
             {inventory.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
                     {filteredInventory.map((entry, idx) => {
                         const isEquipment = entry.item.type === 'equipment';
                         const isSelected = isEquipment && entry.instanceId && selectedItems.has(entry.instanceId);
