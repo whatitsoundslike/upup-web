@@ -765,24 +765,6 @@ export default function Room() {
                                 >
                                     {t('취소')}
                                 </button>
-                                {selectedItems.size > 0 && (
-                                    <div className="flex gap-2 ml-auto">
-                                        <button
-                                            onClick={() => setBulkDisassembleConfirm(true)}
-                                            className="px-4 py-2 rounded-xl bg-orange-500 text-white text-sm font-bold hover:bg-orange-600 transition-colors flex items-center gap-2"
-                                        >
-                                            <Hammer className="h-4 w-4" />
-                                            {selectedItems.size}{lang === 'ko' ? '개 분해' : ' Disassemble'}
-                                        </button>
-                                        <button
-                                            onClick={() => setBulkSellConfirm(true)}
-                                            className="px-4 py-2 rounded-xl bg-amber-500 text-white text-sm font-bold hover:bg-amber-600 transition-colors flex items-center gap-2"
-                                        >
-                                            <Coins className="h-4 w-4" />
-                                            {selectedItems.size}{lang === 'ko' ? '개 판매' : ' Sell'} ({getSelectedItemsTotal()}G)
-                                        </button>
-                                    </div>
-                                )}
                             </>
                         ) : (
                             <div className="flex gap-2">
@@ -1490,6 +1472,36 @@ export default function Room() {
                                 {t('확인')}
                             </button>
                         </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* 일괄 선택 하단 플로팅 바 */}
+            <AnimatePresence>
+                {bulkSelectMode && selectedItems.size > 0 && (
+                    <motion.div
+                        initial={{ y: 80, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: 80, opacity: 0 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                        className="fixed bottom-[70px] left-0 right-0 z-50 px-4 pb-2 pt-3 bg-gradient-to-t from-background via-background to-transparent md:bottom-0 md:pb-4"
+                    >
+                        <div className="max-w-2xl mx-auto flex gap-2">
+                            <button
+                                onClick={() => setBulkDisassembleConfirm(true)}
+                                className="flex-1 py-3 rounded-xl bg-orange-500 text-white font-bold hover:bg-orange-600 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25"
+                            >
+                                <Hammer className="h-4 w-4" />
+                                {selectedItems.size}{lang === 'ko' ? '개 분해' : ' Disassemble'}
+                            </button>
+                            <button
+                                onClick={() => setBulkSellConfirm(true)}
+                                className="flex-1 py-3 rounded-xl bg-amber-500 text-white font-bold hover:bg-amber-600 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-amber-500/25"
+                            >
+                                <Coins className="h-4 w-4" />
+                                {selectedItems.size}{lang === 'ko' ? '개 판매' : ' Sell'} ({getSelectedItemsTotal()}G)
+                            </button>
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
