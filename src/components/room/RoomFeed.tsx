@@ -215,7 +215,7 @@ export default function RoomFeed({ category }: RoomFeedProps) {
     }
 
     const tabBar = (
-        <div className="max-w-lg mx-auto px-4 pt-4 pb-2">
+        <div className="max-w-7xl mx-auto px-4 pt-4 pb-2">
             <div className="flex bg-gray-100 dark:bg-zinc-800 rounded-full p-1">
                 <button
                     onClick={() => handleTabChange('public')}
@@ -297,7 +297,7 @@ export default function RoomFeed({ category }: RoomFeedProps) {
     return (
         <>
             {tabBar}
-            <div className="max-w-lg mx-auto px-4 py-4 pb-24 space-y-6">
+            <div className="max-w-7xl mx-auto px-4 py-4 pb-24 space-y-6">
                 <AnimatePresence>
                     {items.map((item) => (
                         <FeedCard key={`${item.type}-${item.id}`} item={item} category={category} onItemClick={handleFeedItemClick} />
