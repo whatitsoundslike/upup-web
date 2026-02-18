@@ -466,5 +466,4 @@ export const koToEn: Record<string, string> = {
     '5,000G': '5,000G',
     '로그인이 필요합니다': 'Login Required',
     '미션 보상을 받으려면 로그인해주세요.': 'Please log in to claim mission rewards.',
-    '취소': 'Cancel',
 };
