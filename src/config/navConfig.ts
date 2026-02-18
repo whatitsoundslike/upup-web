@@ -14,6 +14,7 @@ import {
     LampDesk,
     Lightbulb,
     Dog,
+    ClipboardCheck,
 } from 'lucide-react';
 
 export interface NavItem {
@@ -43,7 +44,7 @@ export const navConfigs: NavConfig = {
     superpet: [
         { name: '홈', nameEn: 'Home', href: '/superpet', icon: Home },
         { name: '던전', nameEn: 'Dungeon', href: '/superpet/dungeon', icon: Swords },
-        // { name: '랭킹', nameEn: 'Ranking', href: '/superpet/ranking', icon: Star },
+        { name: '미션', nameEn: 'Mission', href: '/superpet/mission', icon: ClipboardCheck },
         { name: '상점', nameEn: 'Shop', href: '/superpet/shop', icon: ShoppingCart },
         { name: '인벤토리', nameEn: 'Inventory', href: '/superpet/room', icon: Warehouse },
     ],

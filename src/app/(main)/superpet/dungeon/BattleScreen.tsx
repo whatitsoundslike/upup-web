@@ -6,6 +6,15 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { useRouter } from 'next/navigation';
 import { type DungeonData, type MonsterData, type BattleState, ELEMENT_EMOJI } from './dungeonData';
 
+export interface MissionProgress {
+    name: string;
+    icon: string;
+    progress: number;
+    target: number;
+    claimable: boolean;
+    claimed: boolean;
+}
+
 interface BattleScreenProps {
     character: Character;
     selectedDungeon: DungeonData;
@@ -21,7 +30,7 @@ interface BattleScreenProps {
     attackDistance: number;
     battleFieldRef: RefObject<HTMLDivElement | null>;
     logRef: RefObject<HTMLDivElement | null>;
-    feedCountdown: string;
+    missionProgress: MissionProgress[];
     onStartBattle: (dungeon: DungeonData) => void;
     onExitBattle: () => void;
     onUseFood: (itemId: string) => void;
@@ -42,7 +51,7 @@ export default function BattleScreen({
     attackDistance,
     battleFieldRef,
     logRef,
-    feedCountdown,
+    missionProgress,
     onStartBattle,
     onExitBattle,
     onUseFood,
@@ -254,55 +263,65 @@ export default function BattleScreen({
                                 {t('다른 던전 가기')}
                             </button>
                         </div>
-                        <div className="mt-3 flex justify-center">
-                            <div className="px-3 py-1.5 rounded-xl bg-foreground/5 text-foreground/50 text-sm font-bold flex items-center gap-1.5">
-                                🍖 {t('무료 사료')} {feedCountdown}
-                            </div>
-                        </div>
 
-                        {/* 보유 식품 목록 및 사용 버튼 */}
-                        <div className="mt-8 pt-8 border-t border-white/10">
-                            <h4 className="text-sm font-bold text-foreground/50 mb-4">{t('배고파..?')}</h4>
-                            <div className="space-y-3">
-                                {inventory
-                                    .filter(entry => entry.item.type === 'food')
-                                    .map((entry, idx) => {
-                                        const item = entry.item;
-                                        return (
-                                            <div key={`${item.id}-${idx}`} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="relative">
-                                                        <span className="text-2xl">{item.emoji}</span>
-                                                        <span className="absolute -top-1 -right-1 min-w-[16px] h-4 flex items-center justify-center px-1 rounded-full bg-foreground text-background text-[10px] font-bold">
-                                                            {entry.quantity}
-                                                        </span>
-                                                    </div>
-                                                    <div className="text-left">
-                                                        <div className={`text-sm font-bold ${ITEM_RARITY_TEXT[item.rarity]}`}>{t(item.name)}</div>
-                                                        <div className="text-[10px] text-foreground/40">{t(item.rarity)}</div>
-                                                    </div>
+                        {/* 미션 진행 현황 */}
+                        {missionProgress.filter(m => !m.claimed).length > 0 && (
+                            <div className="mt-4 space-y-2">
+                                {missionProgress.filter(m => !m.claimed).map((m) => (
+                                    <div
+                                        key={m.name}
+                                        className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold ${m.claimable
+                                            ? 'bg-amber-500/15 text-amber-500 border border-amber-500/30'
+                                            : 'bg-foreground/5 text-foreground/50'
+                                            }`}
+                                    >
+                                        <span>{m.icon}</span>
+                                        <span className="flex-1 text-left">{t(m.name)}</span>
+                                        {m.target > 1 && (
+                                            <>
+                                                <div className="w-16 h-1.5 rounded-full bg-foreground/10 overflow-hidden">
+                                                    <div
+                                                        className={`h-full rounded-full ${m.claimable ? 'bg-amber-500' : 'bg-foreground/30'}`}
+                                                        style={{ width: `${Math.min((m.progress / m.target) * 100, 100)}%` }}
+                                                    />
                                                 </div>
-                                                <button
-                                                    onClick={() => onUseFood(item.id)}
-                                                    className="px-4 py-2 rounded-lg bg-green-500/20 text-green-500 text-xs font-bold hover:bg-green-500/30 transition-colors flex items-center gap-1.5"
-                                                >
-                                                    {t('먹이기')}
-                                                </button>
-                                            </div>
-                                        );
-                                    })}
-                                {inventory.filter(entry => entry.item.type === 'food').length === 0 && (
-                                    <div className="py-4">
-                                        <p className="text-sm text-foreground/40 italic mb-3">{t('보유 중인 간식이 없습니다')}</p>
-                                        <button
-                                            onClick={() => router.push('/superpet/shop')}
-                                            className="px-4 py-2 rounded-xl bg-blue-500/20 text-blue-500 text-sm font-bold hover:bg-blue-500/30 transition-colors flex items-center gap-2 mx-auto"
-                                        >
-                                            <ShoppingCart className="h-4 w-4" /> {t('상점으로 가기')}
-                                        </button>
+                                                <span>{m.progress}/{m.target}</span>
+                                            </>
+                                        )}
+                                        {m.claimable && (
+                                            <span
+                                                className="cursor-pointer underline"
+                                                onClick={() => router.push('/superpet/mission')}
+                                            >
+                                                {t('보상 수령')}
+                                            </span>
+                                        )}
                                     </div>
-                                )}
+                                ))}
                             </div>
+                        )}
+
+                        {/* 사료 한줄 요약 */}
+                        <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                            {inventory
+                                .filter(entry => entry.item.type === 'food')
+                                .map((entry, idx) => (
+                                    <button
+                                        key={`${entry.item.id}-${idx}`}
+                                        onClick={() => onUseFood(entry.item.id)}
+                                        className="px-3 py-1.5 rounded-xl bg-green-500/15 text-green-500 text-sm font-bold hover:bg-green-500/25 transition-colors flex items-center gap-1.5"
+                                    >
+                                        {entry.item.emoji} x{entry.quantity} {t('먹이기')}
+                                    </button>
+                                ))}
+                            {inventory.filter(entry => entry.item.type === 'food').length === 0 && (
+                                <button
+                                    onClick={() => router.push('/superpet/shop')}
+                                    className="px-3 py-1.5 rounded-xl bg-blue-500/15 text-blue-500 text-sm font-bold hover:bg-blue-500/25 transition-colors flex items-center gap-1.5"
+                                >
+                                    <ShoppingCart className="h-3.5 w-3.5" /> {t('상점')}
+                                </button>
+                            )}
                         </div>
                     </motion.div>
                 )}
@@ -331,9 +350,6 @@ export default function BattleScreen({
                                     <ShoppingCart className="h-4 w-4" /> {t('상점으로 가기')}
                                 </button>
                             )}
-                            <div className="px-3 py-1.5 rounded-xl bg-foreground/5 text-foreground/50 text-sm font-bold flex items-center gap-1.5">
-                                🍖 {t('무료 사료')} {feedCountdown}
-                            </div>
                         </div>
                     </motion.div>
                 )}

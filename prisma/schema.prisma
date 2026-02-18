@@ -16,9 +16,10 @@ model Member {
   updatedAt DateTime  @default(now())
   uid       String    @unique
   isDeleted Boolean   @default(false)
-  gameSave  GameSave?
-  rooms     Room[]
-  inquiries Inquiry[]
+  gameSave    GameSave?
+  rooms       Room[]
+  inquiries   Inquiry[]
+  missionLogs MissionLog[]
 }
 
 model Room {
@@ -211,4 +212,16 @@ model Inquiry {
   member    Member   @relation(fields: [memberId], references: [id])
 
   @@index([memberId])
+}
+
+model MissionLog {
+  id         BigInt   @id @default(autoincrement())
+  memberId   BigInt
+  missionKey String   @db.VarChar(30)
+  reward     String   @db.VarChar(100)
+  claimedAt  DateTime @default(now())
+  member     Member   @relation(fields: [memberId], references: [id])
+
+  @@index([memberId])
+  @@index([memberId, missionKey])
 }

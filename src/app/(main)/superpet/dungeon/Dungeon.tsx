@@ -3,15 +3,17 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Lock, LogIn, PawPrint, Skull, Sparkles, Swords, UserPlus } from 'lucide-react';
 import Link from 'next/link';
-import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo, type ReactNode } from 'react';
 import { type Character, GAME_ITEMS, addItemToInventory, addExpToCharacter, ITEM_RARITY_TEXT, ITEM_RARITY_BORDER, loadCharacter, saveCharacter, getTotalStats, useFood, loadInventory, type InventoryItem, type GameItem } from '../types';
-import { getItem, setItem } from '../storage';
+import { setItem } from '../storage';
 import { useDebouncedSave } from '../gameSync';
 import { useLanguage } from '../i18n/LanguageContext';
 import { type DungeonData, type MonsterData, type BattleState } from './dungeonData';
 import DungeonSelect from './DungeonSelect';
 import BattleScreen from './BattleScreen';
 import { useAuth } from '@/components/AuthProvider';
+import { checkAndResetMissionDate, incrementMissionCounter, MISSIONS, getMissionCounter, isMissionClaimed } from '../mission/missionData';
+import { type MissionProgress } from './BattleScreen';
 
 interface DroppedItem {
     item: import('../types').GameItem;
@@ -42,8 +44,24 @@ export default function Dungeon() {
     const [showImpact, setShowImpact] = useState(false);
     const [impactKey, setImpactKey] = useState(0);
     const [attackDistance, setAttackDistance] = useState(100);
-    const [feedCountdown, setFeedCountdown] = useState('');
     const debouncedSaveToServer = useDebouncedSave();
+
+    const missionProgress: MissionProgress[] = useMemo(() => {
+        if (battleState !== 'won') return [];
+        checkAndResetMissionDate();
+        return MISSIONS.map(m => {
+            const progress = m.counterKey ? getMissionCounter(m.counterKey) : 0;
+            const claimed = isMissionClaimed(m.claimedKey);
+            return {
+                name: m.name,
+                icon: m.icon,
+                progress: Math.min(progress, m.target),
+                target: m.target,
+                claimable: !claimed && (m.counterKey ? progress >= m.target : true),
+                claimed,
+            };
+        });
+    }, [battleState]);
 
     useEffect(() => {
         setCharacter(loadCharacter());
@@ -65,20 +83,6 @@ export default function Dungeon() {
     useEffect(() => {
         if (navResetKey > 0) exitBattle();
     }, [navResetKey]);
-
-    useEffect(() => {
-        const FEED_INTERVAL = 30 * 60 * 1000;
-        const update = () => {
-            const last = Number(getItem('last-feed-time') || Date.now());
-            const remaining = Math.max(0, FEED_INTERVAL - (Date.now() - last));
-            const min = Math.floor(remaining / 60000);
-            const sec = Math.floor((remaining % 60000) / 1000);
-            setFeedCountdown(`${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`);
-        };
-        update();
-        const interval = setInterval(update, 1000);
-        return () => clearInterval(interval);
-    }, []);
 
     useEffect(() => {
         if (logRef.current) {
@@ -329,6 +333,15 @@ export default function Dungeon() {
             }
             setBattleLog((prev) => [...prev, ...newLog]);
             setBattleState('won');
+
+            // 미션 킬 카운터 업데이트
+            checkAndResetMissionDate();
+            if (selectedMonster.isBoss) {
+                incrementMissionCounter('mission-boss-kills');
+            } else {
+                incrementMissionCounter('mission-normal-kills');
+            }
+
             debouncedSaveToServer();
             return;
         }
@@ -419,7 +432,7 @@ export default function Dungeon() {
                     attackDistance={attackDistance}
                     battleFieldRef={battleFieldRef}
                     logRef={logRef}
-                    feedCountdown={feedCountdown}
+                    missionProgress={missionProgress}
                     onStartBattle={startBattle}
                     onExitBattle={exitBattle}
                     onUseFood={handleUseFood}
@@ -427,7 +440,6 @@ export default function Dungeon() {
             ) : (
                 <DungeonSelect
                     character={character}
-                    feedCountdown={feedCountdown}
                     onStartBattle={startBattle}
                 />
             )}

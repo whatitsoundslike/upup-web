@@ -3,7 +3,6 @@ import { LanguageProvider } from './i18n/LanguageContext';
 import CoupangLeftBanner from './components/CoupangLeftBanner';
 import CoupangRightBanner from './components/CoupangRightBanner';
 import BottomBanner from './components/BottomBanner';
-import FeedReward from './components/FeedReward';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 
 export const metadata: Metadata = {
@@ -29,7 +28,6 @@ export default function SuperpetLayout({ children }: { children: React.ReactNode
     return (
         <LanguageProvider>
             <div className="relative min-h-screen flex flex-col">
-                <FeedReward />
                 <PWAInstallPrompt />
 
                 {/* Main Content */}

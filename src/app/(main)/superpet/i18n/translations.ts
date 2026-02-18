@@ -222,14 +222,12 @@ export const koToEn: Record<string, string> = {
     '던전에 도전하려면 먼저 캐릭터를 생성하세요!': 'Create a character first to challenge dungeons!',
     '캐릭터 만들러 가기': 'Go Create Character',
     '으로 도전!': 'challenges!',
-    '다음 사료 배달까지': 'Next feed delivery in',
 
     // === 전투 UI ===
     '공격!': 'Attack!',
     '자동 전투': 'Auto Battle',
     '자동 전투 진행 중...': 'Auto Battling...',
     '도망치기': 'Flee',
-    '무료 사료': 'Free Feed',
 
     // === 전투 결과 ===
     '승리!': 'Victory!',
@@ -361,9 +359,10 @@ export const koToEn: Record<string, string> = {
     '현재 베타 테스트 중입니다.': 'Currently in beta testing.',
     '캐릭터 저장 기능이 추가되었습니다!': 'Character save function has been added!',
     '랭킹 기능이 추가되었습니다!': 'Ranking function has been added!',
-    '무료 사료 배달 기능이 추가되었습니다! 웹 접속시 10분 마다 사료가 지급됩니다.': 'Free feed delivery function has been added! You will receive feed every 10 minutes when you access the web.',
     '캐릭터 생성시 성별을 선택할 수 있습니다.': 'You can select gender when creating a character.',
     '강화 시스템이 추가되었습니다!': 'Enhancement system has been added!',
+    '상점에 주문서가 추가되었습니다!': 'Scrolls have been added to the shop!',
+    '미션 시스템이 추가되었습니다!': 'Mission system has been added!',
 
     // === 프로필 ===
     '내 정보 수정': 'Edit Profile',
@@ -441,4 +440,24 @@ export const koToEn: Record<string, string> = {
     '방어구 강화 주문서 제작': 'Craft Armor Enhancement Scroll',
     '무기 강화 주문서 제작': 'Craft Weapon Enhancement Scroll',
     '장신구 강화 주문서 제작': 'Craft Accessory Enhancement Scroll',
+
+    // === 미션 ===
+    '미션': 'Mission',
+    '일일 미션': 'Daily Missions',
+    '출석체크': 'Attendance',
+    '오늘의 출석 보상을 받으세요!': 'Claim your daily attendance reward!',
+    '보스 퇴치': 'Boss Hunt',
+    '보스 몬스터를 3마리 처치하세요': 'Defeat 3 boss monsters',
+    '몬스터 퇴치': 'Monster Hunt',
+    '일반 몬스터를 100마리 처치하세요': 'Defeat 100 normal monsters',
+    '보상 수령': 'Claim',
+    '완료': 'Done',
+    '미션 완료!': 'Mission Complete!',
+    '미션을 완료하려면 먼저 캐릭터를 생성하세요!': 'Create a character first to complete missions!',
+    '사료 x10': 'Feed x10',
+    '8,000G': '8,000G',
+    '5,000G': '5,000G',
+    '로그인이 필요합니다': 'Login Required',
+    '미션 보상을 받으려면 로그인해주세요.': 'Please log in to claim mission rewards.',
+    '취소': 'Cancel',
 };

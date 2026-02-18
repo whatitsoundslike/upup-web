@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Swords, Heart, Timer } from 'lucide-react';
+import { Swords, Heart } from 'lucide-react';
 import { useMemo } from 'react';
 import { type Character, getTotalStats } from '../types';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -8,11 +8,10 @@ import { type DungeonData, dungeons, ELEMENT_EMOJI } from './dungeonData';
 
 interface DungeonSelectProps {
     character: Character;
-    feedCountdown: string;
     onStartBattle: (dungeon: DungeonData) => void;
 }
 
-export default function DungeonSelect({ character, feedCountdown, onStartBattle }: DungeonSelectProps) {
+export default function DungeonSelect({ character, onStartBattle }: DungeonSelectProps) {
     const { t, lang } = useLanguage();
 
     // 마지막 전투 던전 ID
@@ -34,16 +33,6 @@ export default function DungeonSelect({ character, feedCountdown, onStartBattle 
 
     return (
         <div className="max-w-4xl mx-auto px-4 py-2 lg:p-12">
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="flex items-center justify-center gap-2 mb-6 text-sm text-foreground/50"
-            >
-                <Timer className="h-4 w-4" />
-                <span>{t('다음 사료 배달까지')} <span className="font-bold text-amber-500">{feedCountdown}</span></span>
-            </motion.div>
-
             {/* 모바일: 리스트 형태 */}
             <div className="md:hidden flex flex-col gap-3">
                 {sortedDungeons.map((dungeon, idx) => {
