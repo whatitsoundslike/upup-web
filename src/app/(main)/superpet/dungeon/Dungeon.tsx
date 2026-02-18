@@ -133,6 +133,9 @@ export default function Dungeon() {
         }
     };
 
+    const getMonsterMinDmg = (level: number) =>
+        level <= 20 ? 5 : level <= 40 ? 10 : level <= 60 ? 15 : 20;
+
     // 몬스터 랜덤 선택 함수 (% 단위: spawnChance가 25면 25% 확률)
     const selectRandomMonster = (dungeon: DungeonData): MonsterData => {
         // 희귀도 순으로 정렬 (낮은 확률 = 희귀 몬스터 먼저)
@@ -214,7 +217,7 @@ export default function Dungeon() {
             // 몬스터 선제 공격
             const monsterDmg = Math.max(
                 Math.floor((monster.attack - totalStats.defense) * (0.8 + Math.random() * 0.4)),
-                5
+                getMonsterMinDmg(monster.level)
             );
             hp = Math.max(hp - monsterDmg, 0);
             battleLogEntries.push(`👊 ${t(monster.name)}${lang === 'ko' ? '의 선제 공격!' : "'s first strike!"} ${monsterDmg} ${t('데미지!')}`);
@@ -351,7 +354,7 @@ export default function Dungeon() {
         } else {
             const monsterDmg = Math.max(
                 Math.floor((selectedMonster.attack - totalStats.defense) * (0.8 + Math.random() * 0.4)),
-                10
+                getMonsterMinDmg(selectedMonster.level)
             );
             const newPlayerHp = Math.max(playerHp - monsterDmg, 0);
             setPlayerHp(newPlayerHp);

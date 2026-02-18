@@ -60,12 +60,11 @@ export interface Character {
 }
 
 // 레벨별 필요 경험치 (3구간 설계)
-// 목표: 하루 50전투 × 90일(3개월) = 약 4,500전투로 레벨 100 달성
 // - 레벨 1~20: 선형 구간 (빠른 성장)
 // - 레벨 21~50: 완만한 성장 구간
-// - 레벨 51~99: 지수적 성장 구간 (엔드게임)
+// - 레벨 51+: 지수적 성장 구간 (엔드게임)
 export function getExpForNextLevel(level: number): number {
-    if (level < 1 || level >= 100) return 0;
+    if (level < 1) return 0;
 
     if (level <= 20) {
         // 선형 구간: 약 5~22전투/레벨
