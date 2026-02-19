@@ -155,7 +155,7 @@ export default function Craft() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-40 flex items-end justify-center bg-black/60"
+                        className="fixed inset-0 z-40 flex items-end justify-center bg-black/60 pb-20 md:pb-0"
                         onClick={() => setSelectedRecipe(null)}
                     >
                         <motion.div

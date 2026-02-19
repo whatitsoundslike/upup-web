@@ -619,13 +619,14 @@ export const dungeons: DungeonData[] = [
         maxLevel: 60,
         monsters: [
             {
-                name: '작은 거인',
+                name: '여성 거인',
                 emoji: '🧌',
                 level: 52,
                 hp: 1500,
                 attack: 200,
                 isBoss: false,
                 spawnChance: 26,
+                imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/ACT_6_SmallGiant.webp",
                 drops: [
                     { itemId: 'meat', chance: 10 },
                     { itemId: 'dubai_cookie', chance: 5 },
@@ -641,6 +642,7 @@ export const dungeons: DungeonData[] = [
                 attack: 210,
                 isBoss: false,
                 spawnChance: 23,
+                imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/ACT_6_SteelGiant.webp",
                 drops: [
                     { itemId: 'meat', chance: 10 },
                     { itemId: 'dubai_cookie', chance: 5 },
@@ -656,6 +658,7 @@ export const dungeons: DungeonData[] = [
                 attack: 220,
                 isBoss: false,
                 spawnChance: 21,
+                imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/ACT_6_GuardianGiant.webp",
                 drops: [
                     { itemId: 'accessory_enhance_scroll', chance: 5 },
                     { itemId: 'meat', chance: 10 },
@@ -672,6 +675,7 @@ export const dungeons: DungeonData[] = [
                 attack: 230,
                 isBoss: false,
                 spawnChance: 17,
+                imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/ACT_6_DestroyerGiant.webp",
                 drops: [
                     { itemId: 'armor_enhance_scroll', chance: 5 },
                     { itemId: 'meat', chance: 10 },
@@ -681,13 +685,14 @@ export const dungeons: DungeonData[] = [
                 ],
             },
             {
-                name: '지혜의 거인',
+                name: '암석 거인',
                 emoji: '🧌',
                 level: 59,
                 hp: 1900,
                 attack: 240,
                 isBoss: false,
                 spawnChance: 12,
+                imageUrl: "https://rryurpxtarqks8ch.public.blob.vercel-storage.com/superpet/monster/ACT_6_RockGiant.webp",
                 drops: [
                     { itemId: 'weapon_enhance_scroll', chance: 5 },
                     { itemId: 'meat', chance: 10 },

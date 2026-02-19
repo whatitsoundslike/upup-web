@@ -208,11 +208,11 @@ export const koToEn: Record<string, string> = {
     '암흑 비룡': 'Dark Wyvern',
     '마룡': 'Evil Dragon',
 
-    '작은 거인': 'Small Giant',
+    '여성 거인': 'Female Giant',
     '강철 거인': 'Steel Giant',
     '수호 거인': 'Guardian Giant',
     '파괴자 거인': 'Destroyer Giant',
-    '지혜의 거인': 'Giant of Wisdom',
+    '암석 거인': 'Rock Giant',
     '발두르그': 'Baldurug',
 
     // === 던전 UI ===
