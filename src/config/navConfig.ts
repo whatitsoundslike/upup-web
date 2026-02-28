@@ -70,11 +70,11 @@ export const navConfigs: NavConfig = {
 
 // 기본 네비게이션 (루트 경로일 때)
 export const defaultNavItems: NavItem[] = [
-    { name: 'Tesla', href: '/tesla', icon: Home },
+    // { name: 'Tesla', href: '/tesla', icon: Home },
     { name: 'Baby', href: '/baby', icon: Baby },
     { name: 'Superpet', href: '/superpet', icon: PawPrint },
-    { name: 'AI', href: '/ai', icon: Sparkles },
-    { name: 'Desk', href: '/desk', icon: LampDesk },
+    // { name: 'AI', href: '/ai', icon: Sparkles },
+    // { name: 'Desk', href: '/desk', icon: LampDesk },
     { name: 'Pet', href: '/pet', icon: Dog },
 ];
 

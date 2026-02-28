@@ -37,7 +37,7 @@ export default function Home() {
             ZROOM
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-300">
-            취미 기반 커뮤니티 플랫폼
+            관심사 기반 커뮤니티 플랫폼
           </p>
         </div>
 
